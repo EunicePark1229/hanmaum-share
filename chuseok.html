@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>추석 전단지 고르기 — 청주 한마음보청기</title>
+<style>
+/* 학교안심 운동장 L — 원장님이 정하신 서체 (KERIS · OFL) */
+@font-face { font-family:'운동장'; src:url('undongjang.woff2') format('woff2');
+             font-weight:100 900; font-style:normal; font-display:swap; }
+:root { --bg:#F6F1E8; --surface:#FFFFFF; --ink:#2E2A25; --muted:#7A6E62;
+        --line:#E4DACB; --gold:#C89A2E; --blue:#0D519B; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--ink);
+       font-family:'운동장','Malgun Gothic',sans-serif; font-size:18px; line-height:1.7; }
+.wrap { max-width:560px; margin:0 auto; padding:34px 16px 90px; }
+h1 { font-size:31px; margin:0 0 8px; line-height:1.3; color:var(--blue); }
+.lede { margin:0 0 10px; color:var(--muted); font-size:17px; }
+.도움 { background:#FFF8EA; border:2px solid #F0DFB8; border-radius:14px;
+        padding:16px 18px; font-size:16px; color:#6B5320; margin:16px 0 30px; }
+
+section { background:var(--surface); border:2px solid var(--line); border-radius:18px;
+          padding:22px 18px 20px; margin-bottom:22px; }
+.배지 { display:inline-block; background:var(--blue); color:#fff; font-size:15px;
+        padding:6px 15px; border-radius:999px; }
+h2 { font-size:24px; margin:12px 0 4px; }
+.누구 { color:var(--muted); font-size:16px; margin:0 0 14px; }
+img { width:100%; height:auto; display:block; border:1px solid var(--line);
+      border-radius:10px; background:#fff; }
+.왜 { margin:14px 0 0; padding:0 0 0 18px; color:var(--muted); font-size:16px; }
+.왜 li { margin:4px 0; }
+
+.고름 { width:100%; margin-top:16px; padding:16px; border-radius:14px;
+        border:2px solid var(--line); background:#fff; color:var(--ink);
+        font-family:inherit; font-size:18px; cursor:pointer; }
+.고름[aria-pressed="true"] { background:var(--blue); border-color:var(--blue); color:#fff; }
+.고름 .동 { display:inline-block; width:20px; height:20px; border-radius:50%;
+            border:2px solid currentColor; vertical-align:-4px; margin-right:9px; }
+.고름[aria-pressed="true"] .동 { background:#fff; border-color:#fff; }
+
+label { display:block; font-size:17px; margin:26px 0 8px; }
+textarea { width:100%; min-height:110px; padding:14px; border-radius:14px;
+           border:2px solid var(--line); font-family:inherit; font-size:17px;
+           line-height:1.6; resize:vertical; background:#fff; color:var(--ink); }
+.보내 { width:100%; margin-top:16px; padding:18px; border:0; border-radius:14px;
+        background:var(--blue); color:#fff; font-family:inherit; font-size:19px;
+        cursor:pointer; }
+.난것 { display:none; margin-top:18px; background:#fff; border:2px dashed var(--line);
+        border-radius:14px; padding:16px; white-space:pre-wrap; font-size:16px; }
+.복사 { width:100%; margin-top:12px; padding:15px; border:2px solid var(--blue);
+        border-radius:14px; background:#fff; color:var(--blue);
+        font-family:inherit; font-size:17px; cursor:pointer; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>추석 전단지, 어느 쪽으로 갈까요</h1>
+  <p class="lede">두 가지로 만들어 봤습니다. 명함처럼 <b>누구에게 주느냐</b>로 갈랐습니다.</p>
+
+  <div class="도움">
+    둘 다 만들어도 되고, 하나만 만들어도 됩니다.<br>
+    A4 한 면이고 글씨체는 말씀하신 학교안심 운동장 L 입니다.
+  </div>
+
+  <section>
+    <span class="배지">첫째</span>
+    <h2>경로당·행사에서 돌리는 것</h2>
+    <p class="누구">받으시는 분 — 어르신 본인</p>
+    <img src="chuseok-a.png" alt="경로당용 추석 전단지 시안">
+    <ul class="왜">
+      <li>글씨를 크게 두고 혜택을 맨 위로 올렸습니다</li>
+      <li>「검사비 없음 · 한 달 무료 체험 · 정부지원 상담」 셋을 먼저 보이게 했습니다</li>
+      <li>아래에 경로당 단체검사 안내를 넣었습니다 — 회장님이 보시는 자리입니다</li>
+    </ul>
+    <button type="button" class="고름" data-id="경로당용" aria-pressed="false">
+      <span class="동"></span>이게 좋아요
+    </button>
+  </section>
+
+  <section>
+    <span class="배지">둘째</span>
+    <h2>매장 앞·병원에 두는 것</h2>
+    <p class="누구">읽으시는 분 — 추석에 부모님 뵈러 온 자녀</p>
+    <img src="chuseok-b.png" alt="자녀용 추석 전단지 시안">
+    <ul class="왜">
+      <li>어르신은 본인 청력이 나빠진 걸 잘 모르십니다. 먼저 알아채는 쪽이 자녀입니다</li>
+      <li>여섯 가지를 직접 체크해 보게 만들었습니다</li>
+      <li>「검사만 받고 가셔도 된다」를 크게 넣어 부담을 덜었습니다</li>
+    </ul>
+    <button type="button" class="고름" data-id="자녀용" aria-pressed="false">
+      <span class="동"></span>이게 좋아요
+    </button>
+  </section>
+
+  <label for="말">고치고 싶은 곳이나 하고 싶은 말씀</label>
+  <textarea id="말" placeholder="예) 첫째 것으로 하되 글씨를 더 크게 / 연휴에 쉬는 날을 넣어 주세요"></textarea>
+
+  <button type="button" class="보내" id="만들기">적은 것 모아 보기</button>
+  <div class="난것" id="난것"></div>
+  <button type="button" class="복사" id="복사" style="display:none">글 복사하기</button>
+</div>
+
+<script>
+var 고른것 = [];
+document.querySelectorAll('.고름').forEach(function (b) {
+  b.addEventListener('click', function () {
+    var 켬 = b.getAttribute('aria-pressed') === 'true';
+    b.setAttribute('aria-pressed', 켬 ? 'false' : 'true');
+    var id = b.dataset.id;
+    if (켬) { 고른것 = 고른것.filter(function (x) { return x !== id; }); }
+    else if (고른것.indexOf(id) < 0) { 고른것.push(id); }
+  });
+});
+
+document.getElementById('만들기').addEventListener('click', function () {
+  var 줄 = '한마음 추석 전단지 - 최경애 원장 의견' + String.fromCharCode(10) + String.fromCharCode(10);
+  줄 += 고른것.length ? '고른 것 : ' + 고른것.join(' , ') : '고른 것 : 아직 못 정함';
+  var 말 = document.getElementById('말').value.trim();
+  if (말) { 줄 += String.fromCharCode(10) + String.fromCharCode(10) + '하고 싶은 말 :' + String.fromCharCode(10) + 말; }
+  줄 += String.fromCharCode(10) + String.fromCharCode(10) + '(' + new Date().toISOString().slice(0, 10) + ')';
+  var 칸 = document.getElementById('난것');
+  칸.textContent = 줄;
+  칸.style.display = 'block';
+  document.getElementById('복사').style.display = 'block';
+  칸.scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
+
+document.getElementById('복사').addEventListener('click', function () {
+  var 글 = document.getElementById('난것').textContent;
+  var 끝 = function () {
+    var b = document.getElementById('복사');
+    b.textContent = '복사했습니다 — 대표님께 붙여 넣어 주세요';
+    setTimeout(function () { b.textContent = '글 복사하기'; }, 2600);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(글).then(끝, 끝);
+  } else {
+    var t = document.createElement('textarea');
+    t.value = 글; document.body.appendChild(t); t.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(t); 끝();
+  }
+});
+</script>
+</body>
+</html>
