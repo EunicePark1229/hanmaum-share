@@ -414,5 +414,173 @@ function 처음부터(){ 보냈나 = false; 지금 = 0; 그리기(); }
 
 그리기();
 </script>
+<!-- 의견칸 시작 — 붙이기.py 가 넣습니다. 손으로 고치지 마십시오 -->
+<!-- ─────────────────────────────────────────────────────────────
+  _의견칸.html — 시안마다 아래에 붙이는 「이 화면 어떠세요」
+
+  ⛔ 왜 있나 — 2026-09-09 유니스 지적.
+     「UAT 라든가 UI 를 만들 때는 끊임없이 피드백 프로세스를 붙이잖아.
+      왜 그런 기본적인 컨셉도 반영이 안 됐지」
+
+     화면 다섯을 만들면서 **화면 자체에 대한 의견을 받는 자리를 하나도
+     안 만들었다.** 만들어서 「보세요」로 던진 것이다.
+
+  ⚠️ 「그 밖」 칸이 반드시 있다 — 사람규칙. 내가 만든 선택지 안에만 두면
+     상대가 원하는 것이 없을 때 말을 못 하고 아무거나 고른다.
+
+  ⚠️ **거짓 성공을 안 띄운다.** 출처가 달라 `no-cors` 로는 답을 못 읽는다.
+     JSONP 로 실제 답을 받고, 못 받으면 못 받았다고 적는다 —
+     2026-09-03 에 「r.됨 을 안 보고 성공 화면을 띄운」 사고가 있었다.
+
+  쓰는 법 — 시안 HTML 의 </body> 앞에 이 파일 내용을 그대로 붙인다.
+           `data-화면` 에 그 화면 이름을 적는다.
+───────────────────────────────────────────────────────────── -->
+<div id="의견칸" data-화면="C_하나씩">
+  <style>
+    #의견칸{margin:34px 0 0;padding:22px 18px 26px;background:#F6ECE2;
+      border-top:2px solid #8B5E3C;font-family:"Noto Sans KR",sans-serif}
+    #의견칸 h3{margin:0 0 5px;font-size:19px;color:#2A2118;font-weight:500}
+    #의견칸 .안내{margin:0 0 16px;font-size:15px;color:#6B5D50;line-height:1.65}
+    #의견칸 .고름{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+    #의견칸 .고름 button{flex:1 1 auto;min-height:52px;padding:12px 14px;
+      font-size:16px;font-family:inherit;color:#2A2118;background:#fff;
+      border:1.5px solid #EBDFD2;border-radius:10px;cursor:pointer}
+    #의견칸 .고름 button.on{background:#8B5E3C;border-color:#8B5E3C;color:#fff}
+    #의견칸 label{display:block;font-size:15px;color:#2A2118;margin:0 0 7px}
+    #의견칸 textarea{width:100%;min-height:96px;padding:13px;font-size:16px;
+      font-family:inherit;color:#2A2118;background:#fff;border:1.5px solid #EBDFD2;
+      border-radius:10px;line-height:1.6;resize:vertical;box-sizing:border-box}
+    #의견칸 .보냄{width:100%;min-height:56px;margin-top:14px;font-size:17px;
+      font-family:inherit;color:#fff;background:#8B5E3C;border:0;border-radius:10px;
+      cursor:pointer}
+    #의견칸 .보냄[disabled]{background:#C9B8A8;cursor:default}
+    #의견칸 .끝말{margin:12px 0 0;font-size:15px;line-height:1.6;color:#2F5D46}
+    #의견칸 .끝말.안됨{color:#9C3A2E}
+    #의견칸 .끝말 a{color:inherit}
+    #의견칸 .샛길{margin-top:12px}
+    #의견칸 .샛길 textarea{min-height:76px;background:#FBF6F1}
+    #의견칸 .샛길단추{display:flex;gap:8px;margin-top:9px}
+    #의견칸 .샛길단추 button,#의견칸 .샛길단추 a{flex:1 1 0;min-height:52px;
+      display:flex;align-items:center;justify-content:center;font-size:16px;
+      font-family:inherit;text-decoration:none;border-radius:10px;cursor:pointer;
+      color:#2A2118;background:#fff;border:1.5px solid #8B5E3C}
+  </style>
+
+  <h3>이 화면, 어떠세요?</h3>
+  <p class="안내">고치면 좋겠다 싶은 것을 그냥 적어 주세요.<br>
+    한 줄이어도 되고, 안 적으셔도 됩니다.</p>
+
+  <div class="고름" id="의견고름"></div>
+
+  <label for="의견글">이 밖에 다르게 하고 싶으시면</label>
+  <textarea id="의견글" placeholder="예 — 글씨가 작아요 · 이 칸은 없어도 돼요 · 순서를 바꿔 주세요"></textarea>
+
+  <button class="보냄" id="의견보냄" onclick="의견보내기()">보내기</button>
+  <p class="끝말" id="의견끝말" hidden></p>
+
+  <!-- 못 보냈을 때 — 「막혔습니다」로 끝내지 않는다. 가는 길을 같이 준다 -->
+  <div class="샛길" id="의견샛길" hidden>
+    <textarea id="의견베낄것" readonly></textarea>
+    <div class="샛길단추">
+      <button type="button" onclick="의견베끼기()">글 복사</button>
+      <a href="https://t.me/hanmaum_hearing_bot" target="_blank"
+         rel="noopener">텔레그램 열기</a>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var 주소 = 'https://script.google.com/macros/s/AKfycbwQ_WIS4yu5G1s9ctfDozlT7FVPJEdxie6NM40ATLjknrXj5vLBl6PSys3pJeRF6FN5/exec';
+  // ⚠️ 맨 끝에 「이 밖에」가 있다 — 내가 만든 선택지 안에만 두지 않는다
+  var 고를것 = ['이대로 좋아요','글씨가 작아요','칸이 많아요','어디를 눌러야 할지 모르겠어요'];
+  var 고른것 = [];
+
+  var 칸 = document.getElementById('의견고름');
+  고를것.forEach(function(말, i){
+    var b = document.createElement('button');
+    b.type = 'button'; b.textContent = 말;
+    b.onclick = function(){
+      var k = 고른것.indexOf(말);
+      if (k < 0) { 고른것.push(말); b.classList.add('on'); }
+      else { 고른것.splice(k,1); b.classList.remove('on'); }
+    };
+    칸.appendChild(b);
+  });
+
+  window.의견베끼기 = function(){
+    var t = document.getElementById('의견베낄것');
+    t.select(); t.setSelectionRange(0, 99999);
+    var 됨 = false;
+    try { 됨 = document.execCommand('copy'); } catch (e) {}
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(t.value).then(function(){}, function(){});
+      됨 = true;
+    }
+    var 끝 = document.getElementById('의견끝말');
+    끝.hidden = false; 끝.className = '끝말';
+    끝.textContent = 됨 ? '복사했습니다. 텔레그램에 붙여 넣어 주세요.'
+                        : '글을 길게 눌러 복사해 주세요.';
+  };
+
+  window.의견보내기 = function(){
+    var 글 = document.getElementById('의견글').value.trim();
+    var b = document.getElementById('의견보냄');
+    var 끝 = document.getElementById('의견끝말');
+    if (!고른것.length && !글) {
+      끝.hidden = false; 끝.className = '끝말 안됨';
+      끝.textContent = '하나 고르시거나 한 줄 적어 주세요.';
+      return;
+    }
+    var 화면 = document.getElementById('의견칸').getAttribute('data-화면') || '';
+    b.disabled = true; b.textContent = '보내는 중';
+    끝.hidden = true;
+    document.getElementById('의견샛길').hidden = true;
+
+    // JSONP — 출처가 달라 fetch 로는 답을 못 읽는다.
+    // ⚠️ 답을 실제로 받은 뒤에만 「보냈습니다」를 띄운다.
+    // ⛔ 이름을 영문으로 둔다. 서버가 [A-Za-z0-9_] 밖을 지우므로
+    //    한글로 지으면 이름이 통째로 사라져 답이 영영 안 온다 (2026-09-09).
+    var 이름 = 'fb' + Date.now();
+    var 잰다 = setTimeout(function(){ 끝났다(false, '답이 안 왔습니다'); }, 12000);
+    window[이름] = function(r){
+      clearTimeout(잰다);
+      끝났다(!!(r && r.됨), (r && r.말) || '까닭을 모르겠습니다');
+    };
+    function 끝났다(됨, 말){
+      try { delete window[이름]; } catch(e) { window[이름] = undefined; }
+      if (s.parentNode) s.parentNode.removeChild(s);
+      b.disabled = false; b.textContent = '보내기';
+      끝.hidden = false;
+      if (됨) {
+        끝.className = '끝말';
+        끝.textContent = '잘 받았습니다. 고쳐서 다시 보여 드리겠습니다.';
+        b.textContent = '한 번 더 적기';
+      } else {
+        끝.className = '끝말 안됨';
+        끝.textContent = '이 화면에서는 바로 못 보냈습니다 (' + 말 + '). '
+          + '아래 글을 복사해서 텔레그램으로 보내 주시면 똑같이 받습니다.';
+        // ⚠️ 「막혔습니다」로 끝내지 않는다 — 가는 길을 같이 준다.
+        //    구글에 로그인이 안 된 브라우저에서는 위 길이 막힌다.
+        var 샛 = document.getElementById('의견샛길');
+        document.getElementById('의견베낄것').value =
+          '[' + (화면 || '시안') + '] '
+          + (고른것.join(' · ') || '')
+          + (글 ? (고른것.length ? ' / ' : '') + 글 : '');
+        샛.hidden = false;
+      }
+    }
+    var q = '?p=feedback&cb=' + 이름   // ⛔ 주소에 한글을 안 쓴다 (2026-09-06 사고)
+      + '&s=' + encodeURIComponent(화면)
+      + '&w=' + encodeURIComponent(고른것.join(' · '))
+      + '&m=' + encodeURIComponent(글);
+    var s = document.createElement('script');
+    s.src = 주소 + q;
+    s.onerror = function(){ 끝났다(false, '연결이 안 됐습니다'); };
+    document.body.appendChild(s);
+  };
+})();
+</script>
+<!-- 의견칸 끝 -->
 </body>
 </html>
