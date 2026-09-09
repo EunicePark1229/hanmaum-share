@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>일일장부 — 한마음보청기</title>
+<!--
+  일일장부 — 원장님이 폰에서 그날 것을 바로 적으시는 화면
+
+  이 화면이 하는 일 하나
+    금전출납부 한 줄을 손이 제일 적게 가게 적는다.
+
+  칸과 순서는 지금 쓰시는 엑셀 그대로다
+    월 · 일 · 과목 · 매입(구입)처 · 결제내역 · 금액 · 결제수단 · 비고
+    (01_한마음 판매현황_2026.xlsx 의 금전출납부 시트 3행)
+
+  미리 채워 둔 값은 지어낸 것이 아니다
+    과목 10 · 결제수단 4 · 자주 쓰는 거래처 13 은 04_산출/장부_칸값.json 을
+    그대로 옮겼다. 빈도순이라 자주 쓰시는 것이 위에 온다.
+    과목별 거래처·결제수단·비고는 같은 시트 134줄을 세어 넣은 것이다 —
+    13_운송비는 27줄이 전부 「우체국택배 · 카드 · 하나_경애」였다.
+    그래서 과목 하나를 누르면 나머지가 따라 채워진다. 손이 네 번 준다.
+
+  지킨 것
+    · 굵기로 위계를 안 만든다 — 서체(학교안심 운동장 L)에 굵기가 한 종뿐이다.
+      크기 · 색 · 자리 · 여백만 쓴다.
+    · 누르는 것 52px 이상 · 본문 17px · 폭 390px 에서 가로 스크롤 0.
+    · 필수 칸이 없다. 하나만 적어도 저장된다.
+    · 색 하나에 뜻을 안 싣는다 — 들어온 돈·나간 돈은 색과 함께 글자로도 적는다.
+    · 저장은 이 폰 안(localStorage)뿐이다. 밖으로 내보내는 자리가 없다.
+    · 손익·세무 판정, 청력 수치는 한 글자도 없다.
+
+  이걸 만들면서 그만둔 것 — 그날 것을 저녁에 몰아서 엑셀에 옮겨 적는 것.
+-->
+<style>
+:root{
+  --bg:#FDF6EE;
+  --card:#FFFFFF;
+  --ink:#2A2118;
+  --sub:#5F5044;
+  --line:#EBDFD2;
+  --main:#8B5E3C;
+  --deep:#6E4527;
+  --soft:#F6EADD;
+  --in:#2F5D46;        /* 들어온 돈 — 글자로도 적는다 */
+  --off:#8A7B6D;
+  --bar:64px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{max-width:100%;overflow-x:hidden}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:'운동장','Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
+  font-weight:400;                 /* 굵기는 쓰지 않는다 */
+  font-size:17px;line-height:1.7;
+  word-break:keep-all;
+  -webkit-text-size-adjust:100%;
+  padding-bottom:calc(var(--bar) + 26px);
+}
+h1,h2,h3,b,strong{font-weight:inherit;margin:0;font-size:inherit;line-height:inherit}
+button,input{font-family:inherit;font-weight:inherit;color:inherit;font-size:inherit}
+input{-webkit-appearance:none;appearance:none;border-radius:0}
+
+.wrap{max-width:430px;margin:0 auto;padding:12px 14px 0}
+
+/* ── 한 칸 ───────────────────────────────────────── */
+.칸{margin-bottom:18px}
+.칸 .이름{font-size:15px;color:var(--sub);margin:0 3px 7px;display:flex;
+     align-items:baseline;gap:7px}
+.칸 .이름 .곁{font-size:14px;color:var(--off)}
+.글칸{width:100%;height:56px;border:2px solid var(--line);border-radius:14px;
+     padding:0 13px;font-size:17px;background:var(--card);color:var(--ink)}
+.글칸::placeholder{color:#B8A794}
+.글칸:focus{outline:none;border-color:var(--main)}
+.글칸.찼음{border-color:#DCC9B2}
+
+/* ── 날짜 ───────────────────────────────────────── */
+.날{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.날 .상자{display:flex;align-items:center;gap:5px;border:2px solid var(--line);
+     border-radius:14px;background:var(--card);height:56px;padding:0 11px 0 6px}
+/* 상자 아무 데나 눌러도 커서가 들어가게 — 칸 자체가 52px 을 채운다 */
+.날 .상자 input{width:44px;height:100%;border:0;background:transparent;text-align:center;
+     font-size:24px;color:var(--deep);padding:0;outline:none}
+.날 .상자 .u{font-size:16px;color:var(--sub)}
+.날 .상자:focus-within{border-color:var(--main)}
+.날 .요일{font-size:16px;color:var(--sub);flex:1 1 auto;min-width:0;padding-left:2px}
+.날 .옮김{display:flex;gap:6px;flex:1 1 auto}
+.날 .옮김 button{flex:1 1 0;min-width:0;height:56px;border:2px solid var(--line);
+     background:var(--card);border-radius:14px;color:var(--sub);font-size:16px;
+     cursor:pointer;padding:0 8px}
+.날 .옮김 button.켬{border-color:var(--main);background:var(--soft);color:var(--main)}
+
+/* ── 고르는 칩 ──────────────────────────────────── */
+.둘{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.셋{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.둘 button,.셋 button{min-height:56px;padding:8px 6px;border:2px solid var(--line);
+     background:var(--card);border-radius:14px;font-size:16px;line-height:1.35;
+     color:var(--ink);cursor:pointer}
+.둘 button.켬,.셋 button.켬{border-color:var(--main);background:var(--main);color:#FFF}
+.둘 button.밖,.셋 button.밖{color:var(--sub);border-style:dashed}
+.둘 button.밖.켬,.셋 button.밖.켬{color:#FFF;border-style:solid}
+
+.칩{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+.칩 button{min-height:52px;padding:0 13px;border:2px solid var(--line);
+     background:var(--card);border-radius:14px;font-size:16px;color:var(--sub);
+     cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;
+     white-space:nowrap}
+.칩 button.켬{border-color:var(--main);background:var(--soft);color:var(--main)}
+.칩 .더{border-style:dashed;color:var(--off)}
+
+/* ── 금액 ───────────────────────────────────────── */
+.돈{display:flex;align-items:center;gap:9px;border:2px solid var(--line);
+     border-radius:14px;background:var(--card);height:66px;padding:0 13px}
+.돈:focus-within{border-color:var(--main)}
+.돈 input{flex:1 1 auto;min-width:0;height:100%;border:0;background:transparent;
+     text-align:right;font-size:28px;color:var(--deep);padding:0;outline:none;
+     letter-spacing:.01em}
+.돈 .원{font-size:17px;color:var(--sub);flex:0 0 auto}
+.돈말{font-size:15px;color:var(--sub);margin:7px 3px 0;line-height:1.6}
+.돈말.들어옴{color:var(--in)}
+
+/* ── 알림 한 줄 ─────────────────────────────────── */
+.말{font-size:15px;color:var(--sub);margin:9px 3px 0;line-height:1.6}
+.말.짚음{color:#9C3A2E}
+.말.됨{color:var(--in)}
+
+/* ── 저장 ───────────────────────────────────────── */
+.끝단추{display:flex;gap:9px;margin:22px 0 8px}
+.끝단추 button{flex:1 1 0;min-height:60px;border-radius:15px;font-size:18px;cursor:pointer}
+.끝단추 .넣기{border:2px solid var(--main);background:var(--main);color:#FFF}
+.끝단추 .그만{flex:0 0 104px;border:2px solid var(--line);background:var(--card);color:var(--sub)}
+
+/* ── 나눔선 ─────────────────────────────────────── */
+.나눔{display:flex;align-items:center;gap:10px;margin:26px 2px 14px;
+     color:var(--sub);font-size:15px;white-space:nowrap}
+.나눔::before,.나눔::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* ── 목록 ───────────────────────────────────────── */
+.보기고름{display:flex;gap:7px;margin-bottom:12px}
+.보기고름 button{flex:1 1 0;min-height:52px;border:2px solid var(--line);
+     background:var(--card);border-radius:14px;font-size:16px;color:var(--sub);cursor:pointer}
+.보기고름 button.켬{border-color:var(--main);background:var(--soft);color:var(--main)}
+
+.합{background:var(--card);border:2px solid var(--line);border-radius:16px;
+     padding:11px 14px;margin-bottom:12px}
+.합 .줄{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+     padding:6px 0}
+.합 .줄+.줄{border-top:1px solid var(--line)}
+.합 .l{font-size:16px;color:var(--sub)}
+.합 .v{font-size:22px;color:var(--deep);white-space:nowrap}
+.합 .v small{font-size:15px;color:var(--sub);margin-left:2px}
+.합 .줄.들어옴 .v{color:var(--in)}
+
+.줄칸{background:var(--card);border:2px solid var(--line);border-radius:16px;
+     margin-bottom:9px;overflow:hidden}
+.줄칸.펼침{border-color:var(--main)}
+.줄머리{display:flex;align-items:flex-start;gap:10px;width:100%;min-height:56px;
+     padding:12px 13px;border:0;background:transparent;text-align:left;cursor:pointer}
+.줄머리 .왼{flex:1 1 auto;min-width:0}
+.줄머리 .첫{display:block;font-size:17px;line-height:1.4;overflow:hidden;
+     text-overflow:ellipsis;white-space:nowrap}
+.줄머리 .둘째{display:block;font-size:15px;color:var(--sub);line-height:1.5;
+     margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.줄머리 .오{flex:0 0 auto;text-align:right}
+.줄머리 .돈값{display:block;font-size:19px;color:var(--deep);white-space:nowrap}
+.줄머리 .돈값.들어옴{color:var(--in)}
+.줄머리 .꼬리{display:block;font-size:14px;color:var(--sub);white-space:nowrap}
+.줄속{padding:0 13px 13px;border-top:1px solid var(--line)}
+.줄속 .자세{font-size:15px;color:var(--sub);line-height:1.65;padding:11px 1px 0}
+.줄단추{display:flex;gap:8px;margin-top:11px}
+.줄단추 button{flex:1 1 0;min-height:56px;border-radius:14px;font-size:16px;cursor:pointer;
+     border:2px solid var(--line);background:var(--card);color:var(--ink);padding:0 6px}
+.줄단추 .고침{border-color:var(--main);color:var(--main);background:var(--soft)}
+.줄단추 .지움{color:#9C3A2E}
+.줄단추 .진짜{background:#9C3A2E;border-color:#9C3A2E;color:#FFF}
+
+.빈{border:2px dashed var(--line);border-radius:16px;padding:26px 16px;
+     text-align:center;color:var(--sub);font-size:16px;line-height:1.7}
+
+.꼬리말{margin:22px 3px 0;font-size:15px;color:var(--sub);line-height:1.7}
+.베끼기{width:100%;min-height:56px;margin-top:12px;border:2px solid var(--line);
+     background:var(--card);border-radius:14px;color:var(--sub);font-size:16px;
+     cursor:pointer;padding:0 10px}
+
+/* ── 아래 띠 — 그날 합계가 늘 보이게 ─────────────── */
+.띠{position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(253,246,238,.98);
+     border-top:2px solid var(--line);padding:9px 14px calc(9px + env(safe-area-inset-bottom))}
+.띠 .속{max-width:430px;margin:0 auto;display:flex;align-items:center;gap:10px}
+.띠 .날짜{font-size:15px;color:var(--sub);flex:0 0 auto}
+.띠 .수{flex:1 1 auto;min-width:0;text-align:right;font-size:16px;line-height:1.35;
+     color:var(--deep);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.띠 .수 .들{color:var(--in)}
+.띠 .수 .곁{font-size:14px;color:var(--sub)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ① 월 · 일 — 오늘로 미리 채워 둔다 -->
+  <div class="칸">
+    <div class="날">
+      <div class="상자">
+        <input id="월" inputmode="numeric" maxlength="2" aria-label="월"><span class="u">월</span>
+      </div>
+      <div class="상자">
+        <input id="일" inputmode="numeric" maxlength="2" aria-label="일"><span class="u">일</span>
+      </div>
+      <span class="요일" id="요일"></span>
+    </div>
+    <div class="날" style="margin-top:8px">
+      <div class="옮김">
+        <button type="button" id="어제" onclick="날옮기기(-1)">하루 앞</button>
+        <button type="button" id="오늘로" onclick="오늘로()">오늘</button>
+        <button type="button" id="내일" onclick="날옮기기(1)">하루 뒤</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ② 과목 -->
+  <div class="칸">
+    <div class="이름">과목</div>
+    <div class="둘" id="과목칸"></div>
+    <input class="글칸" id="과목직접" hidden placeholder="과목을 그대로 적어 주세요"
+           style="margin-top:8px">
+    <p class="말" id="따라채움" hidden></p>
+  </div>
+
+  <!-- ③ 매입(구입)처 -->
+  <div class="칸">
+    <div class="이름">매입(구입)처</div>
+    <input class="글칸" id="처" placeholder="눌러서 고르시거나 적어 주세요">
+    <div class="칩" id="처칩"></div>
+  </div>
+
+  <!-- ④ 결제내역 -->
+  <div class="칸">
+    <div class="이름">결제내역</div>
+    <input class="글칸" id="내역" placeholder="예 — 조순례님 신규보청기 발송">
+  </div>
+
+  <!-- ⑤ 금액 -->
+  <div class="칸">
+    <div class="이름">금액</div>
+    <div class="돈">
+      <input id="금액" inputmode="numeric" placeholder="0" aria-label="금액">
+      <span class="원">원</span>
+    </div>
+    <p class="돈말" id="돈말">과목을 고르시면 들어온 돈인지 나간 돈인지 여기에 적힙니다.</p>
+  </div>
+
+  <!-- ⑥ 결제수단 -->
+  <div class="칸">
+    <div class="이름">결제수단</div>
+    <div class="셋" id="수단칸"></div>
+    <input class="글칸" id="수단직접" hidden placeholder="결제수단을 그대로 적어 주세요"
+           style="margin-top:8px">
+  </div>
+
+  <!-- ⑦ 비고 -->
+  <div class="칸">
+    <div class="이름">비고 <span class="곁">안 적으셔도 됩니다</span></div>
+    <input class="글칸" id="비고" placeholder="어느 카드·통장인지">
+    <div class="칩" id="비고칩"></div>
+  </div>
+
+  <div class="끝단추">
+    <button type="button" class="넣기" id="저장" onclick="넣기()">한 줄 넣기</button>
+    <button type="button" class="그만" id="그만" hidden onclick="고치기그만()">그만</button>
+  </div>
+  <p class="말" id="알림" hidden></p>
+
+  <!-- ── 적은 것 ────────────────────────────────── -->
+  <div class="나눔" id="목록머리">적은 것</div>
+
+  <div class="보기고름">
+    <button type="button" id="보기날" class="켬" onclick="보기('날')">이 날</button>
+    <button type="button" id="보기달" onclick="보기('달')">이 달 전체</button>
+  </div>
+
+  <div class="합" id="합계"></div>
+  <div id="목록"></div>
+
+  <button type="button" class="베끼기" onclick="베끼기()">
+    보이는 것 베끼기 — 엑셀에 붙여 넣게</button>
+
+  <p class="꼬리말">
+    여기 적은 것은 이 폰 안에만 남습니다. 밖으로 나가지 않습니다.<br>
+    폰을 바꾸시거나 브라우저 기록을 지우시면 함께 지워지니, 엑셀에는 따로 옮겨 두시면 좋습니다.
+  </p>
+</div>
+
+<div class="띠" id="띠" hidden>
+  <div class="속">
+    <span class="날짜" id="띠날짜"></span>
+    <span class="수" id="띠수"></span>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ── 값 — 04_산출/장부_칸값.json 을 그대로 옮긴 것 (빈도순) ────── */
+  var 과목목록 = ["매출","13_운송비","08_광고선전비","80_기타판관비","매입",
+                "07_수도광열비","06_여비교통비","10_접대비","05_세금과공과","02_식비회식비"];
+  var 수단목록 = ["카드","계좌이체","입금","현금"];
+  var 자주쓰는처 = ["우체국택배","비즈하우스","나스콤","한국전력공사","다이소몰","미리캔버스",
+                 "국민건강보험공단","구글_제미나이","조순례","옥션","복음보청기",
+                 "더블유에스올로지","방문구매"];
+  var 비고목록 = ["하나_경애","사업자통장","NH체크카드","신한카드","삼성카드","비씨카드","현금"];
+
+  /* 과목별로 늘 쓰시던 것 — 금전출납부 134줄을 세어 넣었다.
+     처가 하나뿐이거나 결제수단·비고가 여덟 할을 넘으면 눌렀을 때 따라 채운다. */
+  var 과목별 = {
+    "매출":         {처:["국민건강보험공단","조순례","방문구매","김선희"]},
+    "13_운송비":    {처:["우체국택배"], 수단:"카드", 비고:"하나_경애"},
+    "08_광고선전비":{처:["비즈하우스","미리캔버스","구글_제미나이","네이버페이"],
+                    수단:"카드", 비고:"하나_경애"},
+    "80_기타판관비":{처:["나스콤","다이소몰","옥션","CJ온스타일","지마켓"],
+                    수단:"카드", 비고:"하나_경애"},
+    "매입":         {처:["복음보청기","더블유에스올로지","지엔히어링코리아","소노바코리아유한회사"],
+                    수단:"계좌이체", 비고:"사업자통장"},
+    "07_수도광열비":{처:["한국전력공사"], 수단:"카드", 비고:"하나_경애"},
+    "06_여비교통비":{처:["그린주유소","주유비","휴게소"], 수단:"카드", 비고:"하나_경애"},
+    "10_접대비":    {처:["옥션","GS25금천점","이경원보청기"], 수단:"카드", 비고:"하나_경애"},
+    "05_세금과공과":{처:["지방세"], 수단:"계좌이체", 비고:"사업자통장"},
+    "02_식비회식비":{처:["에이뿔램"], 수단:"카드", 비고:"하나_경애"}
+  };
+
+  var 요일말 = ["일","월","화","수","목","금","토"];
+  var 키 = "한마음_일일장부_v1";
+
+  var 목록 = [];
+  var 지금 = {월:"", 일:"", 과목:"", 처:"", 내역:"", 금액:"", 수단:"", 비고:""};
+  var 따라 = {};          /* 과목 때문에 따라 채워진 칸 */
+  var 고치는중 = null;    /* 고치고 있는 줄의 id */
+  var 펼친것 = null;      /* 목록에서 열어 둔 줄 */
+  var 지울까 = null;      /* 지우기를 한 번 누른 줄 */
+  var 보는범위 = "날";
+  var 처더보기 = false;
+  /* 고르고 나면 접는다 — 화면이 짧아야 금액·저장이 한 화면에 온다 */
+  var 과목펼침 = true;
+  var 처펼침 = true;
+  var 수단펼침 = true;
+  var 비고펼침 = true;
+
+  function ㄱ(id){ return document.getElementById(id); }
+
+  /* ── 저장 ──────────────────────────────────────── */
+  function 읽어오기(){
+    try { 목록 = JSON.parse(localStorage.getItem(키) || "[]") || []; }
+    catch(e){ 목록 = []; }
+    if (Object.prototype.toString.call(목록) !== "[object Array]") 목록 = [];
+  }
+  function 저장하기(){
+    try { localStorage.setItem(키, JSON.stringify(목록)); return true; }
+    catch(e){
+      알림("이 폰에서는 저장이 안 됩니다. 화면을 닫으면 사라지니 엑셀에 옮겨 두시면 좋습니다.", "짚음");
+      return false;
+    }
+  }
+
+  /* ── 잔손 ──────────────────────────────────────── */
+  function 숫자만(v){ return String(v == null ? "" : v).replace(/[^0-9]/g, ""); }
+  function 콤마(v){
+    var n = 숫자만(v);
+    if (!n) return "";
+    n = String(parseInt(n, 10));
+    return n.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+  function 돈글(n){ return 콤마(String(n || 0)) || "0"; }
+  function 매출인가(과목){ return 과목 === "매출"; }
+  function 요일(월, 일){
+    var m = parseInt(월, 10), d = parseInt(일, 10);
+    if (!m || !d) return "";
+    var x = new Date(new Date().getFullYear(), m - 1, d);
+    if (x.getMonth() !== m - 1) return "";
+    return 요일말[x.getDay()] + "요일";
+  }
+  function 오늘날(){
+    var t = new Date();
+    return { 월: String(t.getMonth() + 1), 일: String(t.getDate()) };
+  }
+  function 알림(말, 결){
+    var p = ㄱ("알림");
+    if (!말) { p.hidden = true; return; }
+    p.hidden = false;
+    p.className = "말" + (결 ? " " + 결 : "");
+    p.textContent = 말;
+  }
+
+  /* ── 날짜 ──────────────────────────────────────── */
+  window.오늘로 = function(){
+    var o = 오늘날();
+    지금.월 = o.월; 지금.일 = o.일;
+    ㄱ("월").value = o.월; ㄱ("일").value = o.일;
+    날그리기(); 목록그리기();
+  };
+  window.날옮기기 = function(걸음){
+    var m = parseInt(지금.월, 10), d = parseInt(지금.일, 10);
+    if (!m || !d) { window.오늘로(); return; }
+    var x = new Date(new Date().getFullYear(), m - 1, d + 걸음);
+    지금.월 = String(x.getMonth() + 1);
+    지금.일 = String(x.getDate());
+    ㄱ("월").value = 지금.월; ㄱ("일").value = 지금.일;
+    날그리기(); 목록그리기();
+  };
+  function 날그리기(){
+    var o = 오늘날();
+    var 오늘인가 = (지금.월 === o.월 && 지금.일 === o.일);
+    ㄱ("요일").textContent = (오늘인가 ? "오늘 · " : "") + 요일(지금.월, 지금.일);
+    ㄱ("오늘로").className = 오늘인가 ? "켬" : "";
+  }
+
+  /* ── 칩 그리기 ─────────────────────────────────── */
+  function 단추(글, 켬, 누름, 덧){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.textContent = 글;
+    b.className = (덧 ? 덧 : "") + (켬 ? " 켬" : "");
+    b.setAttribute("aria-pressed", 켬 ? "true" : "false");
+    b.onclick = 누름;
+    return b;
+  }
+
+  function 과목그리기(){
+    var 통 = ㄱ("과목칸");
+    통.innerHTML = "";
+    var 자유 = !ㄱ("과목직접").hidden;
+    var 골랐나 = !자유 && 지금.과목 && 과목목록.indexOf(지금.과목) >= 0;
+
+    if (골랐나 && !과목펼침) {
+      통.appendChild(단추(지금.과목, true, function(){ 과목고름(지금.과목); }));
+      통.appendChild(단추("다른 과목", false, function(){
+        과목펼침 = true; 과목그리기();
+      }, "밖"));
+      return;
+    }
+    과목목록.forEach(function(코드){
+      통.appendChild(단추(코드, 지금.과목 === 코드, function(){ 과목고름(코드); }));
+    });
+    통.appendChild(단추("이 밖에", !!자유, function(){ 과목고름("__밖"); }, "밖"));
+  }
+
+  function 과목고름(코드){
+    /* 앞서 따라 채워진 칸은 먼저 비운다 — 안 그러면 옛 과목 것이 남는다 */
+    ["처","수단","비고"].forEach(function(k){
+      if (따라[k]) { 지금[k] = ""; 따라[k] = false; }
+    });
+    ㄱ("따라채움").hidden = true;
+
+    if (코드 === "__밖") {
+      지금.과목 = "";
+      과목펼침 = true; 처펼침 = true;
+      ㄱ("과목직접").hidden = false;
+      ㄱ("과목직접").value = "";
+      과목그리기(); 나머지그리기();
+      ㄱ("과목직접").focus();
+      return;
+    }
+    ㄱ("과목직접").hidden = true;
+    ㄱ("과목직접").value = "";
+    지금.과목 = (지금.과목 === 코드) ? "" : 코드;
+
+    var 채운것 = [];
+    var 정보 = 과목별[지금.과목];
+    if (정보) {
+      if (정보.처 && 정보.처.length === 1 && !지금.처) {
+        지금.처 = 정보.처[0]; 따라.처 = true; 채운것.push("매입(구입)처");
+      }
+      if (정보.수단 && !지금.수단) {
+        지금.수단 = 정보.수단; 따라.수단 = true; 채운것.push("결제수단");
+      }
+      if (정보.비고 && !지금.비고) {
+        지금.비고 = 정보.비고; 따라.비고 = true; 채운것.push("비고");
+      }
+    }
+    if (채운것.length) {
+      var 말 = ㄱ("따라채움");
+      말.hidden = false;
+      말.className = "말";
+      말.textContent = 채운것.join(" · ") + " 를 늘 쓰시던 것으로 채웠습니다. 다르면 눌러서 바꾸시면 됩니다.";
+    }
+    처더보기 = false;
+    과목펼침 = !지금.과목;          /* 골랐으면 접고, 껐으면 편다 */
+    처펼침 = !따라.처;              /* 거래처까지 따라 채웠으면 그것도 접는다 */
+    수단펼침 = !따라.수단;
+    비고펼침 = !따라.비고;
+    과목그리기();
+    나머지그리기();
+  }
+
+  function 처칩그리기(){
+    var 통 = ㄱ("처칩");
+    통.innerHTML = "";
+    var 정보 = 과목별[지금.과목];
+    var 목 = (정보 && 정보.처) ? 정보.처 : 자주쓰는처;
+    /* 고른 곳은 위 글칸에 이미 적혀 있다 — 칩으로 또 보이지 않는다 */
+    if (지금.처 && !처펼침 && 목.indexOf(지금.처) >= 0) {
+      통.appendChild(단추("다른 곳", false, function(){
+        처펼침 = true; 처칩그리기();
+      }, "밖"));
+      return;
+    }
+    var 보일것 = (목.length > 6 && !처더보기) ? 목.slice(0, 6) : 목;
+    보일것.forEach(function(이름){
+      통.appendChild(단추(이름, 지금.처 === 이름, function(){
+        var 껐나 = (지금.처 === 이름);
+        지금.처 = 껐나 ? "" : 이름;
+        따라.처 = false;
+        처펼침 = 껐나;
+        ㄱ("처").value = 지금.처;
+        나머지그리기();
+      }));
+    });
+    if (목.length > 6 && !처더보기) {
+      통.appendChild(단추("더 보기 " + (목.length - 6), false, function(){
+        처더보기 = true; 처칩그리기();
+      }, "더"));
+    }
+  }
+
+  function 수단그리기(){
+    var 통 = ㄱ("수단칸");
+    통.innerHTML = "";
+    if (지금.수단 && !수단펼침 && 수단목록.indexOf(지금.수단) >= 0
+        && ㄱ("수단직접").hidden) {
+      통.appendChild(단추(지금.수단, true, function(){
+        지금.수단 = ""; 따라.수단 = false; 수단펼침 = true; 수단그리기();
+      }));
+      통.appendChild(단추("다른 것", false, function(){
+        수단펼침 = true; 수단그리기();
+      }, "밖"));
+      return;
+    }
+    수단목록.forEach(function(이름){
+      통.appendChild(단추(이름, 지금.수단 === 이름, function(){
+        var 껐나 = (지금.수단 === 이름);
+        지금.수단 = 껐나 ? "" : 이름;
+        따라.수단 = false;
+        수단펼침 = 껐나;
+        ㄱ("수단직접").hidden = true;
+        ㄱ("수단직접").value = "";
+        수단그리기();
+      }));
+    });
+    var 밖 = !ㄱ("수단직접").hidden || (지금.수단 && 수단목록.indexOf(지금.수단) < 0);
+    통.appendChild(단추("이 밖에", !!밖, function(){
+      지금.수단 = ""; 따라.수단 = false; 수단펼침 = true;
+      ㄱ("수단직접").hidden = false;
+      ㄱ("수단직접").value = "";
+      수단그리기();
+      ㄱ("수단직접").focus();
+    }, "밖"));
+  }
+
+  function 비고칩그리기(){
+    var 통 = ㄱ("비고칩");
+    통.innerHTML = "";
+    if (지금.비고 && !비고펼침 && 비고목록.indexOf(지금.비고) >= 0) {
+      통.appendChild(단추("다른 것", false, function(){
+        비고펼침 = true; 비고칩그리기();
+      }, "밖"));
+      return;
+    }
+    비고목록.forEach(function(이름){
+      통.appendChild(단추(이름, 지금.비고 === 이름, function(){
+        var 껐나 = (지금.비고 === 이름);
+        지금.비고 = 껐나 ? "" : 이름;
+        따라.비고 = false;
+        비고펼침 = 껐나;
+        ㄱ("비고").value = 지금.비고;
+        비고칩그리기();
+      }));
+    });
+  }
+
+  function 돈말그리기(){
+    var p = ㄱ("돈말");
+    if (!지금.과목) {
+      p.className = "돈말";
+      p.textContent = "과목을 고르시면 들어온 돈인지 나간 돈인지 여기에 적힙니다.";
+      return;
+    }
+    if (매출인가(지금.과목)) {
+      p.className = "돈말 들어옴";
+      p.textContent = "들어온 돈 (매출) 으로 셉니다";
+    } else {
+      p.className = "돈말";
+      p.textContent = "나간 돈 으로 셉니다 · " + 지금.과목;
+    }
+  }
+
+  function 나머지그리기(){
+    ㄱ("처").value = 지금.처;
+    ㄱ("비고").value = 지금.비고;
+    처칩그리기(); 수단그리기(); 비고칩그리기(); 돈말그리기();
+    ["처","내역","비고"].forEach(function(id){
+      var e = ㄱ(id);
+      if (e.value) e.classList.add("찼음"); else e.classList.remove("찼음");
+    });
+  }
+
+  /* ── 넣기 · 고치기 ─────────────────────────────── */
+  window.넣기 = function(){
+    지금.내역 = ㄱ("내역").value.replace(/^\s+|\s+$/g, "");
+    지금.금액 = 숫자만(ㄱ("금액").value);
+    지금.처 = ㄱ("처").value.replace(/^\s+|\s+$/g, "");
+    지금.비고 = ㄱ("비고").value.replace(/^\s+|\s+$/g, "");
+    if (!ㄱ("과목직접").hidden) 지금.과목 = ㄱ("과목직접").value.replace(/^\s+|\s+$/g, "");
+    if (!ㄱ("수단직접").hidden) 지금.수단 = ㄱ("수단직접").value.replace(/^\s+|\s+$/g, "");
+    지금.월 = 숫자만(ㄱ("월").value);
+    지금.일 = 숫자만(ㄱ("일").value);
+
+    if (!지금.과목 && !지금.처 && !지금.내역 && !지금.금액) {
+      알림("적으신 것이 없습니다. 과목이든 금액이든 하나만 넣으셔도 저장됩니다.", "짚음");
+      return;
+    }
+
+    var 줄 = {
+      id: 고치는중 ? 고치는중 : ("z" + Date.now() + Math.floor(Math.random() * 1000)),
+      월: 지금.월, 일: 지금.일, 과목: 지금.과목, 처: 지금.처,
+      내역: 지금.내역, 금액: 지금.금액, 수단: 지금.수단, 비고: 지금.비고
+    };
+
+    if (고치는중) {
+      for (var i = 0; i < 목록.length; i++) {
+        if (목록[i].id === 고치는중) { 목록[i] = 줄; break; }
+      }
+    } else {
+      목록.push(줄);
+    }
+    var 됐나 = 저장하기();
+
+    var 고쳤던가 = !!고치는중;
+    고치는중 = null;
+    펼친것 = null; 지울까 = null;
+    ㄱ("그만").hidden = true;
+    ㄱ("저장").textContent = "한 줄 넣기";
+
+    /* 이어서 적으시게 과목·거래처·결제수단·비고는 남기고 내역과 금액만 비운다 */
+    지금.내역 = ""; 지금.금액 = "";
+    ㄱ("내역").value = ""; ㄱ("금액").value = "";
+
+    과목그리기(); 나머지그리기(); 목록그리기();
+    if (됐나) {
+      알림(고쳤던가 ? "고쳤습니다."
+                   : "적었습니다. 이어서 적으시면 과목·거래처는 그대로 씁니다.", "됨");
+    }
+  };
+
+  window.고치기그만 = function(){
+    고치는중 = null;
+    ㄱ("그만").hidden = true;
+    ㄱ("저장").textContent = "한 줄 넣기";
+    비우기();
+    알림("");
+  };
+
+  function 비우기(){
+    var o = 오늘날();
+    지금 = {월:o.월, 일:o.일, 과목:"", 처:"", 내역:"", 금액:"", 수단:"", 비고:""};
+    따라 = {};
+    ㄱ("월").value = o.월; ㄱ("일").value = o.일;
+    ㄱ("내역").value = ""; ㄱ("금액").value = "";
+    ㄱ("과목직접").hidden = true; ㄱ("과목직접").value = "";
+    ㄱ("수단직접").hidden = true; ㄱ("수단직접").value = "";
+    ㄱ("따라채움").hidden = true;
+    처더보기 = false;
+    과목펼침 = true; 처펼침 = true; 수단펼침 = true; 비고펼침 = true;
+    날그리기(); 과목그리기(); 나머지그리기(); 목록그리기();
+  }
+
+  window.줄고치기 = function(id){
+    var 줄 = null;
+    for (var i = 0; i < 목록.length; i++) if (목록[i].id === id) 줄 = 목록[i];
+    if (!줄) return;
+    고치는중 = id;
+    지금 = {월:줄.월, 일:줄.일, 과목:줄.과목, 처:줄.처, 내역:줄.내역,
+            금액:줄.금액, 수단:줄.수단, 비고:줄.비고};
+    따라 = {};
+    ㄱ("월").value = 줄.월; ㄱ("일").value = 줄.일;
+    ㄱ("내역").value = 줄.내역;
+    ㄱ("금액").value = 콤마(줄.금액);
+    ㄱ("따라채움").hidden = true;
+    ㄱ("과목직접").hidden = !(줄.과목 && 과목목록.indexOf(줄.과목) < 0);
+    ㄱ("과목직접").value = ㄱ("과목직접").hidden ? "" : 줄.과목;
+    ㄱ("수단직접").hidden = !(줄.수단 && 수단목록.indexOf(줄.수단) < 0);
+    ㄱ("수단직접").value = ㄱ("수단직접").hidden ? "" : 줄.수단;
+    처더보기 = true;
+    과목펼침 = false; 처펼침 = false; 수단펼침 = false; 비고펼침 = false;
+    ㄱ("저장").textContent = "고쳐 넣기";
+    ㄱ("그만").hidden = false;
+    펼친것 = null; 지울까 = null;
+    날그리기(); 과목그리기(); 나머지그리기(); 목록그리기();
+    알림("이 줄을 고치고 계십니다. 다 고치시면 「고쳐 넣기」를 눌러 주세요.");
+    window.scrollTo(0, 0);
+  };
+
+  window.줄지우기 = function(id, 진짜){
+    if (!진짜) { 지울까 = id; 목록그리기(); return; }
+    var 남은 = [];
+    for (var i = 0; i < 목록.length; i++) if (목록[i].id !== id) 남은.push(목록[i]);
+    목록 = 남은;
+    저장하기();
+    지울까 = null; 펼친것 = null;
+    if (고치는중 === id) { window.고치기그만(); }
+    목록그리기();
+    알림("한 줄 지웠습니다.", "됨");
+  };
+
+  window.줄열기 = function(id){
+    펼친것 = (펼친것 === id) ? null : id;
+    지울까 = null;
+    목록그리기();
+  };
+
+  window.보기 = function(범위){
+    보는범위 = 범위;
+    ㄱ("보기날").className = (범위 === "날") ? "켬" : "";
+    ㄱ("보기달").className = (범위 === "달") ? "켬" : "";
+    목록그리기();
+  };
+
+  /* ── 목록 ──────────────────────────────────────── */
+  function 보이는것(){
+    var 난것 = [];
+    for (var i = 0; i < 목록.length; i++) {
+      var z = 목록[i];
+      if (String(z.월) !== String(지금.월)) continue;
+      if (보는범위 !== "달" && String(z.일) !== String(지금.일)) continue;
+      난것.push(z);
+    }
+    return 난것;
+  }
+
+  function 목록그리기(){
+    var 것들 = 보이는것();
+    var 들어온 = 0, 나간 = 0;
+    것들.forEach(function(z){
+      var 값 = parseInt(숫자만(z.금액) || "0", 10);
+      if (매출인가(z.과목)) 들어온 += 값; else 나간 += 값;
+    });
+
+    ㄱ("목록머리").textContent =
+      (보는범위 === "날")
+        ? (지금.월 || "-") + "월 " + (지금.일 || "-") + "일 적은 것"
+        : (지금.월 || "-") + "월에 적은 것";
+
+    ㄱ("합계").innerHTML =
+      '<div class="줄 들어옴"><span class="l">매출 (들어온 돈)</span>' +
+        '<span class="v">' + 돈글(들어온) + '<small>원</small></span></div>' +
+      '<div class="줄"><span class="l">나간 돈</span>' +
+        '<span class="v">' + 돈글(나간) + '<small>원</small></span></div>' +
+      '<div class="줄"><span class="l">적은 줄</span>' +
+        '<span class="v">' + 것들.length + '<small>건</small></span></div>';
+
+    var 통 = ㄱ("목록");
+    통.innerHTML = "";
+    if (!것들.length) {
+      var 빈 = document.createElement("div");
+      빈.className = "빈";
+      빈.textContent = "아직 적은 것이 없습니다. 위에서 한 줄 넣어 보세요.";
+      통.appendChild(빈);
+    }
+
+    것들.slice().reverse().forEach(function(z){
+      var 값 = parseInt(숫자만(z.금액) || "0", 10);
+      var 들 = 매출인가(z.과목);
+      var 칸 = document.createElement("div");
+      칸.className = "줄칸" + (펼친것 === z.id ? " 펼침" : "");
+
+      var 머리 = document.createElement("button");
+      머리.type = "button";
+      머리.className = "줄머리";
+      머리.onclick = function(){ window.줄열기(z.id); };
+      머리.innerHTML =
+        '<span class="왼"><span class="첫"></span><span class="둘째"></span></span>' +
+        '<span class="오"><span class="돈값' + (들 ? " 들어옴" : "") + '"></span>' +
+        '<span class="꼬리"></span></span>';
+      머리.querySelector(".첫").textContent = z.일 + "일 · " + (z.과목 || "과목 없음");
+      머리.querySelector(".둘째").textContent =
+        [z.처, z.내역].filter(function(s){ return !!s; }).join(" · ") || "적은 내용 없음";
+      머리.querySelector(".돈값").textContent = 값 ? ((들 ? "+" : "−") + 돈글(값)) : "-";
+      머리.querySelector(".꼬리").textContent = 들 ? "매출" : "나감";
+      칸.appendChild(머리);
+
+      if (펼친것 === z.id) {
+        var 속 = document.createElement("div");
+        속.className = "줄속";
+        /* 줄머리는 한 줄로 잘리므로, 펼치면 적으신 것을 다 보인다 */
+        var 자세 = document.createElement("div");
+        자세.className = "자세";
+        [["매입(구입)처", z.처], ["결제내역", z.내역],
+         ["결제수단", z.수단], ["비고", z.비고]].forEach(function(짝){
+          var 줄 = document.createElement("div");
+          줄.textContent = 짝[0] + "   " + (짝[1] || "-");
+          자세.appendChild(줄);
+        });
+        속.appendChild(자세);
+
+        var 단추들 = document.createElement("div");
+        단추들.className = "줄단추";
+        var 고 = document.createElement("button");
+        고.type = "button"; 고.className = "고침"; 고.textContent = "고치기";
+        고.onclick = function(){ window.줄고치기(z.id); };
+        단추들.appendChild(고);
+
+        if (지울까 === z.id) {
+          var 진 = document.createElement("button");
+          진.type = "button"; 진.className = "지움 진짜"; 진.textContent = "정말 지웁니다";
+          진.onclick = function(){ window.줄지우기(z.id, true); };
+          단추들.appendChild(진);
+          var 말 = document.createElement("button");
+          말.type = "button"; 말.textContent = "그만";
+          말.onclick = function(){ 지울까 = null; 목록그리기(); };
+          단추들.appendChild(말);
+        } else {
+          var 지 = document.createElement("button");
+          지.type = "button"; 지.className = "지움"; 지.textContent = "지우기";
+          지.onclick = function(){ window.줄지우기(z.id, false); };
+          단추들.appendChild(지);
+        }
+        속.appendChild(단추들);
+        칸.appendChild(속);
+      }
+      통.appendChild(칸);
+    });
+
+    띠그리기(들어온, 나간, 것들.length);
+  }
+
+  function 띠그리기(들어온, 나간, 개수){
+    var 띠 = ㄱ("띠");
+    if (!개수) {
+      띠.hidden = true;
+      document.body.style.paddingBottom = "26px";
+      return;
+    }
+    띠.hidden = false;
+    document.body.style.paddingBottom = "";
+    ㄱ("띠날짜").textContent = (보는범위 === "날")
+      ? (지금.월 + "/" + 지금.일 + " · " + 개수 + "건")
+      : (지금.월 + "월 · " + 개수 + "건");
+    ㄱ("띠수").innerHTML =
+      '<span class="들">매출 ' + 돈글(들어온) + '</span>' +
+      '<span class="곁"> 원 · </span>나감 ' + 돈글(나간) + '<span class="곁"> 원</span>';
+  }
+
+  /* ── 베끼기 — 이 폰 안에서 복사만 한다 ─────────── */
+  window.베끼기 = function(){
+    var 것들 = 보이는것();
+    if (!것들.length) { 알림("베낄 것이 없습니다.", "짚음"); return; }
+    var 글 = 것들.map(function(z){
+      return [z.월, z.일, z.과목, z.처, z.내역, 숫자만(z.금액), z.수단, z.비고].join("\t");
+    }).join("\n");
+    var 됨 = false;
+    try {
+      var t = document.createElement("textarea");
+      t.value = 글;
+      t.style.position = "fixed"; t.style.left = "-9999px";
+      document.body.appendChild(t);
+      t.select(); t.setSelectionRange(0, 999999);
+      됨 = document.execCommand("copy");
+      document.body.removeChild(t);
+    } catch(e){ 됨 = false; }
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(글).then(function(){}, function(){});
+      됨 = true;
+    }
+    알림(됨 ? (것들.length + "줄 복사했습니다. 엑셀 금전출납부에 붙여 넣으시면 칸이 그대로 맞습니다.")
+            : "이 브라우저에서는 복사가 안 됩니다. 화면을 보고 옮겨 적어 주시면 됩니다.",
+         됨 ? "됨" : "짚음");
+  };
+
+  /* ── 글칸 이어 맞추기 ──────────────────────────── */
+  function 글칸붙이기(){
+    ㄱ("금액").addEventListener("input", function(){
+      this.value = 콤마(this.value);
+      지금.금액 = 숫자만(this.value);
+    });
+    ["월","일"].forEach(function(id){
+      ㄱ(id).addEventListener("input", function(){
+        this.value = 숫자만(this.value).slice(0, 2);
+        지금[id] = this.value;
+        날그리기(); 목록그리기();
+      });
+    });
+    ㄱ("처").addEventListener("input", function(){
+      지금.처 = this.value; 따라.처 = false; 처칩그리기();
+      if (this.value) this.classList.add("찼음"); else this.classList.remove("찼음");
+    });
+    ㄱ("비고").addEventListener("input", function(){
+      지금.비고 = this.value; 따라.비고 = false; 비고펼침 = true; 비고칩그리기();
+      if (this.value) this.classList.add("찼음"); else this.classList.remove("찼음");
+    });
+    ㄱ("내역").addEventListener("input", function(){
+      지금.내역 = this.value;
+      if (this.value) this.classList.add("찼음"); else this.classList.remove("찼음");
+    });
+    ㄱ("과목직접").addEventListener("input", function(){
+      지금.과목 = this.value.replace(/^\s+|\s+$/g, "");
+      돈말그리기();
+    });
+    ㄱ("수단직접").addEventListener("input", function(){
+      지금.수단 = this.value.replace(/^\s+|\s+$/g, "");
+    });
+  }
+
+  /* ── 열 때 ─────────────────────────────────────── */
+  읽어오기();
+  var 처음 = 오늘날();
+  지금.월 = 처음.월; 지금.일 = 처음.일;
+  ㄱ("월").value = 처음.월; ㄱ("일").value = 처음.일;
+  글칸붙이기();
+  날그리기(); 과목그리기(); 나머지그리기(); 목록그리기();
+})();
+</script>
+<!-- 의견칸 시작 — 붙이기.py 가 넣습니다. 손으로 고치지 마십시오 -->
+<!-- ─────────────────────────────────────────────────────────────
+  _의견칸.html — 시안마다 아래에 붙이는 「이 화면 어떠세요」
+
+  ⛔ 왜 있나 — 2026-09-09 유니스 지적.
+     「UAT 라든가 UI 를 만들 때는 끊임없이 피드백 프로세스를 붙이잖아.
+      왜 그런 기본적인 컨셉도 반영이 안 됐지」
+
+     화면 다섯을 만들면서 **화면 자체에 대한 의견을 받는 자리를 하나도
+     안 만들었다.** 만들어서 「보세요」로 던진 것이다.
+
+  ⚠️ 「그 밖」 칸이 반드시 있다 — 사람규칙. 내가 만든 선택지 안에만 두면
+     상대가 원하는 것이 없을 때 말을 못 하고 아무거나 고른다.
+
+  ⚠️ **거짓 성공을 안 띄운다.** 출처가 달라 `no-cors` 로는 답을 못 읽는다.
+     JSONP 로 실제 답을 받고, 못 받으면 못 받았다고 적는다 —
+     2026-09-03 에 「r.됨 을 안 보고 성공 화면을 띄운」 사고가 있었다.
+
+  쓰는 법 — 붙이기.py 가 시안 HTML 끝에 넣는다. 손으로 붙이지 않는다.
+           `data-화면` 에 그 화면 이름을 적는다.
+───────────────────────────────────────────────────────────── -->
+<div id="의견칸" data-화면="일일장부">
+  <style>
+    #의견칸{margin:34px 0 0;padding:22px 18px 26px;background:#F6ECE2;
+      border-top:2px solid #8B5E3C;font-family:"Noto Sans KR",sans-serif}
+    #의견칸 h3{margin:0 0 5px;font-size:19px;color:#2A2118;font-weight:500}
+    #의견칸 .안내{margin:0 0 16px;font-size:15px;color:#6B5D50;line-height:1.65}
+    #의견칸 .고름{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+    #의견칸 .고름 button{flex:1 1 auto;min-height:52px;padding:12px 14px;
+      font-size:16px;font-family:inherit;color:#2A2118;background:#fff;
+      border:1.5px solid #EBDFD2;border-radius:10px;cursor:pointer}
+    #의견칸 .고름 button.on{background:#8B5E3C;border-color:#8B5E3C;color:#fff}
+    #의견칸 label{display:block;font-size:15px;color:#2A2118;margin:0 0 7px}
+    #의견칸 textarea{width:100%;min-height:96px;padding:13px;font-size:16px;
+      font-family:inherit;color:#2A2118;background:#fff;border:1.5px solid #EBDFD2;
+      border-radius:10px;line-height:1.6;resize:vertical;box-sizing:border-box}
+    #의견칸 .보냄{width:100%;min-height:56px;margin-top:14px;font-size:17px;
+      font-family:inherit;color:#fff;background:#8B5E3C;border:0;border-radius:10px;
+      cursor:pointer}
+    #의견칸 .보냄[disabled]{background:#C9B8A8;cursor:default}
+    #의견칸 .끝말{margin:12px 0 0;font-size:15px;line-height:1.6;color:#2F5D46}
+    #의견칸 .끝말.안됨{color:#9C3A2E}
+    #의견칸 .끝말 a{color:inherit}
+    #의견칸 .샛길{margin-top:12px}
+    #의견칸 .샛길 textarea{min-height:76px;background:#FBF6F1}
+    #의견칸 .샛길단추{display:flex;gap:8px;margin-top:9px}
+    #의견칸 .샛길단추 button,#의견칸 .샛길단추 a{flex:1 1 0;min-height:52px;
+      display:flex;align-items:center;justify-content:center;font-size:16px;
+      font-family:inherit;text-decoration:none;border-radius:10px;cursor:pointer;
+      color:#2A2118;background:#fff;border:1.5px solid #8B5E3C}
+  </style>
+
+  <h3>이 화면, 어떠세요?</h3>
+  <p class="안내">고치면 좋겠다 싶은 것을 그냥 적어 주세요.<br>
+    한 줄이어도 되고, 안 적으셔도 됩니다.</p>
+
+  <div class="고름" id="의견고름"></div>
+
+  <label for="의견글">이 밖에 다르게 하고 싶으시면</label>
+  <textarea id="의견글" placeholder="예 — 글씨가 작아요 · 이 칸은 없어도 돼요 · 순서를 바꿔 주세요"></textarea>
+
+  <button class="보냄" id="의견보냄" onclick="의견보내기()">보내기</button>
+  <p class="끝말" id="의견끝말" hidden></p>
+
+  <!-- 못 보냈을 때 — 「막혔습니다」로 끝내지 않는다. 가는 길을 같이 준다 -->
+  <div class="샛길" id="의견샛길" hidden>
+    <textarea id="의견베낄것" readonly></textarea>
+    <div class="샛길단추">
+      <button type="button" onclick="의견베끼기()">글 복사</button>
+      <a href="https://t.me/hanmaum_hearing_bot" target="_blank"
+         rel="noopener">텔레그램 열기</a>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var 주소 = 'https://script.google.com/macros/s/AKfycbwQ_WIS4yu5G1s9ctfDozlT7FVPJEdxie6NM40ATLjknrXj5vLBl6PSys3pJeRF6FN5/exec';
+  // ⚠️ 맨 끝에 「이 밖에」가 있다 — 내가 만든 선택지 안에만 두지 않는다
+  var 고를것 = ['이대로 좋아요','글씨가 작아요','칸이 많아요','어디를 눌러야 할지 모르겠어요'];
+  var 고른것 = [];
+
+  var 칸 = document.getElementById('의견고름');
+  고를것.forEach(function(말, i){
+    var b = document.createElement('button');
+    b.type = 'button'; b.textContent = 말;
+    b.onclick = function(){
+      var k = 고른것.indexOf(말);
+      if (k < 0) { 고른것.push(말); b.classList.add('on'); }
+      else { 고른것.splice(k,1); b.classList.remove('on'); }
+    };
+    칸.appendChild(b);
+  });
+
+  window.의견베끼기 = function(){
+    var t = document.getElementById('의견베낄것');
+    t.select(); t.setSelectionRange(0, 99999);
+    var 됨 = false;
+    try { 됨 = document.execCommand('copy'); } catch (e) {}
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(t.value).then(function(){}, function(){});
+      됨 = true;
+    }
+    var 끝 = document.getElementById('의견끝말');
+    끝.hidden = false; 끝.className = '끝말';
+    끝.textContent = 됨 ? '복사했습니다. 텔레그램에 붙여 넣어 주세요.'
+                        : '글을 길게 눌러 복사해 주세요.';
+  };
+
+  window.의견보내기 = function(){
+    var 글 = document.getElementById('의견글').value.trim();
+    var b = document.getElementById('의견보냄');
+    var 끝 = document.getElementById('의견끝말');
+    if (!고른것.length && !글) {
+      끝.hidden = false; 끝.className = '끝말 안됨';
+      끝.textContent = '하나 고르시거나 한 줄 적어 주세요.';
+      return;
+    }
+    var 화면 = document.getElementById('의견칸').getAttribute('data-화면') || '';
+    b.disabled = true; b.textContent = '보내는 중';
+    끝.hidden = true;
+    document.getElementById('의견샛길').hidden = true;
+
+    // JSONP — 출처가 달라 fetch 로는 답을 못 읽는다.
+    // ⚠️ 답을 실제로 받은 뒤에만 「보냈습니다」를 띄운다.
+    // ⛔ 이름을 영문으로 둔다. 서버가 [A-Za-z0-9_] 밖을 지우므로
+    //    한글로 지으면 이름이 통째로 사라져 답이 영영 안 온다 (2026-09-09).
+    var 이름 = 'fb' + Date.now();
+    var 잰다 = setTimeout(function(){ 끝났다(false, '답이 안 왔습니다'); }, 12000);
+    window[이름] = function(r){
+      clearTimeout(잰다);
+      끝났다(!!(r && r.됨), (r && r.말) || '까닭을 모르겠습니다');
+    };
+    function 끝났다(됨, 말){
+      try { delete window[이름]; } catch(e) { window[이름] = undefined; }
+      if (s.parentNode) s.parentNode.removeChild(s);
+      b.disabled = false; b.textContent = '보내기';
+      끝.hidden = false;
+      if (됨) {
+        끝.className = '끝말';
+        끝.textContent = '잘 받았습니다. 고쳐서 다시 보여 드리겠습니다.';
+        b.textContent = '한 번 더 적기';
+      } else {
+        끝.className = '끝말 안됨';
+        끝.textContent = '이 화면에서는 바로 못 보냈습니다 (' + 말 + '). '
+          + '아래 글을 복사해서 텔레그램으로 보내 주시면 똑같이 받습니다.';
+        // ⚠️ 「막혔습니다」로 끝내지 않는다 — 가는 길을 같이 준다.
+        //    구글에 로그인이 안 된 브라우저에서는 위 길이 막힌다.
+        var 샛 = document.getElementById('의견샛길');
+        document.getElementById('의견베낄것').value =
+          '[' + (화면 || '시안') + '] '
+          + (고른것.join(' · ') || '')
+          + (글 ? (고른것.length ? ' / ' : '') + 글 : '');
+        샛.hidden = false;
+      }
+    }
+    var q = '?p=feedback&cb=' + 이름   // ⛔ 주소에 한글을 안 쓴다 (2026-09-06 사고)
+      + '&s=' + encodeURIComponent(화면)
+      + '&w=' + encodeURIComponent(고른것.join(' · '))
+      + '&m=' + encodeURIComponent(글);
+    var s = document.createElement('script');
+    s.src = 주소 + q;
+    s.onerror = function(){ 끝났다(false, '연결이 안 됐습니다'); };
+    document.body.appendChild(s);
+  };
+})();
+</script>
+<!-- 의견칸 끝 -->
+</body>
+</html>
