@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>한마음 · 오늘 (B안 — 하루 흐름)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400&display=swap" rel="stylesheet">
+<style>
+/* ──────────────────────────────────────────────────────────────
+   B안 — 하루 흐름 · 시안
+   탭이 없다. 위에서 아래로 하루가 한 번 흐르고 맨 아래에서 끝난다.
+
+   ⚠️ 굵기로 위계를 만들지 않는다.
+      실제 서체(학교안심 운동장 L)가 굵기 한 종뿐이라, 여기서 굵게로
+      세운 위계는 옮겨 붙이는 순간 전부 사라진다.
+      그래서 * { font-weight:400 } 을 걸어 두고 크기·색·자리로만 세웠다.
+   ────────────────────────────────────────────────────────────── */
+:root{
+  --bg:#FDF6EE;        /* 바탕 */
+  --card:#FFFFFF;      /* 하는 것 — 흰 카드 */
+  --read:#F6EDE1;      /* 읽는 것 — 바탕보다 한 톤 진한 면. 카드가 아니다 */
+  --ink:#2A2118;
+  --sub:#8A7A6B;
+  --line:#EBDFD2;
+  --main:#8B5E3C;
+  --deep:#6B4527;
+  --done:#4F7256;      /* 다 하신 것 — 색 하나에만 기대지 않고 ✓ 와 글자를 늘 같이 쓴다 */
+  --done-bg:#EFF3EC;
+  --done-line:#D8E2D6;
+  --shadow:rgba(120,85,55,.13);
+}
+*{box-sizing:border-box;font-weight:400;-webkit-tap-highlight-color:transparent}
+html,body{max-width:100%;overflow-x:hidden}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
+  font-size:17px;line-height:1.7;letter-spacing:-.01em;
+  padding-bottom:96px;
+}
+button,input,textarea,a{font-family:inherit;font-weight:400}
+
+/* ── 머리 — 스크롤하지 않아도 「오늘 뭐 해야 하나」가 여기 다 있다 ───── */
+.hero{
+  background:linear-gradient(160deg,var(--main),var(--deep));
+  color:#fff;padding:calc(20px + env(safe-area-inset-top)) 18px 20px;
+  border-radius:0 0 24px 24px;
+}
+.hero .날{font-size:15.5px;opacity:.82;margin:0}
+.hero h1{font-size:25px;margin:6px 0 16px;line-height:1.45}
+.hero .오늘할일{
+  background:rgba(255,255,255,.15);border-radius:16px;
+  padding:14px 16px;font-size:17px;line-height:1.6;
+}
+.hero .오늘할일 .작게{display:block;font-size:15px;opacity:.8;margin-top:3px}
+.게이지{height:7px;border-radius:99px;background:rgba(255,255,255,.25);margin-top:14px;overflow:hidden}
+.게이지 i{display:block;height:100%;width:0;background:#fff;border-radius:99px;transition:width .3s}
+
+/* ── 하루가 흐르는 선 — 왼쪽 가장자리에 실선 하나, 마디마다 점 ─────── */
+main{position:relative;padding:0 14px 0 18px}
+.선{position:absolute;left:6px;top:14px;bottom:120px;width:2px;background:var(--line)}
+.마디{position:relative;margin-top:30px}
+.마디 h2{
+  position:relative;font-size:20px;color:var(--deep);margin:0 0 2px;line-height:1.5;
+}
+.마디 h2::before{
+  content:'';position:absolute;left:-17px;top:9px;
+  width:12px;height:12px;border-radius:50%;
+  background:var(--bg);border:2px solid var(--line);
+}
+.마디.지남 h2::before{background:var(--line);border-color:var(--line)}
+.마디.여기 h2::before{background:var(--main);border-color:var(--main);
+  box-shadow:0 0 0 4px rgba(139,94,60,.18)}
+.마디.끝 h2::before{background:var(--done);border-color:var(--done)}
+.곁말{font-size:15px;color:var(--sub);margin:0 0 12px;line-height:1.6}
+.넘겨도{
+  display:inline-block;font-size:14.5px;color:var(--sub);
+  background:var(--read);border-radius:99px;padding:3px 11px;margin:2px 0 10px;
+}
+
+/* ── 읽는 것 · 하는 것을 눈으로 가른다 ──────────────────────────────
+   읽는 것 = 그림자 없는 면. 누를 것이 하나도 없다.
+   하는 것 = 흰 카드 + 그림자. 손이 가는 자리는 전부 하얗다.        */
+.읽기{background:var(--read);border-radius:18px;padding:6px 16px}
+.읽기 .줄{display:flex;gap:12px;padding:12px 0;border-top:1px solid rgba(160,130,100,.15)}
+.읽기 .줄:first-child{border-top:0}
+.읽기 .뭐{flex:0 0 62px;font-size:15px;color:var(--sub);padding-top:1px}
+.읽기 .말{flex:1;min-width:0;font-size:16.5px;line-height:1.6}
+
+.카드{
+  background:var(--card);border:1px solid var(--line);border-radius:18px;
+  padding:16px;margin-bottom:12px;box-shadow:0 2px 10px var(--shadow);
+}
+.이름{font-size:21px;color:var(--deep);line-height:1.4}
+.까닭{font-size:16px;color:var(--sub);line-height:1.6;margin-top:4px}
+a.전화{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  min-height:54px;margin-top:12px;padding:0 14px;
+  border:1.5px solid var(--line);border-radius:14px;background:#FFFCF8;
+  color:var(--deep);text-decoration:none;font-size:19px;letter-spacing:.02em;
+}
+a.전화 .걸기{font-size:15px;color:var(--main);flex:0 0 auto}
+a.전화:active{background:var(--read)}
+.없는번호{
+  min-height:54px;margin-top:12px;padding:15px 14px;
+  border:1.5px dashed var(--line);border-radius:14px;
+  color:var(--sub);font-size:16px;background:transparent;
+}
+.고른칸{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.고른칸 button{
+  min-width:0;min-height:54px;padding:8px 6px;
+  border:1.5px solid var(--line);border-radius:14px;background:#fff;
+  color:var(--ink);font-size:16px;line-height:1.35;cursor:pointer;
+}
+.고른칸 button:nth-child(5){grid-column:1 / -1}
+.고른칸 button.on{background:var(--main);border-color:var(--main);color:#fff}
+.한마디{
+  width:100%;min-width:0;margin-top:10px;padding:13px 14px;
+  border:1.5px solid var(--line);border-radius:14px;background:#FFFCF8;
+  font-size:16.5px;line-height:1.6;color:var(--ink);resize:vertical;
+}
+.한마디:focus,input:focus{outline:0;border-color:var(--main);background:#fff}
+::placeholder{color:#BEAE9F}
+
+/* 다 하신 카드는 한 줄로 접힌다 — 남은 것이 눈에 띄게 하려는 것 */
+.카드.맺음{
+  background:var(--done-bg);border-color:var(--done-line);box-shadow:none;
+  display:flex;align-items:center;gap:10px;padding:12px 12px 12px 14px;
+}
+.카드.맺음 .체크{flex:0 0 auto;color:var(--done);font-size:19px}
+.카드.맺음 .요약{flex:1;min-width:0;font-size:17px;line-height:1.5}
+.카드.맺음 .요약 span{display:block;font-size:15px;color:var(--sub)}
+.고치기{
+  flex:0 0 auto;min-height:44px;padding:0 14px;
+  border:1.5px solid var(--done-line);border-radius:12px;background:#fff;
+  color:var(--sub);font-size:15.5px;cursor:pointer;
+}
+
+/* ── 이번 달 — 대수만. 금액은 이 화면 어디에도 없다 ─────────────── */
+.달{display:flex;gap:10px}
+.달 .칸{flex:1;min-width:0;background:var(--read);border-radius:18px;padding:14px 12px;text-align:center}
+.달 .수{font-size:30px;color:var(--deep);line-height:1.3}
+.달 .수 em{font-size:17px;font-style:normal;color:var(--sub);margin-left:2px}
+.달 .이름표{font-size:15px;color:var(--sub);margin-top:2px}
+
+/* ── 적는 자리 ───────────────────────────────────────────────── */
+label{display:block;font-size:16px;color:var(--deep);margin:14px 0 0}
+input[type=text]{
+  width:100%;min-width:0;margin-top:8px;padding:14px;
+  border:1.5px solid var(--line);border-radius:14px;background:#FFFCF8;
+  font-size:16.5px;color:var(--ink);
+}
+.더{
+  width:100%;min-height:56px;margin-top:2px;
+  border:1.5px dashed var(--line);border-radius:16px;background:transparent;
+  color:var(--main);font-size:17px;cursor:pointer;
+}
+.더:active{background:var(--read)}
+.빈자리{
+  background:var(--read);border-radius:18px;padding:20px 18px;
+  color:var(--sub);font-size:16.5px;line-height:1.8;margin-bottom:10px;
+}
+
+/* ── 가끔 쓰는 것 — 접어 둔다 ───────────────────────────────────── */
+details{background:var(--card);border:1px solid var(--line);border-radius:18px;
+  padding:0 16px;box-shadow:0 2px 10px var(--shadow)}
+summary{
+  list-style:none;cursor:pointer;min-height:56px;display:flex;align-items:center;
+  justify-content:space-between;font-size:17px;color:var(--deep);
+}
+summary::-webkit-details-marker{display:none}
+summary .펴기{font-size:15px;color:var(--sub)}
+details[open] summary{border-bottom:1px solid var(--line)}
+.속줄{display:block;padding:16px 0;border-top:1px solid var(--line);
+  font-size:16.5px;color:var(--ink);text-decoration:none}
+.속줄:first-of-type{border-top:0}
+.속줄 span{display:block;font-size:15px;color:var(--sub);margin-top:2px}
+
+/* ── 맨 아래 — 여기서 하루가 끝난다 ─────────────────────────────── */
+.맺는말{margin:34px 0 10px;text-align:center;font-size:16px;color:var(--sub);line-height:1.7}
+.보내기{
+  width:100%;min-height:64px;border:0;border-radius:18px;
+  background:var(--main);color:#fff;font-size:20px;cursor:pointer;
+  box-shadow:0 4px 14px var(--shadow);
+}
+.보내기:disabled{background:#E0D2C4;color:#fff;box-shadow:none}
+.꼬리{text-align:center;font-size:15px;color:var(--sub);margin:14px 0 6px;line-height:1.7}
+
+/* ── 지금 어디쯤인지 — 엄지 닿는 자리에 띠 하나 ─────────────────── */
+.띠{
+  position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));
+  background:var(--deep);color:#fff;border-radius:16px;padding:11px 16px 13px;
+  box-shadow:0 6px 20px rgba(90,60,35,.3);
+  transition:opacity .25s,transform .25s;
+}
+.띠.숨음{opacity:0;transform:translateY(14px);pointer-events:none}
+.띠 .말{font-size:16px;line-height:1.4}
+.띠 .말 em{font-style:normal;opacity:.72;font-size:15px}
+.띠 .자{height:5px;border-radius:99px;background:rgba(255,255,255,.25);margin-top:8px;overflow:hidden}
+.띠 .자 i{display:block;height:100%;width:0;background:#fff;transition:width .3s}
+.띠.다함{background:var(--done)}
+
+/* ── 보낸 뒤 ────────────────────────────────────────────────── */
+.끝화면{position:fixed;inset:0;background:linear-gradient(160deg,var(--main),var(--deep));
+  color:#fff;display:none;place-items:center;text-align:center;padding:32px;z-index:30}
+.끝화면.on{display:grid}
+.끝화면 .잎{font-size:46px;line-height:1.2}
+.끝화면 h2{font-size:28px;margin:14px 0 8px}
+.끝화면 p{font-size:17px;opacity:.9;margin:0 0 28px;line-height:1.7}
+.끝화면 button{min-height:56px;padding:0 30px;border:0;border-radius:16px;
+  background:#fff;color:var(--deep);font-size:18px;cursor:pointer}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <p class="날" id="날">9월 9일 수요일 아침</p>
+  <h1 id="인사">원장님, 좋은 아침이에요</h1>
+  <div class="오늘할일">
+    <span id="한줄">오늘 연락드릴 분 네 분이에요</span>
+    <span class="작게" id="한줄곁">다 못 하셔도 괜찮습니다</span>
+    <div class="게이지"><i id="게이지"></i></div>
+  </div>
+</header>
+
+<main>
+  <div class="선"></div>
+
+  <!-- ① 어제 — 읽기만 -->
+  <section class="마디" id="마디-어제">
+    <h2>어제 있었던 일</h2>
+    <p class="곁말">9월 8일 화요일 · 읽기만 하시면 됩니다</p>
+    <div class="읽기">
+      <div class="줄"><span class="뭐">맞춤</span><span class="말">이순안 님 · 양쪽 맞춰 드렸어요</span></div>
+      <div class="줄"><span class="뭐">손질</span><span class="말">홍춘길 님 · 소리가 작다고 오셔서 청소해 드렸어요</span></div>
+      <div class="줄"><span class="뭐">새 손님</span><span class="말">박경자 님 · 금천 수영경로당에서 소개받고 오셨어요</span></div>
+    </div>
+  </section>
+
+  <!-- ② 오늘 — 하는 것 -->
+  <section class="마디" id="마디-오늘">
+    <h2>오늘 연락드릴 분</h2>
+    <p class="곁말" id="오늘곁말">네 분이에요. 하신 것만 눌러 주시면 됩니다</p>
+    <div id="연락목록"></div>
+  </section>
+
+  <!-- ③ 이번 달 — 대수만 -->
+  <section class="마디" id="마디-이번달">
+    <h2>이번 달</h2>
+    <p class="곁말">9월 1일부터 오늘까지예요</p>
+    <div class="달">
+      <div class="칸"><div class="수">6<em>대</em></div><div class="이름표">맞춰 드린 것</div></div>
+      <div class="칸"><div class="수">9<em>분</em></div><div class="이름표">점검 오신 분</div></div>
+      <div class="칸"><div class="수">2<em>분</em></div><div class="이름표">새로 오신 분</div></div>
+    </div>
+    <p class="곁말" style="margin-top:10px">지난달 이맘때는 네 대였어요. 두 대 많으십니다</p>
+  </section>
+
+  <!-- ④ 여쭐 것 -->
+  <section class="마디" id="마디-여쭐것">
+    <h2>여쭐 것이 하나 있어요</h2>
+    <span class="넘겨도">비워 두셔도 그냥 넘어갑니다</span>
+    <div class="카드">
+      <div style="font-size:17.5px;line-height:1.6">딸기 장바구니를 어디로 몇 개쯤 내보내실까요</div>
+      <div class="까닭">주문 수량을 잡으려고 여쭙습니다</div>
+      <input type="text" id="여쭌답" placeholder="아시는 만큼만 (예: 경로당 세 곳에 30개씩)" autocomplete="off">
+    </div>
+  </section>
+
+  <!-- ⑤ 오늘 있었던 일 -->
+  <section class="마디" id="마디-오늘일">
+    <h2>오늘 있었던 일</h2>
+    <span class="넘겨도">안 적으셔도 돼요</span>
+    <div id="오늘일목록"></div>
+    <div class="빈자리" id="오늘일빈">손님이 오시면 한 줄만 남겨 주세요.<br>안 오신 날은 그냥 두시면 됩니다.</div>
+    <button class="더" onclick="오늘일추가()">한 줄 적기</button>
+  </section>
+
+  <!-- ⑥ 가끔 쓰는 것 -->
+  <section class="마디" id="마디-가끔">
+    <h2>가끔 쓰는 것</h2>
+    <p class="곁말">오늘 안 여셔도 됩니다</p>
+    <details>
+      <summary>여기를 누르면 펴집니다 <span class="펴기">블로그 · 손님 찾기</span></summary>
+      <a class="속줄" href="#" onclick="return 아직(event)">블로그 글 봐 드리기
+        <span>올리기 전에 한 번 보시면 되는 글이 한 편 있어요</span></a>
+      <a class="속줄" href="#" onclick="return 아직(event)">손님 찾기
+        <span>이름 한 글자만 넣어도 나옵니다</span></a>
+    </details>
+  </section>
+
+  <!-- ⑦ 끝 -->
+  <p class="맺는말" id="맺는말">오늘 하루 여기까지예요.<br>적으신 것만 저에게 갑니다.</p>
+  <button class="보내기" id="보내기버튼" disabled onclick="보내기()">보내기</button>
+  <p class="꼬리">오늘은 그냥 닫으셔도 괜찮아요.<br>내일 아침에 다시 열립니다.</p>
+</main>
+
+<div class="띠" id="띠">
+  <div class="말" id="띠말">오늘 연락 <em>· 네 분 남았어요</em></div>
+  <div class="자"><i id="띠자"></i></div>
+</div>
+
+<div class="끝화면" id="끝화면">
+  <div>
+    <div class="잎">🌿</div>
+    <h2>잘 받았습니다</h2>
+    <p id="끝말"></p>
+    <button onclick="location.reload()">다시 열기</button>
+  </div>
+</div>
+
+<script>
+/* 자료는 화면 안에 박아 두었습니다. 실제로는 연락명단·판매현황에서 옵니다. */
+var 고를것 = ['통화했어요','안 받으셨어요','방문 약속','괜찮다고 하셔요','다음에 다시'];
+
+var 연락 = [
+  {이름:'이순안', 전화:'010-5185-7282', 까닭:'어제 맞춰 드린 것 잘 들리시는지 여쭤보시면 좋아요', 결과:'', 말:''},
+  {이름:'김옥태', 전화:'010-9644-1027', 까닭:'보장구 급여 재지원이 11월 6일이에요. 58일 남았습니다', 결과:'', 말:''},
+  {이름:'박기순', 전화:'010-3462-9902', 까닭:'구입하신 지 104일 되셨어요. 적합 봐 드릴 때입니다', 결과:'', 말:''},
+  {이름:'윤천중', 전화:'010-8911-1304', 까닭:'2월에 맞추신 뒤로 여섯 달째예요. 정기점검 안내드리면 좋아요', 결과:'', 말:''}
+];
+var 오늘일 = [];
+var 여쭌답 = '';
+var 편것 = {};   /* 다 하셨어도 다시 펴 두신 카드 */
+
+var 한글수 = ['','한','두','세','네','다섯','여섯','일곱','여덟','아홉','열'];
+function 수말(n){ return (n <= 10 ? 한글수[n] : String(n)); }
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
+  });
+}
+
+/* ── 인사 — 여는 때에 맞춘다 ─────────────────────────────────── */
+(function 머리(){
+  var 이제 = new Date();
+  var 요일 = ['일','월','화','수','목','금','토'][이제.getDay()];
+  var h = 이제.getHours();
+  var 때 = h < 11 ? '아침' : (h < 17 ? '낮' : '저녁');
+  document.getElementById('날').textContent =
+    (이제.getMonth() + 1) + '월 ' + 이제.getDate() + '일 ' + 요일 + '요일 ' + 때;
+  document.getElementById('인사').textContent =
+    h < 11 ? '원장님, 좋은 아침이에요'
+    : h < 17 ? '원장님, 안녕하세요'
+    : '원장님, 오늘도 고생하셨어요';
+})();
+
+/* ── 오늘 연락 ─────────────────────────────────────────────── */
+function 연락그리기(){
+  var 자리 = document.getElementById('연락목록');
+  if (!연락.length){
+    자리.innerHTML = '<div class="빈자리">이번 주는 연락드릴 분이 없어요.<br>편히 보내세요.</div>';
+    document.getElementById('오늘곁말').textContent = '';
+    return;
+  }
+  자리.innerHTML = 연락.map(function(r, i){
+    var 맺음 = r.결과 && !편것[i];
+    if (맺음){
+      return '<div class="카드 맺음">' +
+        '<span class="체크">✓</span>' +
+        '<span class="요약">' + esc(r.이름) + ' 님<span>' + esc(r.결과) +
+          (r.말 ? ' · ' + esc(r.말) : '') + '</span></span>' +
+        '<button class="고치기" onclick="다시펴기(' + i + ')">고치기</button>' +
+        '</div>';
+    }
+    var 번호 = String(r.전화 || '').replace(/[^0-9]/g, '');
+    var 전화칸 = 번호.length >= 9
+      ? '<a class="전화" href="tel:' + 번호 + '">' + esc(r.전화) + '<span class="걸기">눌러서 걸기</span></a>'
+      : '<div class="없는번호">번호가 없어요. 아시면 아래에 적어 주세요</div>';
+    return '<div class="카드">' +
+      '<div class="이름">' + esc(r.이름) + ' 님</div>' +
+      '<div class="까닭">' + esc(r.까닭) + '</div>' +
+      전화칸 +
+      '<div class="고른칸">' + 고를것.map(function(c){
+        return '<button class="' + (r.결과 === c ? 'on' : '') +
+          '" onclick="고르기(' + i + ',\'' + c + '\')">' + c + '</button>';
+      }).join('') + '</div>' +
+      '<textarea class="한마디" rows="2" placeholder="남기실 말씀 있으시면 (안 쓰셔도 돼요)" ' +
+        'oninput="연락[' + i + '].말=this.value;세기()">' + esc(r.말) + '</textarea>' +
+      '</div>';
+  }).join('');
+}
+
+function 고르기(i, c){
+  연락[i].결과 = (연락[i].결과 === c) ? '' : c;
+  /* 고르시면 그 카드는 한 줄로 접힌다. 남은 분이 눈에 띄게 하려는 것이다. */
+  if (연락[i].결과) 편것[i] = false; else 편것[i] = true;
+  연락그리기();
+  세기();
+}
+function 다시펴기(i){
+  편것[i] = true;
+  연락그리기();
+}
+
+/* ── 오늘 있었던 일 ─────────────────────────────────────────── */
+function 오늘일추가(){
+  오늘일.push({누구:'', 무슨일:''});
+  오늘일그리기();
+  세기();
+  /* 방금 만든 칸으로 커서를 옮긴다 — 한 손으로 쓰시니 다시 누르실 일을 던다 */
+  var 칸들 = document.querySelectorAll('#오늘일목록 input');
+  if (칸들.length) 칸들[칸들.length - 1].focus();
+}
+function 오늘일그리기(){
+  document.getElementById('오늘일빈').style.display = 오늘일.length ? 'none' : '';
+  document.getElementById('오늘일목록').innerHTML = 오늘일.map(function(r, i){
+    return '<div class="카드">' +
+      '<label>어떤 분이 오셨나요</label>' +
+      '<input type="text" value="' + esc(r.누구) + '" placeholder="김 어머님" ' +
+        'oninput="오늘일[' + i + '].누구=this.value;세기()">' +
+      '<label>무슨 일이 있었나요</label>' +
+      '<textarea class="한마디" rows="2" placeholder="보청기 소리가 작다고 오셨어요" ' +
+        'oninput="오늘일[' + i + '].무슨일=this.value;세기()">' + esc(r.무슨일) + '</textarea>' +
+      '</div>';
+  }).join('');
+}
+
+document.getElementById('여쭌답').addEventListener('input', function(){
+  여쭌답 = this.value;
+  세기();
+});
+
+function 아직(e){
+  e.preventDefault();
+  alert('시안이라 이 자리는 아직 안 열려요.');
+  return false;
+}
+
+/* ── 얼마나 하셨나 — 머리·띠·마디 점이 같은 값을 본다 ──────────── */
+function 세기(){
+  var 한연락 = 연락.filter(function(r){ return r.결과; }).length;
+  var 모두 = 연락.length;
+  var 남은 = 모두 - 한연락;
+  var 적은것 = 한연락
+    + 연락.filter(function(r){ return !r.결과 && r.말; }).length
+    + 오늘일.filter(function(r){ return r.누구 || r.무슨일; }).length
+    + (여쭌답.trim() ? 1 : 0);
+
+  var 몫 = 모두 ? Math.round(한연락 / 모두 * 100) : 100;
+  document.getElementById('게이지').style.width = 몫 + '%';
+  document.getElementById('띠자').style.width = 몫 + '%';
+
+  var 띠 = document.getElementById('띠');
+  var 띠말 = document.getElementById('띠말');
+  if (!모두){
+    띠말.innerHTML = '오늘은 연락드릴 분이 없어요';
+    띠.classList.add('다함');
+  } else if (남은 === 0){
+    띠말.innerHTML = '연락 다 하셨어요 <em>· 아래에서 보내기만 누르시면 돼요</em>';
+    띠.classList.add('다함');
+  } else {
+    띠말.innerHTML = '오늘 연락 <em>· ' + 수말(남은) + ' 분 남았어요</em>';
+    띠.classList.remove('다함');
+  }
+
+  document.getElementById('한줄').textContent =
+    !모두 ? '오늘은 연락드릴 분이 없어요'
+    : 남은 === 0 ? '연락 다 하셨어요'
+    : (한연락 ? '연락드릴 분 ' + 수말(남은) + ' 분 남았어요'
+              : '오늘 연락드릴 분 ' + 수말(모두) + ' 분이에요');
+  document.getElementById('한줄곁').textContent =
+    남은 === 0 && 모두 ? '아래로 내려가시면 오늘이 끝나요' : '다 못 하셔도 괜찮습니다';
+
+  document.getElementById('오늘곁말').textContent = 모두
+    ? (남은 === 0 ? (수말(모두) + ' 분 다 하셨어요') : '하신 것만 눌러 주시면 됩니다')
+    : '';
+
+  document.getElementById('마디-오늘').classList.toggle('끝', !!모두 && 남은 === 0);
+
+  var 단추 = document.getElementById('보내기버튼');
+  단추.disabled = !적은것;
+  단추.textContent = 적은것 ? ('보내기 · ' + 적은것 + '건') : '보내기';
+  document.getElementById('맺는말').innerHTML = 적은것
+    ? '오늘 하루 여기까지예요.<br>적으신 ' + 적은것 + '건이 저에게 갑니다.'
+    : '오늘 하루 여기까지예요.<br>적으신 것만 저에게 갑니다.';
+}
+
+/* ── 지금 어디쯤인지 — 화면 위쪽에 걸린 마디에 점이 켜진다 ──────── */
+var 마디들 = [].slice.call(document.querySelectorAll('.마디'));
+function 어디쯤(){
+  var 켤것 = 0;   /* 맨 위에서는 첫 마디에 불이 켜져 있다 */
+  for (var i = 0; i < 마디들.length; i++){
+    var 위 = 마디들[i].getBoundingClientRect().top;
+    if (위 <= 140) 켤것 = i;
+  }
+  마디들.forEach(function(s, i){
+    s.classList.toggle('지남', 켤것 !== null && i < 켤것);
+    s.classList.toggle('여기', i === 켤것);
+  });
+  /* 진짜 보내기 단추가 보이면 아래 띠는 물러난다 — 같은 말을 두 번 안 한다 */
+  var 단추 = document.getElementById('보내기버튼').getBoundingClientRect();
+  var 보임 = 단추.top < window.innerHeight - 40;
+  document.getElementById('띠').classList.toggle('숨음', 보임);
+}
+window.addEventListener('scroll', 어디쯤, {passive:true});
+window.addEventListener('resize', 어디쯤);
+
+/* ── 보내기 ───────────────────────────────────────────────── */
+function 보내기(){
+  var 단추 = document.getElementById('보내기버튼');
+  단추.disabled = true;
+  단추.textContent = '보내는 중';
+  setTimeout(function(){
+    var 한연락 = 연락.filter(function(r){ return r.결과; }).length;
+    document.getElementById('끝말').textContent = 한연락
+      ? (수말(한연락) + ' 분 연락하신 것 잘 받았어요. 고맙습니다')
+      : '적어 주신 것 잘 받았어요. 고맙습니다';
+    document.getElementById('끝화면').classList.add('on');
+  }, 600);
+}
+
+연락그리기();
+오늘일그리기();
+세기();
+어디쯤();
+</script>
+</body>
+</html>
