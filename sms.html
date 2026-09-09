@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>문자 안내 정하기 — 한마음보청기</title>
+<style>
+/* ─────────────────────────────────────────────
+   한마음보청기 · 문자 안내 결정 화면
+   굵기로 위계를 만들지 않는다 — 전부 400.
+   크기 · 색 · 자리로만 가른다.
+   ───────────────────────────────────────────── */
+:root{
+  --바탕:#FDF6EE;
+  --카드:#FFFFFF;
+  --글:#2A2118;
+  --선:#EBDFD2;
+  --주:#8B5E3C;
+  --흐림:#6E6154;
+  --연함:#9A8B79;
+  --살짝:#FBF3EA;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  background:var(--바탕);
+  color:var(--글);
+  font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic','맑은 고딕',sans-serif;
+  font-weight:400;
+  font-size:17px;
+  line-height:1.6;
+  word-break:keep-all;
+  overflow-wrap:anywhere;
+  padding-bottom:150px;
+}
+*,h1,h2,h3,p,button,input,textarea,label{font-weight:400}
+h1,h2,h3,p{margin:0}
+button,input,textarea{font-family:inherit;color:inherit}
+
+.판{max-width:520px;margin:0 auto;padding:0 16px}
+
+/* ── 머리 ── */
+header{padding:26px 16px 18px;max-width:520px;margin:0 auto}
+.상호{font-size:15px;color:var(--주);letter-spacing:.02em}
+h1{font-size:27px;line-height:1.35;margin-top:6px;letter-spacing:-.01em}
+.머리말{font-size:16px;color:var(--흐림);margin-top:8px}
+
+/* ── 마디 ── */
+section{
+  background:var(--카드);
+  border:1px solid var(--선);
+  border-radius:16px;
+  padding:20px 16px;
+  margin-bottom:14px;
+}
+.마디머리{display:flex;align-items:baseline;gap:10px;margin-bottom:4px}
+.번호{
+  width:27px;height:27px;flex:0 0 27px;
+  border-radius:50%;
+  background:var(--주);color:#fff;
+  font-size:15px;line-height:27px;text-align:center;
+  position:relative;top:3px;
+}
+.마디이름{font-size:20px;letter-spacing:-.01em}
+.마디설명{font-size:15px;color:var(--흐림);margin:0 0 16px 37px}
+
+/* ── 고르는 줄 ── */
+.고르기{display:flex;flex-direction:column;gap:10px}
+.줄{display:block;position:relative;cursor:pointer}
+.줄 input{position:absolute;opacity:0;width:1px;height:1px}
+.칸{
+  display:flex;align-items:center;gap:13px;
+  min-height:64px;padding:13px 15px;
+  border:1px solid var(--선);border-radius:13px;
+  background:var(--카드);
+  transition:border-color .12s,background .12s;
+}
+.동그라미{
+  width:24px;height:24px;flex:0 0 24px;
+  border:2px solid #D6C6B4;border-radius:50%;
+  position:relative;transition:border-color .12s;
+}
+.줄 input:checked + .칸{border-color:var(--주);border-width:2px;padding:12px 14px;background:var(--살짝)}
+.줄 input:checked + .칸 .동그라미{border-color:var(--주)}
+.줄 input:checked + .칸 .동그라미::after{
+  content:"";position:absolute;inset:4px;border-radius:50%;background:var(--주);
+}
+.줄 input:focus-visible + .칸{outline:3px solid rgba(139,94,60,.35);outline-offset:2px}
+.칸글{flex:1 1 auto;min-width:0}
+.칸이름{display:block;font-size:18px;line-height:1.35}
+.칸밑{display:block;font-size:14px;color:var(--연함);margin-top:2px;line-height:1.4}
+.인원{font-size:21px;color:var(--주);white-space:nowrap;text-align:right}
+.인원 span{font-size:15px;color:var(--흐림)}
+
+/* ── 오래 안 뵌 분 ── */
+.오래{margin-top:16px;padding-top:15px;border-top:1px dashed var(--선)}
+.꼬리표{font-size:14px;color:var(--연함);margin-bottom:8px}
+.이름줄{display:flex;flex-wrap:wrap;gap:7px}
+.이름칩{
+  font-size:15px;color:var(--흐림);
+  background:var(--살짝);border:1px solid var(--선);
+  border-radius:9px;padding:6px 10px;
+}
+.이름칩 i{font-style:normal;color:var(--연함);font-size:13px}
+
+/* ── 전화 몰림 ── */
+.몰림{
+  margin-top:14px;padding:15px;
+  background:var(--살짝);border:1px solid var(--선);border-radius:13px;
+}
+.몰림머리{font-size:15px;color:var(--흐림);display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.어림{font-size:12px;color:#fff;background:var(--연함);border-radius:6px;padding:2px 7px;white-space:nowrap}
+.점판{display:flex;flex-wrap:wrap;gap:5px;margin:11px 0 10px}
+.점{width:11px;height:11px;border-radius:50%;background:#E4D6C6}
+.점.올{background:var(--주)}
+.몰림글{font-size:16px;line-height:1.55}
+.몰림글 b{font-weight:400;color:var(--주);font-size:18px}
+.몰림덧{font-size:14px;color:var(--연함);margin-top:7px}
+
+/* ── 문자 말풍선 ── */
+.문안{display:flex;flex-direction:column;gap:12px}
+.폰{
+  border:1px solid var(--선);border-radius:14px;
+  padding:14px;background:var(--카드);
+  transition:border-color .12s,background .12s;
+}
+.폰.고름{border-color:var(--주);border-width:2px;padding:13px;background:var(--살짝)}
+.폰.고름 .동그라미{border-color:var(--주)}
+.폰.고름 .동그라미::after{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--주)}
+.폰머리:focus-visible{outline:3px solid rgba(139,94,60,.35);outline-offset:3px;border-radius:10px}
+.폰머리{display:flex;align-items:center;gap:11px;cursor:pointer;min-height:52px}
+.폰이름{flex:1 1 auto;min-width:0;font-size:18px}
+.폰이름 em{display:block;font-style:normal;font-size:14px;color:var(--연함);margin-top:1px}
+.값{text-align:right;white-space:nowrap}
+.종류{
+  display:inline-block;font-size:13px;color:#fff;background:var(--연함);
+  border-radius:6px;padding:2px 8px;
+}
+.종류.lms{background:var(--주)}
+.종류.넘침{background:#B4402F}
+.바이트{display:block;font-size:13px;color:var(--연함);margin-top:4px}
+
+.말판{margin-top:12px;background:#F4EADF;border-radius:14px;padding:11px}
+.보낸이{font-size:13px;color:var(--연함);margin:0 0 7px 4px}
+.말풍선{
+  background:#fff;border:1px solid #E6D9CA;
+  border-radius:16px;border-top-left-radius:5px;
+  padding:12px 13px;
+}
+.말풍선 textarea{
+  display:block;width:100%;border:0;padding:0;margin:0;background:transparent;
+  font-size:17px;line-height:1.62;resize:none;overflow:hidden;
+}
+.말풍선 textarea:focus{outline:none}
+.고치기말{font-size:13px;color:var(--연함);margin:9px 0 0 4px;display:flex;flex-wrap:wrap;
+  align-items:center;justify-content:space-between;gap:8px}
+.고치기말 span{flex:1 1 150px;min-width:0;line-height:1.5}
+.되돌리기{
+  border:1px solid var(--선);background:var(--카드);border-radius:8px;
+  font-size:15px;color:var(--흐림);padding:0 16px;cursor:pointer;min-height:52px;flex:0 0 auto;
+}
+
+/* ── 주기 ── */
+.칩판{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.칩{
+  border:1px solid var(--선);background:var(--카드);border-radius:11px;
+  min-height:52px;padding:0 15px;font-size:16px;color:var(--흐림);cursor:pointer;
+}
+.칩.고름{border-color:var(--주);border-width:2px;color:var(--주);background:var(--살짝)}
+.적는칸{
+  width:100%;min-height:56px;padding:14px 15px;font-size:18px;
+  border:1px solid var(--선);border-radius:13px;background:var(--카드);
+}
+.적는칸:focus{outline:none;border-color:var(--주);border-width:2px;padding:13px 14px}
+.적는칸::placeholder{color:#BFB0A0}
+.칸덧{font-size:14px;color:var(--연함);margin-top:8px}
+
+/* ── 돈 ── */
+.돈판{display:flex;flex-direction:column;gap:1px;background:var(--선);border:1px solid var(--선);border-radius:13px;overflow:hidden}
+.돈줄{display:flex;justify-content:space-between;align-items:baseline;gap:12px;background:var(--카드);padding:14px 15px}
+.돈이름{font-size:16px;color:var(--흐림);min-width:0}
+.돈이름 em{display:block;font-style:normal;font-size:13px;color:var(--연함);margin-top:2px}
+.돈값{font-size:21px;white-space:nowrap;text-align:right}
+.돈줄.큰{background:var(--살짝)}
+.돈줄.큰 .돈값{font-size:26px;color:var(--주)}
+.출처{font-size:13px;color:var(--연함);margin-top:11px;line-height:1.55}
+
+/* ── 아래 요약 ── */
+.바닥{
+  position:fixed;left:0;right:0;bottom:0;
+  background:rgba(253,246,238,.97);
+  border-top:1px solid var(--선);
+  padding:11px 16px calc(11px + env(safe-area-inset-bottom));
+  backdrop-filter:blur(6px);
+}
+.바닥안{max-width:520px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.요약{flex:1 1 auto;min-width:0}
+.요약글{font-size:15px;color:var(--흐림);line-height:1.45}
+.요약돈{font-size:19px;margin-top:2px}
+.요약돈 span{font-size:15px;color:var(--흐림)}
+.확정{
+  flex:0 0 auto;min-height:52px;padding:0 15px;
+  background:var(--주);color:#fff;border:0;border-radius:13px;
+  font-size:16px;cursor:pointer;
+}
+.확정:disabled{background:#CBBAA8;cursor:default}
+
+/* ── 확정 뒤 ── */
+.정함{display:none;background:var(--카드);border:2px solid var(--주);border-radius:16px;padding:20px 16px;margin-bottom:14px}
+.정함.보임{display:block}
+.정함머리{font-size:20px;color:var(--주);margin-bottom:12px}
+.정함글{
+  font-size:17px;line-height:1.75;background:var(--살짝);
+  border:1px solid var(--선);border-radius:12px;padding:14px;
+  white-space:pre-wrap;user-select:text;
+}
+.정함단추{display:flex;gap:9px;margin-top:13px}
+.정함단추 button{
+  flex:1 1 0;min-height:52px;border-radius:12px;font-size:16px;cursor:pointer;
+  border:1px solid var(--선);background:var(--카드);color:var(--흐림);
+}
+.정함단추 .베끼기{border-color:var(--주);color:var(--주);background:var(--살짝)}
+.정함덧{font-size:14px;color:var(--연함);margin-top:11px;line-height:1.55}
+footer{max-width:520px;margin:0 auto;padding:4px 16px 24px;font-size:13px;color:var(--연함);line-height:1.6}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="상호">한마음보청기</div>
+  <h1>문자 안내, 이렇게 할까요</h1>
+  <p class="머리말">세 가지만 정해 주시면 됩니다. 여기서 보내지는 않습니다.</p>
+</header>
+
+<div class="판">
+
+  <!-- ① 누구에게 -->
+  <section>
+    <div class="마디머리"><div class="번호">1</div><h2 class="마디이름">누구에게 보낼까요</h2></div>
+    <p class="마디설명">안 오신 지 오래되신 분부터 정하시면 됩니다.</p>
+
+    <div class="고르기" id="누구">
+      <label class="줄">
+        <input type="radio" name="누구" value="90">
+        <span class="칸">
+          <span class="동그라미"></span>
+          <span class="칸글"><span class="칸이름">90일 넘게 안 오신 분</span><span class="칸밑">석 달쯤 지난 분까지</span></span>
+          <span class="인원" id="수90">55<span>명</span></span>
+        </span>
+      </label>
+      <label class="줄">
+        <input type="radio" name="누구" value="180" checked>
+        <span class="칸">
+          <span class="동그라미"></span>
+          <span class="칸글"><span class="칸이름">180일 넘게 안 오신 분</span><span class="칸밑">반년 넘은 분부터</span></span>
+          <span class="인원" id="수180">40<span>명</span></span>
+        </span>
+      </label>
+      <label class="줄">
+        <input type="radio" name="누구" value="365">
+        <span class="칸">
+          <span class="동그라미"></span>
+          <span class="칸글"><span class="칸이름">1년 넘게 안 오신 분</span><span class="칸밑">가장 급한 분만</span></span>
+          <span class="인원" id="수365">12<span>명</span></span>
+        </span>
+      </label>
+    </div>
+
+    <div class="오래">
+      <div class="꼬리표">그중 가장 오래되신 분</div>
+      <div class="이름줄" id="오래줄"></div>
+    </div>
+
+    <div class="몰림">
+      <div class="몰림머리"><span>전화가 얼마나 올까요</span><span class="어림">어림</span></div>
+      <div class="점판" id="점판"></div>
+      <p class="몰림글" id="몰림글"></p>
+      <p class="몰림덧">한꺼번에 부담되시면 절반씩 두 주로 나눠 보내셔도 됩니다.</p>
+    </div>
+  </section>
+
+  <!-- ② 뭐라고 -->
+  <section>
+    <div class="마디머리"><div class="번호">2</div><h2 class="마디이름">뭐라고 보낼까요</h2></div>
+    <p class="마디설명">글을 눌러서 원장님 말씀대로 고치실 수 있습니다.</p>
+
+    <div class="문안">
+      <div class="폰 고름" data-문안="짧게">
+        <div class="폰머리" role="radio" tabindex="0" aria-checked="true">
+          <span class="동그라미"></span>
+          <span class="폰이름">짧은 문자<em class="밑말">한 화면에 들어갑니다</em></span>
+          <span class="값"><span class="종류">SMS</span><span class="바이트">90바이트</span></span>
+        </div>
+        <div class="말판">
+          <p class="보낸이">받으시는 분 화면</p>
+          <div class="말풍선"><textarea rows="3" aria-label="짧은 문자 문안"></textarea></div>
+          <div class="고치기말"><span>「박기순님」 자리엔 그분 성함이 들어갑니다</span><button class="되돌리기" type="button">처음으로</button></div>
+        </div>
+      </div>
+
+      <div class="폰" data-문안="길게">
+        <div class="폰머리" role="radio" tabindex="0" aria-checked="false">
+          <span class="동그라미"></span>
+          <span class="폰이름">긴 문자<em class="밑말">안부를 함께 여쭙습니다</em></span>
+          <span class="값"><span class="종류 lms">LMS</span><span class="바이트">136바이트</span></span>
+        </div>
+        <div class="말판">
+          <p class="보낸이">받으시는 분 화면</p>
+          <div class="말풍선"><textarea rows="5" aria-label="긴 문자 문안"></textarea></div>
+          <div class="고치기말"><span>고치시면 요금이 다시 계산됩니다</span><button class="되돌리기" type="button">처음으로</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ③ 얼마나 자주 -->
+  <section>
+    <div class="마디머리"><div class="번호">3</div><h2 class="마디이름">얼마나 자주 보낼까요</h2></div>
+    <p class="마디설명">정해진 답은 없습니다. 편하신 대로 적어 주시면 됩니다.</p>
+    <div class="칩판" id="칩판">
+      <button class="칩" type="button" data-회="12">한 달에 한 번</button>
+      <button class="칩" type="button" data-회="6">두 달에 한 번</button>
+      <button class="칩" type="button" data-회="4">석 달에 한 번</button>
+    </div>
+    <input class="적는칸" id="주기칸" type="text" inputmode="text" placeholder="예: 한 달에 한 번, 손님 뜸할 때만" aria-label="얼마나 자주 보낼지">
+    <p class="칸덧" id="주기덧">위에서 고르셔도 되고, 직접 적으셔도 됩니다.</p>
+  </section>
+
+  <!-- 돈 -->
+  <section>
+    <div class="마디머리"><div class="번호">₩</div><h2 class="마디이름">문자 요금</h2></div>
+    <p class="마디설명">고르신 대로 계산한 금액입니다.</p>
+    <div class="돈판">
+      <div class="돈줄 큰">
+        <span class="돈이름">한 번 보낼 때<em id="돈설명">40분께 · 짧은 문자</em></span>
+        <span class="돈값" id="돈한번">336원</span>
+      </div>
+      <div class="돈줄">
+        <span class="돈이름">1년이면<em id="돈해설명">한 달에 한 번씩 보낼 때</em></span>
+        <span class="돈값" id="돈일년">—</span>
+      </div>
+      <div class="돈줄">
+        <span class="돈이름">아무리 많아도<em>매주 보내도 이보다는 안 나옵니다</em></span>
+        <span class="돈값" id="돈상한">—</span>
+      </div>
+    </div>
+    <p class="출처">한 분은 90일에 한 번만 해당되시니 실제로는 이보다 적게 나옵니다. 위 상한은 주 1회 × 52주로 잡은 것입니다.<br>알리고 기준 · 부가세 별도 · 2026-09-09 조회 · SMS 8.4원 · LMS 25.9원</p>
+  </section>
+
+  <!-- 확정 뒤 -->
+  <div class="정함" id="정함">
+    <div class="정함머리">이렇게 정하셨습니다</div>
+    <div class="정함글" id="정함글"></div>
+    <div class="정함단추">
+      <button type="button" class="베끼기" id="베끼기">글자 복사하기</button>
+      <button type="button" id="다시">다시 고를게요</button>
+    </div>
+    <p class="정함덧">복사해서 보내 주시면 그대로 준비하겠습니다. 이 화면에서는 문자가 나가지 않습니다.</p>
+  </div>
+
+</div>
+
+<footer>문자는 아직 한 통도 나가지 않았습니다. 원장님이 정해 주시면 그때 준비합니다.</footer>
+
+<div class="바닥">
+  <div class="바닥안">
+    <div class="요약">
+      <div class="요약글" id="요약글">—</div>
+      <div class="요약돈" id="요약돈">—</div>
+    </div>
+    <button class="확정" id="확정단추" type="button">이렇게 할게요</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* 노아에서 뽑은 실제 명단 (2026-09-09) — 폰번호는 화면에 쓰지 않는다 */
+var 명단 = [
+{"이름":"김태욱","지남":639},{"이름":"유숭열","지남":551},{"이름":"이성근","지남":551},
+{"이름":"박순자","지남":533},{"이름":"이상억","지남":525},{"이름":"최순환","지남":490},
+{"이름":"유남순","지남":477},{"이름":"장동국","지남":477},{"이름":"황상인","지남":468},
+{"이름":"박복순","지남":405},{"이름":"박효선","지남":403},{"이름":"신교우","지남":380},
+{"이름":"박복순","지남":352},{"이름":"김옥태","지남":317},{"이름":"심하수","지남":314},
+{"이름":"김순영","지남":314},{"이름":"홍춘길","지남":313},{"이름":"최창환","지남":312},
+{"이름":"김춘기","지남":309},{"이름":"김종희","지남":309},{"이름":"조남수","지남":294},
+{"이름":"최영화","지남":289},{"이름":"유평희","지남":288},{"이름":"김영한","지남":286},
+{"이름":"김종준","지남":286},{"이름":"이상무","지남":273},{"이름":"이인찬","지남":272},
+{"이름":"윤순임","지남":271},{"이름":"박항은","지남":266},{"이름":"이연희","지남":254},
+{"이름":"임헌각","지남":252},{"이름":"현선분","지남":232},{"이름":"이범우","지남":229},
+{"이름":"김순월","지남":229},{"이름":"이한국","지남":219},{"이름":"임동하","지남":198},
+{"이름":"이대웅","지남":196},{"이름":"윤천중","지남":193},{"이름":"이순안","지남":190},
+{"이름":"최인호","지남":189},{"이름":"이영애","지남":173},{"이름":"김상숙","지남":163},
+{"이름":"이안이","지남":156},{"이름":"김정순","지남":155},{"이름":"이명복","지남":142},
+{"이름":"김선희","지남":141},{"이름":"조순례","지남":141},{"이름":"강은숙","지남":139},
+{"이름":"이용태","지남":137},{"이름":"곽노욱","지남":130},{"이름":"장중호","지남":121},
+{"이름":"박기순","지남":104},{"이름":"김용선","지남":104},{"이름":"이종희","지남":103},
+{"이름":"송태헌","지남":93},{"이름":"김순예","지남":-37}
+];
+
+var 요금 = { SMS:8.4, LMS:25.9 };
+var 처음문안 = {
+  "짧게":"[한마음보청기] 박기순님 보청기 3개월 되었습니다.\n오시면 소리 조절해 드립니다. 043-234-2918",
+  "길게":"[한마음보청기]\n박기순님, 보청기 구입하신 지 3개월이 되었습니다.\n들으시는 데 불편은 없으신지요.\n오시면 소리 조절해 드립니다.\n043-234-2918"
+};
+var 이름표 = { "짧게":"짧은 문자", "길게":"긴 문자" };
+var 기본종류 = { "짧게":"SMS", "길게":"LMS" };
+var 기본밑말 = { "짧게":"한 화면에 들어갑니다", "길게":"안부를 함께 여쭙습니다" };
+var 고른문안 = "짧게";
+var 고른회수 = null;      /* 1년에 몇 번인지. 못 알아들으면 null */
+
+/* ── 잔손 ── */
+function 바이트(글){                       /* 한글 2 · 영숫자와 줄바꿈 1 */
+  var n = 0;
+  for (var i = 0; i < 글.length; i++) n += (글.charCodeAt(i) < 128 ? 1 : 2);
+  return n;
+}
+function 돈(값){                           /* 딱 0.5 면 짝수로 — 견적표와 같은 값이 나오게 */
+  var 내림 = Math.floor(값), 나머지 = 값 - 내림, r;
+  if (Math.abs(나머지 - 0.5) < 1e-9) r = (내림 % 2 === 0) ? 내림 : 내림 + 1;
+  else r = Math.round(값);
+  return r.toLocaleString('ko-KR') + '원';
+}
+function 기간(일){
+  var 해 = Math.floor(일/365), 달 = Math.floor((일 % 365)/30);
+  if (해 > 0) return 달 > 0 ? (해 + '년 ' + 달 + '개월') : (해 + '년');
+  return (달 > 0 ? 달 : 1) + '개월';
+}
+function 가림(이름){                        /* 손님 앞에서 열어도 되게 가운데를 가린다 */
+  if (이름.length < 3) return 이름.charAt(0) + '○';
+  return 이름.charAt(0) + '○' + 이름.slice(2);
+}
+function 고른기준(){ return Number(document.querySelector('input[name=누구]:checked').value); }
+function 대상(기준){ return 명단.filter(function(ㄱ){ return ㄱ.지남 > 기준; }); }
+
+/* ── 문안 한 통의 값 ── */
+function 문안값(갈래){
+  var 글 = document.querySelector('[data-문안="'+갈래+'"] textarea').value;
+  var b = 바이트(글);
+  var 종류 = b <= 90 ? 'SMS' : 'LMS';
+  return { 글:글, 바이트:b, 종류:종류, 단가:요금[종류], 넘침:b > 2000 };
+}
+
+/* ── 주기 알아듣기 ── */
+function 주기읽기(말){
+  var ㄱ = 말.replace(/\s/g,'');
+  if (!ㄱ) return null;
+  if (/(주에|매주|주1회|주한번|일주일)/.test(ㄱ)) return 52;
+  if (/(한달|1달|매달|매월|한번씩달|월1회)/.test(ㄱ)) return 12;
+  if (/(두달|2달|격월)/.test(ㄱ)) return 6;
+  if (/(석달|세달|3달|분기)/.test(ㄱ)) return 4;
+  if (/(반년|6개월|여섯달)/.test(ㄱ)) return 2;
+  if (/(일년|1년|한해|해에)/.test(ㄱ)) return 1;
+  return null;
+}
+
+/* ── 그린다 ── */
+function 그리기(){
+  var 기준 = 고른기준();
+  var 사람 = 대상(기준);
+  var 수 = 사람.length;
+
+  document.getElementById('수90').innerHTML  = 대상(90).length  + '<span>명</span>';
+  document.getElementById('수180').innerHTML = 대상(180).length + '<span>명</span>';
+  document.getElementById('수365').innerHTML = 대상(365).length + '<span>명</span>';
+
+  /* 오래되신 분 셋 */
+  var 줄 = document.getElementById('오래줄');
+  줄.innerHTML = '';
+  사람.slice(0,3).forEach(function(ㄱ){
+    var d = document.createElement('span');
+    d.className = '이름칩';
+    d.innerHTML = 가림(ㄱ.이름) + ' <i>' + 기간(ㄱ.지남) + ' 전</i>';
+    줄.appendChild(d);
+  });
+  if (수 > 3){
+    var 나머지 = document.createElement('span');
+    나머지.className = '이름칩';
+    나머지.innerHTML = '<i>그 밖 ' + (수-3) + '분</i>';
+    줄.appendChild(나머지);
+  }
+
+  /* 전화 몰림 — 열 분 중 세 분이 전화하신다고 본 어림 */
+  var 전화 = Math.round(수 * 0.3);
+  var 분 = 전화 * 5;
+  var 시간말 = 분 >= 60 ? (Math.floor(분/60) + '시간' + (분%60 ? ' ' + (분%60) + '분' : '')) : (분 + '분');
+  var 판 = document.getElementById('점판');
+  판.innerHTML = '';
+  for (var i = 0; i < 수; i++){
+    var p = document.createElement('span');
+    p.className = '점' + (i < 전화 ? ' 올' : '');
+    판.appendChild(p);
+  }
+  document.getElementById('몰림글').innerHTML =
+    수 + '분께 한꺼번에 보내면, 열 분 중 세 분이 전화하신다고 볼 때 <b>' + 전화 + '통</b>입니다. ' +
+    '한 분과 5분씩만 통화해도 ' + 시간말 + '이 듭니다.';
+
+  /* 문안 두 개의 바이트·종류 */
+  ['짧게','길게'].forEach(function(갈래){
+    var 칸 = document.querySelector('[data-문안="'+갈래+'"]');
+    var v = 문안값(갈래);
+    var 딱지 = 칸.querySelector('.종류');
+    딱지.textContent = v.넘침 ? '너무 김' : v.종류;
+    딱지.className = '종류' + (v.넘침 ? ' 넘침' : (v.종류 === 'LMS' ? ' lms' : ''));
+    칸.querySelector('.바이트').textContent = v.바이트 + '바이트';
+    칸.querySelector('.밑말').textContent =
+        v.넘침 ? '너무 길어 못 보냅니다'
+      : v.종류 === 기본종류[갈래] ? 기본밑말[갈래]
+      : v.종류 === 'LMS' ? '고치셔서 길어졌습니다 · LMS 요금'
+      : '짧아지셔서 SMS 요금입니다';
+    var 켬 = (갈래 === 고른문안);
+    칸.classList.toggle('고름', 켬);
+    칸.querySelector('.폰머리').setAttribute('aria-checked', 켬 ? 'true' : 'false');
+  });
+
+  /* 돈 */
+  var v = 문안값(고른문안);
+  var 한번 = 수 * v.단가;
+  document.getElementById('돈한번').textContent = 돈(한번);
+  document.getElementById('돈설명').textContent = 수 + '분께 · ' + 이름표[고른문안] + ' · ' + v.종류 + ' ' + v.단가 + '원';
+  document.getElementById('돈상한').textContent = 돈(한번 * 52);
+  if (고른회수){
+    document.getElementById('돈일년').textContent = 돈(한번 * 고른회수);
+    document.getElementById('돈해설명').textContent = '1년에 ' + 고른회수 + '번 보낼 때';
+  } else {
+    document.getElementById('돈일년').textContent = '—';
+    document.getElementById('돈해설명').textContent = '얼마나 자주 보낼지 정하시면 나옵니다';
+  }
+
+  /* 맨 아래 한 줄 */
+  var 주기말 = document.getElementById('주기칸').value.trim();
+  document.getElementById('요약글').textContent =
+    기준 + '일 · ' + 수 + '분께 · ' + 이름표[고른문안] + ' · ' + (주기말 || '주기는 아직');
+  document.getElementById('요약돈').innerHTML = '한 번에 ' + 돈(한번) + ' <span>' + (주기말 && 고른회수 ? '· 1년 ' + 돈(한번*고른회수) : '· 부가세 별도') + '</span>';
+
+  /* 확정판이 열려 있으면 같이 고친다 */
+  if (document.getElementById('정함').classList.contains('보임')) 정함쓰기();
+}
+
+function 정함쓰기(){
+  var 기준 = 고른기준(), 수 = 대상(기준).length, v = 문안값(고른문안);
+  var 주기말 = document.getElementById('주기칸').value.trim() || '아직 안 정함';
+  var 한번 = 수 * v.단가;
+  document.getElementById('정함글').textContent =
+    '보낼 분   ' + 기준 + '일 넘게 안 오신 ' + 수 + '분\n' +
+    '문자      ' + 이름표[고른문안] + ' (' + v.바이트 + '바이트 · ' + v.종류 + ')\n' +
+    '주기      ' + 주기말 + '\n' +
+    '한 번에   ' + 돈(한번) + ' (부가세 별도)\n' +
+    '1년이면   ' + (고른회수 ? 돈(한번*고른회수) : '주기를 정하면 나옴') + ' · 아무리 많아도 ' + 돈(한번*52) + '\n\n' +
+    '보낼 글\n' + v.글;
+}
+
+/* ── 손 타는 자리 ── */
+document.getElementById('누구').addEventListener('change', 그리기);
+
+document.querySelectorAll('[data-문안]').forEach(function(칸){
+  var 갈래 = 칸.getAttribute('data-문안');
+  var 글칸 = 칸.querySelector('textarea');
+  글칸.value = 처음문안[갈래];
+
+  function 키우기(){ 글칸.style.height = 'auto'; 글칸.style.height = 글칸.scrollHeight + 'px'; }
+  글칸.addEventListener('input', function(){ 키우기(); 고른문안 = 갈래; 그리기(); });
+  글칸.addEventListener('focus', function(){ 고른문안 = 갈래; 그리기(); });
+  키우기();
+
+  function 고르기(){ 고른문안 = 갈래; 그리기(); }
+  칸.querySelector('.폰머리').addEventListener('click', 고르기);
+  칸.querySelector('.폰머리').addEventListener('keydown', function(e){
+    if (e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); 고르기(); }
+  });
+  칸.querySelector('.되돌리기').addEventListener('click', function(e){
+    e.stopPropagation();
+    글칸.value = 처음문안[갈래]; 키우기(); 고른문안 = 갈래; 그리기();
+  });
+});
+
+var 주기칸 = document.getElementById('주기칸');
+document.getElementById('칩판').addEventListener('click', function(e){
+  var 칩 = e.target.closest('.칩'); if (!칩) return;
+  주기칸.value = 칩.textContent;
+  칩판칠하기();
+  고른회수 = Number(칩.getAttribute('data-회'));
+  주기덧();
+  그리기();
+});
+function 칩판칠하기(){
+  document.querySelectorAll('.칩').forEach(function(ㅊ){
+    ㅊ.classList.toggle('고름', ㅊ.textContent === 주기칸.value.trim());
+  });
+}
+function 주기덧(){
+  var 말 = 주기칸.value.trim();
+  var 덧 = document.getElementById('주기덧');
+  if (!말) 덧.textContent = '위에서 고르셔도 되고, 직접 적으셔도 됩니다.';
+  else if (고른회수) 덧.textContent = '1년에 ' + 고른회수 + '번으로 보고 계산했습니다.';
+  else 덧.textContent = '적어 주신 대로 두겠습니다. 1년 요금은 아래 상한만 보시면 됩니다.';
+}
+주기칸.addEventListener('input', function(){
+  고른회수 = 주기읽기(주기칸.value);
+  칩판칠하기(); 주기덧(); 그리기();
+});
+
+document.getElementById('확정단추').addEventListener('click', function(){
+  정함쓰기();
+  var 판 = document.getElementById('정함');
+  판.classList.add('보임');
+  판.scrollIntoView({behavior:'smooth', block:'center'});
+});
+document.getElementById('다시').addEventListener('click', function(){
+  document.getElementById('정함').classList.remove('보임');
+  window.scrollTo({top:0, behavior:'smooth'});
+});
+document.getElementById('베끼기').addEventListener('click', function(){
+  var 글 = document.getElementById('정함글').textContent;
+  var 단추 = this;
+  function 됐다(){ 단추.textContent = '복사했습니다'; setTimeout(function(){ 단추.textContent = '글자 복사하기'; }, 2000); }
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(글).then(됐다, 손으로);
+  } else 손으로();
+  function 손으로(){
+    var t = document.createElement('textarea');
+    t.value = 글; t.style.position='fixed'; t.style.opacity='0';
+    document.body.appendChild(t); t.select();
+    try { document.execCommand('copy'); 됐다(); }
+    catch(e){ 단추.textContent = '위 글을 길게 눌러 복사해 주세요'; }
+    document.body.removeChild(t);
+  }
+});
+
+그리기();
+</script>
+</body>
+</html>
