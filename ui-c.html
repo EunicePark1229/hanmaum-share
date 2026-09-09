@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>이번 주 연락 — 한마음보청기</title>
+<!--
+  C안 — 한 번에 하나
+  · 한 화면에 한 분만. 단추로 넘긴다(스와이프 없음).
+  · 서체 굵기로 위계를 안 만든다 — 크기·색·자리·여백만 쓴다.
+  · 글자 18px 이상 · 누르는 것 56px 이상 · 명암비 7:1 이상.
+  · 손님 앞에서 열려도 되는 화면이라 금액·매출이 한 글자도 없다.
+  · 시안이라 자료가 안에 박혀 있고 「보내기」는 화면만 바뀐다.
+-->
+<style>
+:root{
+  --bg:#FDF6EE;      /* 바탕 */
+  --card:#FFFFFF;
+  --ink:#2A2118;     /* 본문  15.0:1 (바탕) */
+  --ink2:#5A4A3C;    /* 곁말   7.9:1 (바탕) · 8.5:1 (흰 카드) */
+  --main:#6E4322;    /* 주색   7.9:1 (바탕) · 흰 글자 8.4:1 */
+  --line:#E4D5C4;    /* 나누는 선 */
+  --edge:#A88564;    /* 단추 테두리 3.4:1 */
+  --soft:#F6EADD;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{max-width:100%;overflow-x:hidden}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
+  /* 굵기는 처음부터 끝까지 하나다. 실제 서체가 한 종뿐이라 굵게가 없다. */
+  font-weight:500;
+  font-size:19px;line-height:1.7;
+  -webkit-text-size-adjust:100%;
+}
+b,strong,h1,h2,h3{font-weight:inherit;margin:0}
+button{font-family:inherit;font-weight:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--main);outline-offset:3px}
+
+/* ── 어디쯤인지 — 늘 화면 맨 위에 붙어 있다 ───────────── */
+header{
+  position:sticky;top:0;z-index:5;background:var(--bg);
+  padding:16px 20px 12px;border-bottom:1px solid var(--line);
+}
+.날{font-size:18px;color:var(--ink2);margin:0}
+.어디{font-size:22px;color:var(--main);margin:2px 0 10px}
+.칸들{display:flex;gap:6px}
+.칸{flex:1;height:10px;border-radius:6px;background:var(--line)}
+.칸.끝{background:var(--main)}
+.칸.지금{background:var(--main);box-shadow:0 0 0 3px rgba(110,67,34,.22)}
+
+main{padding:18px 20px 186px}
+
+/* ── 카드 ───────────────────────────────────────── */
+.카드{
+  background:var(--card);border:1px solid var(--line);border-radius:22px;
+  padding:20px 18px;box-shadow:0 3px 14px rgba(120,86,56,.10);
+}
+.이름{font-size:34px;line-height:1.25;color:var(--ink);letter-spacing:-.01em}
+.전화{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  min-height:62px;margin:12px 0 0;padding:0 14px;
+  border:2px solid var(--edge);border-radius:16px;background:var(--soft);
+  color:var(--main);font-size:25px;text-decoration:none;letter-spacing:.01em;
+}
+.전화:active{background:#EEDFCC}
+.전화 .수화기{font-size:22px}
+.이유{
+  margin:14px 0 0;padding:13px 14px 13px 16px;
+  border-left:6px solid var(--line);background:#FFFCF8;border-radius:0 12px 12px 0;
+  font-size:19px;line-height:1.75;color:var(--ink2);
+}
+.물음{font-size:20px;color:var(--ink);margin:18px 0 10px}
+
+/* ── 고르는 단추 ────────────────────────────────── */
+.고르기{display:grid;gap:9px}
+.칩{
+  width:100%;min-height:60px;padding:14px 16px;text-align:left;
+  border:2px solid var(--edge);border-radius:16px;background:var(--card);
+  font-size:20px;line-height:1.4;
+  display:flex;align-items:center;gap:12px;
+}
+.칩 .표{
+  flex:0 0 26px;height:26px;border-radius:50%;border:2px solid var(--edge);
+  display:flex;align-items:center;justify-content:center;font-size:18px;color:transparent;
+}
+.칩.고름{background:var(--main);border-color:var(--main);color:#fff}
+.칩.고름 .표{background:#fff;border-color:#fff;color:var(--main)}
+.칩:active{transform:scale(.99)}
+
+/* ── 되돌리기 ──────────────────────────────────── */
+.되돌{
+  margin-top:14px;padding:14px 16px;border-radius:14px;background:var(--soft);
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  font-size:18px;color:var(--ink2);
+}
+.되돌 .지움{
+  min-height:56px;padding:0 20px;border:2px solid var(--main);border-radius:14px;
+  background:var(--card);color:var(--main);font-size:18px;margin-left:auto;
+}
+
+/* ── 남기실 말씀 ───────────────────────────────── */
+.열기{
+  width:100%;min-height:60px;margin-top:14px;padding:15px;
+  border:2px dashed var(--edge);border-radius:16px;background:transparent;
+  color:var(--main);font-size:19px;
+}
+textarea{
+  width:100%;margin-top:14px;padding:16px;border:2px solid var(--edge);
+  border-radius:16px;background:#FFFDFA;color:var(--ink);
+  font-family:inherit;font-weight:inherit;font-size:19px;line-height:1.7;resize:vertical;
+}
+textarea::placeholder{color:var(--ink2);opacity:1}
+textarea:focus{outline:0;border-color:var(--main)}
+.곁{font-size:18px;color:var(--ink2);margin:10px 2px 0}
+
+/* ── 아래 바 ───────────────────────────────────── */
+.바{
+  position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--card);
+  border-top:1px solid var(--line);border-radius:22px 22px 0 0;
+  padding:14px 20px calc(16px + env(safe-area-inset-bottom));
+  box-shadow:0 -4px 18px rgba(120,86,56,.13);
+  display:flex;gap:12px;align-items:stretch;
+}
+.바 button{min-height:64px;border-radius:16px;font-size:20px;padding:14px 18px}
+.뒤{flex:0 0 auto;border:2px solid var(--edge);background:var(--card);color:var(--main)}
+.뒤[hidden]{display:none}
+.앞{flex:1;border:0;background:var(--main);color:#fff;line-height:1.35}
+.앞.연하게{background:var(--card);border:2px solid var(--main);color:var(--main)}
+
+/* ── 다 끝난 화면 ──────────────────────────────── */
+.끝머리{font-size:32px;line-height:1.4;margin:0 0 6px}
+.끝말{font-size:19px;color:var(--ink2);margin:0 0 22px}
+.적은것{background:var(--card);border:1px solid var(--line);border-radius:20px;overflow:hidden}
+.줄{display:flex;align-items:center;gap:12px;padding:18px 18px;border-top:1px solid var(--line)}
+.줄:first-child{border-top:0}
+.줄 .왼{flex:1;min-width:0}
+.줄 .누구{font-size:21px;color:var(--ink)}
+.줄 .뭐{font-size:18px;color:var(--ink2);margin-top:2px}
+.줄 .고침{
+  flex:0 0 auto;min-height:56px;padding:0 18px;border:2px solid var(--edge);
+  border-radius:14px;background:var(--card);color:var(--main);font-size:18px;
+}
+.미룬알림{
+  margin-top:18px;padding:18px;border:2px solid var(--edge);border-radius:18px;
+  background:var(--soft);font-size:19px;color:var(--ink2);
+}
+.미룬알림 button{
+  width:100%;min-height:60px;margin-top:12px;border:2px solid var(--main);
+  border-radius:14px;background:var(--card);color:var(--main);font-size:19px;
+}
+.보냄{text-align:center;padding:40px 8px}
+.보냄 .해{
+  width:88px;height:88px;margin:0 auto;border-radius:50%;
+  background:var(--main);color:#fff;font-size:44px;
+  display:flex;align-items:center;justify-content:center;
+}
+.보냄 h2{font-size:30px;margin:14px 0 8px}
+.보냄 p{font-size:19px;color:var(--ink2);margin:0 0 26px;line-height:1.7}
+.보냄 button{
+  min-height:60px;padding:0 26px;border:2px solid var(--edge);border-radius:16px;
+  background:var(--card);color:var(--main);font-size:19px;
+}
+
+@media (prefers-reduced-motion:no-preference){
+  .들어옴{animation:들어 .22s ease-out}
+  @keyframes 들어{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <p class="날" id="날"></p>
+  <p class="어디" id="어디">세 분 중 첫 번째</p>
+  <div class="칸들" id="칸들"></div>
+</header>
+
+<main id="무대"></main>
+
+<div class="바" id="바">
+  <button class="뒤" id="뒤" onclick="뒤로()">← 이전</button>
+  <button class="앞" id="앞" onclick="앞으로()">다음 분 →</button>
+</div>
+
+<script>
+/* ── 자료 (시안이라 화면 안에 박아 둔다) ───────────────── */
+var 사람 = [
+  { 이름:'윤천중', 전화:'010-3742-5518',
+    이유:'지난달 26일에 맞추신 보청기,\n한 달 점검 때가 됐어요.' },
+  { 이름:'이순안', 전화:'010-2286-4071',
+    이유:'건전지 사 가신 지 두 달 됐어요.\n떨어지실 때입니다.' },
+  { 이름:'김옥태', 전화:'010-5619-3324',
+    이유:'급여 재지원 넣을 수 있는 때가\n다음 달이에요. 서류가 걸리는 분입니다.' }
+];
+var 고를것 = ['통화했어요','안 받으셨어요','방문 약속','괜찮다고 하셔요','다음에 다시'];
+
+사람.forEach(function(p){ p.결과=''; p.말=''; p.말펴짐=false; p.미룸=false; });
+
+var 여쭘 = {
+  물음:'지금 매장에 딸기 장바구니가 몇 개쯤 남았을까요?',
+  곁:'다음 주문 넣을 때 쓰려는 거예요. 대충 적으셔도 됩니다.',
+  고를것:['거의 없어요','스무 개쯤','쉰 개쯤','백 개 넘게','잘 모르겠어요'],
+  답:'', 말:'', 말펴짐:false, 미룸:false
+};
+
+var 지금 = 0;          /* 0·1·2 = 사람 · 3 = 여쭐 것 · 4 = 다 끝 */
+var 보냈나 = false;
+var 총 = 4;
+
+/* ── 날짜 한 줄 ─────────────────────────────────── */
+(function(){
+  var d = new Date(), 요일 = ['일','월','화','수','목','금','토'][d.getDay()];
+  document.getElementById('날').textContent =
+    d.getMonth()+1 + '월 ' + d.getDate() + '일 ' + 요일 + '요일 · 이번 주 연락';
+})();
+
+function esc(s){
+  return String(s==null?'':s).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
+  });
+}
+function 줄바꿈(s){ return esc(s).split('\n').join('<br>'); }
+
+/* ── 어디쯤인지 ─────────────────────────────────── */
+var 차례말 = ['첫 번째','두 번째','세 번째'];
+
+function 머리그리기(){
+  var 어디 = document.getElementById('어디');
+  var 칸들 = document.getElementById('칸들');
+  if (지금 === 4){
+    어디.textContent = 보냈나 ? '보냈습니다' : '오늘 남기신 것';
+  } else if (지금 === 3){
+    어디.textContent = '마지막 · 하나만 여쭐게요';
+  } else {
+    어디.textContent = '세 분 중 ' + 차례말[지금];
+  }
+  var h = '';
+  for (var i=0;i<총;i++){
+    var 꼴 = 지금===4 ? '끝' : (i<지금 ? '끝' : (i===지금 ? '지금' : ''));
+    h += '<div class="칸 ' + 꼴 + '"></div>';
+  }
+  칸들.innerHTML = h;
+}
+
+/* ── 화면 그리기 ────────────────────────────────── */
+function 그리기(){
+  머리그리기();
+  var 무대 = document.getElementById('무대');
+  무대.innerHTML =
+      지금 === 4 ? 끝화면()
+    : 지금 === 3 ? 여쭐화면()
+    : 사람화면(지금);
+  무대.firstElementChild && 무대.firstElementChild.classList.add('들어옴');
+  바그리기();
+  window.scrollTo(0,0);
+}
+
+function 사람화면(i){
+  var p = 사람[i];
+  var 번호 = p.전화.replace(/[^0-9]/g,'');
+  var h = '<section class="카드">';
+  h += '<h2 class="이름">' + esc(p.이름) + ' 님</h2>';
+  h += '<a class="전화" href="tel:' + 번호 + '">' +
+       '<span class="수화기">☎</span>' + esc(p.전화) + '</a>';
+  h += '<p class="이유">' + 줄바꿈(p.이유) + '</p>';
+  h += '<p class="물음">어떻게 되셨어요?</p>';
+  h += '<div class="고르기">';
+  for (var k=0;k<고를것.length;k++){
+    var c = 고를것[k], 켬 = (p.결과===c);
+    h += '<button class="칩' + (켬?' 고름':'') + '" onclick="고르기(' + i + ',' + k + ')">' +
+         '<span class="표">✓</span>' + esc(c) + '</button>';
+  }
+  h += '</div>';
+
+  /* 되돌리기 — 잘못 누르셨을 때 이 자리에서 바로 지운다 */
+  if (p.결과){
+    h += '<div class="되돌">「' + esc(p.결과) + '」로 두었어요' +
+         '<button class="지움" onclick="지우기(' + i + ')">지우기</button></div>';
+  }
+
+  /* 남기실 말씀 — 안 쓰셔도 되게 접어 둔다 */
+  if (p.말펴짐 || p.말){
+    h += '<textarea rows="3" placeholder="더 하실 말씀 있으시면 편하게요"' +
+         ' oninput="말적기(' + i + ',this.value)">' + esc(p.말) + '</textarea>' +
+         '<p class="곁">안 쓰셔도 그냥 넘어갑니다.</p>';
+  } else {
+    h += '<button class="열기" onclick="말펴기(' + i + ')">+ 남기실 말씀 (안 쓰셔도 돼요)</button>';
+  }
+  h += '</section>';
+  return h;
+}
+
+function 여쭐화면(){
+  var h = '<section class="카드">';
+  h += '<h2 class="이름">하나만 여쭐게요</h2>';
+  h += '<p class="이유">' + 줄바꿈(여쭘.곁) + '</p>';
+  h += '<p class="물음">' + esc(여쭘.물음) + '</p>';
+  h += '<div class="고르기">';
+  for (var k=0;k<여쭘.고를것.length;k++){
+    var c = 여쭘.고를것[k], 켬 = (여쭘.답===c);
+    h += '<button class="칩' + (켬?' 고름':'') + '" onclick="여쭘고르기(' + k + ')">' +
+         '<span class="표">✓</span>' + esc(c) + '</button>';
+  }
+  h += '</div>';
+  if (여쭘.답){
+    h += '<div class="되돌">「' + esc(여쭘.답) + '」로 두었어요' +
+         '<button class="지움" onclick="여쭘지우기()">지우기</button></div>';
+  }
+  if (여쭘.말펴짐 || 여쭘.말){
+    h += '<textarea rows="2" placeholder="개수를 아시면 적어 주셔도 좋아요"' +
+         ' oninput="여쭘말(this.value)">' + esc(여쭘.말) + '</textarea>';
+  } else {
+    h += '<button class="열기" onclick="여쭘펴기()">+ 직접 적을래요</button>';
+  }
+  h += '</section>';
+  return h;
+}
+
+function 끝화면(){
+  if (보냈나){
+    return '<section class="보냄"><div class="해">✓</div>' +
+      '<h2>잘 보냈습니다</h2>' +
+      '<p>고맙습니다, 원장님.<br>다음 주 월요일에 또 명단 보내 드릴게요.</p>' +
+      '<button onclick="처음부터()">다시 보기</button></section>';
+  }
+  var 한것 = [], 미룬 = [];
+  사람.forEach(function(p,i){
+    if (p.미룸) 미룬.push({이름:p.이름 + ' 님', 자리:i});
+    else 한것.push({누구:p.이름 + ' 님', 뭐:(p.결과 || '아직 안 고르셨어요') +
+      (p.말 ? ' · 말씀 남기심' : ''), 자리:i});
+  });
+  if (여쭘.미룸) 미룬.push({이름:'장바구니 여쭌 것', 자리:3});
+  else 한것.push({누구:'딸기 장바구니', 뭐:(여쭘.답 || 여쭘.말 || '아직 안 고르셨어요'), 자리:3});
+
+  var h = '<h2 class="끝머리">다 보셨어요</h2>';
+  h += '<p class="끝말">아래가 오늘 남기신 것이에요. 고치실 데가 있으면 눌러 주세요.</p>';
+  h += '<div class="적은것">';
+  한것.forEach(function(r){
+    h += '<div class="줄"><div class="왼">' +
+         '<div class="누구">' + esc(r.누구) + '</div>' +
+         '<div class="뭐">' + esc(r.뭐) + '</div></div>' +
+         '<button class="고침" onclick="가기(' + r.자리 + ')">고치기</button></div>';
+  });
+  h += '</div>';
+
+  if (미룬.length){
+    h += '<div class="미룬알림">나중에 보기로 하신 것이 ' + 미룬.length + '개 있어요.' +
+         '<button onclick="가기(' + 미룬[0].자리 + ')">' +
+         esc(미룬[0].이름) + '부터 다시 보기</button></div>';
+  }
+  return h;
+}
+
+/* ── 아래 바 ───────────────────────────────────── */
+function 바그리기(){
+  var 뒤 = document.getElementById('뒤'), 앞 = document.getElementById('앞');
+  뒤.hidden = (지금 === 0);
+  if (보냈나){ document.getElementById('바').hidden = true; return; }
+  document.getElementById('바').hidden = false;
+
+  if (지금 === 4){
+    뒤.hidden = false; 뒤.textContent = '← 이전';
+    앞.textContent = '보내기'; 앞.classList.remove('연하게');
+    return;
+  }
+  if (지금 === 3){
+    var 함 = !!(여쭘.답 || 여쭘.말);
+    앞.textContent = 함 ? '다 됐어요 →' : '그냥 넘어갈게요 →';
+    앞.classList.toggle('연하게', !함);
+    return;
+  }
+  var p = 사람[지금], 했나 = !!(p.결과 || p.말);
+  앞.textContent = 했나 ? '다음 →' : '나중에 볼게요 →';
+  앞.classList.toggle('연하게', !했나);
+}
+
+/* ── 누르는 것들 ────────────────────────────────── */
+function 고르기(i,k){
+  var c = 고를것[k];
+  사람[i].결과 = (사람[i].결과 === c) ? '' : c;   /* 다시 누르면 풀린다 */
+  사람[i].미룸 = false;
+  그리기();
+}
+function 지우기(i){ 사람[i].결과=''; 그리기(); }
+function 말펴기(i){ 사람[i].말펴짐 = true; 그리기(); }
+function 말적기(i,v){ 사람[i].말 = v; 바그리기(); }
+
+function 여쭘고르기(k){
+  var c = 여쭘.고를것[k];
+  여쭘.답 = (여쭘.답 === c) ? '' : c;
+  여쭘.미룸 = false;
+  그리기();
+}
+function 여쭘지우기(){ 여쭘.답=''; 그리기(); }
+function 여쭘펴기(){ 여쭘.말펴짐 = true; 그리기(); }
+function 여쭘말(v){ 여쭘.말 = v; 바그리기(); }
+
+function 앞으로(){
+  if (지금 === 4){ 보냈나 = true; 그리기(); return; }
+  if (지금 === 3){
+    여쭘.미룸 = !(여쭘.답 || 여쭘.말);
+  } else {
+    var p = 사람[지금];
+    p.미룸 = !(p.결과 || p.말);
+  }
+  지금++;
+  그리기();
+}
+function 뒤로(){ if (지금 > 0){ 지금--; 그리기(); } }
+function 가기(i){ 지금 = i; 그리기(); }
+function 처음부터(){ 보냈나 = false; 지금 = 0; 그리기(); }
+
+그리기();
+</script>
+</body>
+</html>
