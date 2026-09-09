@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>A안 · 카드 대시보드 — 한마음보청기</title>
+
+<!-- 서체 — 정본은 '학교안심 운동장 L' 이고, 이 시안은 단독으로 열리므로 Noto 로 대신한다.
+     운동장은 굵기가 한 종뿐이라 굵게가 안 먹는다.
+     그래서 이 화면의 위계는 굵기가 아니라 크기 · 색 · 자리 · 여백으로만 만들었다. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap">
+
+<style>
+:root{
+  --bg:#FDF6EE;
+  --card:#FFFFFF;
+  --ink:#2A2118;
+  --sub:#7C6B5D;
+  --line:#EBDFD2;
+  --main:#8B5E3C;
+  --main-deep:#6E4527;
+  --soft:#F6E8DA;
+  --done:#3F7A5A;
+  --done-soft:#EBF3EE;
+  --navy:#1A2B4C;
+  --shadow:rgba(140,100,66,.12);
+
+  --탭바:74px;
+  --보내기바:78px;
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{max-width:100%;overflow-x:hidden}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:'운동장','Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
+  font-weight:400;                 /* 굵기는 쓰지 않는다 */
+  font-size:17px;line-height:1.7;
+  word-break:keep-all;             /* 한국어는 낱말 단위로 줄바꿈 */
+  letter-spacing:.005em;
+  padding-bottom:calc(var(--탭바) + 20px);
+  transition:padding-bottom .18s;
+}
+body.보낼것있음{padding-bottom:calc(var(--탭바) + var(--보내기바) + 12px)}
+h1,h2,h3,h4,p,strong,b,summary{font-weight:400}
+button{font-family:inherit;font-weight:400;letter-spacing:inherit;cursor:pointer}
+
+/* ── 인사 ─────────────────────────────────────────── */
+header{padding:22px 18px 16px}
+header .날{margin:0;font-size:15px;color:var(--sub)}
+header h1{margin:2px 0 0;font-size:25px;line-height:1.35;color:var(--main-deep)}
+
+/* ── 진행 띠 — 스크롤해도 붙어 있다. 「몇 개 남았나」의 자리 ── */
+.띠{
+  position:sticky;top:0;z-index:8;
+  background:var(--bg);
+  padding:10px 18px 14px;
+  border-bottom:1px solid var(--line);
+  box-shadow:0 6px 14px -12px var(--shadow);
+}
+.띠.숨김{display:none}
+.띠 .윗줄{display:flex;align-items:center;gap:10px;min-width:0}
+.띠 .이름표{
+  font-size:14px;color:var(--sub);flex:1;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.띠 .거르기{
+  border:1px solid var(--line);background:var(--card);color:var(--sub);
+  border-radius:999px;padding:8px 14px;font-size:14px;min-height:36px;flex:0 0 auto;
+}
+.띠 .거르기.켬{background:var(--main);border-color:var(--main);color:#fff}
+.띠 .말{margin:6px 0 10px;font-size:19px;line-height:1.4;color:var(--ink)}
+.띠 .말 .수{font-size:26px;color:var(--main-deep);letter-spacing:.01em}
+.띠.다함 .말 .수{color:var(--done)}
+.칸막대{display:flex;gap:3px}
+.칸막대 span{flex:1 1 0;height:9px;border-radius:999px;background:var(--line);transition:background .2s}
+.칸막대 span.참{background:var(--main)}
+.띠.다함 .칸막대 span.참{background:var(--done)}
+
+/* ── 본문 ─────────────────────────────────────────── */
+main{padding:16px 14px 0}
+.안내{margin:0 4px 14px;color:var(--sub);font-size:15.5px;line-height:1.65}
+.구역제목{margin:26px 4px 10px;font-size:15px;color:var(--sub)}
+.구역제목:first-child{margin-top:4px}
+
+.카드{
+  background:var(--card);border:1px solid var(--line);border-radius:20px;
+  padding:18px 16px;margin-bottom:12px;box-shadow:0 2px 8px var(--shadow);
+}
+.카드 .이름{font-size:22px;line-height:1.3;color:var(--main-deep)}
+.카드 .까닭{margin:5px 0 0;color:var(--sub);font-size:15px;line-height:1.6}
+
+/* 전화 — 카드에서 제일 먼저 하는 것이라 제일 크다 */
+.걸기{
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  width:100%;min-height:58px;margin-top:14px;
+  background:var(--soft);border:1px solid #E2CDB6;border-radius:16px;
+  color:var(--main-deep);font-size:19px;text-decoration:none;letter-spacing:.02em;
+}
+.걸기:active{background:#EEDCC8}
+.걸기 svg{flex:0 0 auto}
+.번호없음{
+  margin-top:14px;padding:15px;border:1px dashed var(--line);border-radius:16px;
+  text-align:center;color:var(--sub);font-size:15px;
+}
+
+.나눔{display:flex;align-items:center;gap:10px;margin:16px 2px 11px;color:var(--sub);font-size:14px}
+.나눔::before,.나눔::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* 결과 다섯 — 2열 격자. 크기가 같아야 눈으로 훑힌다 */
+.고를것{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.고를것 button{
+  min-height:56px;padding:10px 8px;
+  border:1.5px solid var(--line);background:var(--card);color:var(--ink);
+  border-radius:15px;font-size:16px;line-height:1.35;
+}
+.고를것 button:last-child{grid-column:1 / -1}
+.고를것 button.켬{background:var(--main);border-color:var(--main);color:#fff}
+.고를것 button.켬::before{content:"✓ "}
+
+textarea,input{
+  width:100%;min-width:0;max-width:100%;
+  border:1.5px solid var(--line);border-radius:14px;padding:14px;
+  font-family:inherit;font-weight:400;font-size:17px;line-height:1.6;color:var(--ink);
+  background:#FFFDFA;margin-top:12px;resize:vertical;
+}
+textarea:focus,input:focus{outline:0;border-color:var(--main);background:#fff}
+::placeholder{color:#BFB0A4}
+label{display:block;font-size:15px;color:var(--main-deep);margin-top:16px}
+
+/* 다 한 카드 — 자리를 안 옮기고 그 자리에서 접힌다.
+   손가락 밑에서 목록이 움직이면 어디를 눌렀는지 잃어버리신다 */
+.카드.끝{
+  padding:14px 16px;background:var(--done-soft);border-color:#CFE1D6;box-shadow:none;
+  display:flex;align-items:center;gap:11px;
+}
+.카드.끝 .표{
+  flex:0 0 auto;width:28px;height:28px;border-radius:999px;background:var(--done);color:#fff;
+  display:grid;place-items:center;font-size:16px;line-height:1;
+}
+.카드.끝 .글{flex:1;min-width:0;font-size:17px;line-height:1.45}
+.카드.끝 .글 em{font-style:normal;color:var(--done);font-size:15px;display:block}
+.카드.끝 .고칠{
+  flex:0 0 auto;border:1px solid #CFE1D6;background:#fff;color:var(--sub);
+  border-radius:12px;padding:11px 12px;font-size:14px;min-height:44px;
+}
+.숨김{display:none !important}
+
+/* 다 끝났을 때 */
+.다끝{
+  background:var(--done-soft);border:1px solid #CFE1D6;border-radius:20px;
+  padding:26px 20px;text-align:center;margin-bottom:12px;
+}
+.다끝 .큰{font-size:21px;color:var(--done);margin:0 0 6px}
+.다끝 p{margin:0;color:var(--sub);font-size:15.5px;line-height:1.7}
+
+/* 빈 상태 */
+.빈{
+  border:1px dashed var(--line);border-radius:20px;background:#FFFCF8;
+  padding:38px 22px;text-align:center;color:var(--sub);font-size:16px;line-height:1.85;
+}
+.더하기{
+  width:100%;min-height:60px;border:1.5px dashed var(--line);background:transparent;
+  color:var(--main);border-radius:18px;padding:16px;font-size:17px;margin:2px 0 8px;
+}
+.더하기:active{background:var(--soft)}
+
+/* 블로그 — 앱 색을 안 쓴다. 네이버에 올라갔을 때 보이는 모양 그대로 */
+.머리띠{background:var(--navy);color:#fff;border-radius:14px;padding:15px 16px;margin-bottom:12px;
+  font-size:14px;line-height:1.6}
+.머리띠 span{display:block;margin-top:5px;font-size:17px;line-height:1.5}
+.종이{background:#fff;border:1px solid #E7E7E7;border-radius:14px;padding:24px 18px;margin-bottom:12px}
+.종이 .소제{font-size:19px;color:var(--navy);text-align:center;margin:0 0 16px;line-height:1.55}
+.종이 .글{font-size:16px;line-height:2.05;color:#2E2E2E;text-align:center;margin:0}
+.빈그림{background:#F3F4F6;border:1px dashed #C9CDD4;border-radius:8px;padding:42px 16px;
+  text-align:center;color:#8B8B8B;font-size:14px;line-height:1.8}
+.사진표{font-size:12.5px;color:#9A9A9A;text-align:center;margin-top:8px}
+.고칠래{width:100%;min-height:48px;border:0;background:transparent;color:var(--main);
+  font-size:15.5px;padding:12px;border-top:1px dashed var(--line);margin-top:14px}
+.적는칸{display:none}.적는칸.켬{display:block}
+.메모단추{width:100%;min-height:48px;border:0;background:transparent;color:var(--sub);
+  font-size:15.5px;padding:12px;margin-top:12px;border-top:1px dashed var(--line)}
+.메모칸{display:none}.메모칸.켬{display:block}
+.메모칸 textarea{margin-top:4px}
+
+/* 찾기 */
+input[type=search]{margin-top:0}
+.고른이{
+  display:inline-block;border:1.5px solid var(--line);background:var(--card);color:var(--ink);
+  border-radius:999px;padding:13px 18px;font-size:16px;min-height:48px;margin:0 8px 8px 0;
+}
+.사람 .줄{display:flex;gap:10px;padding:11px 0;border-top:1px solid #F3EBE2}
+.사람 .키{flex:0 0 92px;color:var(--sub);font-size:14.5px;line-height:1.5}
+.사람 .값{flex:1;min-width:0;font-size:16px;line-height:1.5}
+.사람 details{margin-top:12px;border-top:1px solid var(--line);padding-top:6px}
+.사람 summary{padding:13px 2px;color:var(--sub);font-size:15px;min-height:44px;list-style:none}
+.사람 summary::-webkit-details-marker{display:none}
+.사람 summary::before{content:"▸ "}
+.사람 details[open] summary::before{content:"▾ "}
+
+/* ── 오류 ─────────────────────────────────────────── */
+.오류{
+  position:fixed;left:12px;right:12px;z-index:12;
+  bottom:calc(var(--탭바) + var(--보내기바) + 10px);
+  background:#FFF4F1;border:1px solid #E9C4B8;border-radius:18px;padding:16px 16px 14px;
+  box-shadow:0 8px 24px rgba(120,60,40,.16);
+}
+.오류 .큰{margin:0 0 4px;font-size:17px;color:#96412A}
+.오류 p{margin:0;font-size:15px;color:#7C5A4E;line-height:1.6}
+.오류 .닫기{position:absolute;top:8px;right:8px;border:0;background:transparent;color:#96412A;
+  font-size:20px;min-height:44px;min-width:44px;border-radius:12px}
+
+/* ── 보내기 바 ─────────────────────────────────────── */
+.보내기바{
+  position:fixed;left:0;right:0;bottom:var(--탭바);z-index:9;
+  background:var(--card);border-top:1px solid var(--line);
+  padding:11px 14px;display:flex;gap:12px;align-items:center;
+  box-shadow:0 -6px 18px -10px var(--shadow);
+  transform:translateY(110%);transition:transform .18s;
+}
+.보내기바.켬{transform:none}
+.보내기바 .수{flex:1;min-width:0;font-size:15px;color:var(--sub);line-height:1.4}
+.보내기{
+  border:0;background:var(--main);color:#fff;border-radius:16px;
+  padding:0 26px;min-height:56px;font-size:19px;letter-spacing:.02em;
+  box-shadow:0 4px 12px var(--shadow);
+}
+.보내기[disabled]{background:#D8C8BA;box-shadow:none}
+
+/* ── 탭 넷 — 엄지가 닿는 자리 ────────────────────────── */
+.탭바{
+  position:fixed;left:0;right:0;bottom:0;z-index:10;
+  height:calc(var(--탭바) + env(safe-area-inset-bottom));
+  padding-bottom:env(safe-area-inset-bottom);
+  background:var(--card);border-top:1px solid var(--line);
+  display:flex;box-shadow:0 -6px 18px -12px var(--shadow);
+}
+.탭바 button{
+  flex:1 1 0;min-width:0;border:0;background:transparent;color:var(--sub);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  font-size:13.5px;position:relative;padding:0 2px;
+}
+.탭바 button svg{width:25px;height:25px;stroke:currentColor;fill:none;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round}
+.탭바 button.켬{color:var(--main-deep)}
+.탭바 button.켬::after{
+  content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:34px;height:3px;border-radius:0 0 4px 4px;background:var(--main);
+}
+.구슬{
+  position:absolute;top:8px;left:calc(50% + 9px);
+  min-width:21px;height:21px;padding:0 6px;border-radius:999px;
+  background:var(--main);color:#fff;font-size:12.5px;line-height:21px;text-align:center;
+}
+.탭바 button.켬 .구슬{background:var(--main-deep)}
+
+/* ── 다 보낸 뒤 ────────────────────────────────────── */
+.끝화면{position:fixed;inset:0;background:var(--main);color:#fff;display:none;
+  place-items:center;text-align:center;padding:32px;z-index:30}
+.끝화면.켬{display:grid}
+.끝화면 h2{margin:0 0 10px;font-size:29px}
+.끝화면 p{margin:0 0 28px;font-size:17px;line-height:1.75;opacity:.92}
+.끝화면 button{border:0;background:#fff;color:var(--main-deep);border-radius:16px;
+  padding:0 32px;min-height:56px;font-size:18px}
+.하트{font-size:44px;margin-bottom:10px}
+</style>
+</head>
+<body>
+
+<header>
+  <p class="날" id="날짜">9월 9일 화요일</p>
+  <h1 id="인사">원장님, 좋은 아침이에요</h1>
+</header>
+
+<!-- 스크롤해도 붙어 있다. 「지금 몇 개 남았나」는 여기 하나로 끝낸다 -->
+<div class="띠" id="띠">
+  <div class="윗줄">
+    <span class="이름표">이번 주 연락드릴 분</span>
+    <button class="거르기" id="거르기" onclick="거르기누름()">남은 것만</button>
+  </div>
+  <p class="말" id="띠말"><span class="수">12분</span> 계세요</p>
+  <div class="칸막대" id="막대"></div>
+</div>
+
+<main>
+
+  <!-- ── 연락 ─────────────────────────────────────── -->
+  <section id="p0">
+    <p class="안내">전화 거신 뒤에, 어떻게 되셨는지만 눌러 주세요.<br>다 안 하셔도 괜찮습니다.</p>
+    <div id="연락목록"></div>
+
+    <p class="구역제목">여쭐 것 셋 — 주문할 때 쓰려고요</p>
+    <div id="여쭐것목록"></div>
+  </section>
+
+  <!-- ── 오늘 (손님 + 부탁) ───────────────────────── -->
+  <section id="p1" hidden>
+    <p class="구역제목">오늘 오신 손님</p>
+    <p class="안내">한 줄이면 됩니다. 안 오신 날은 안 적으셔도 돼요.</p>
+    <div id="오늘목록"></div>
+    <button class="더하기" onclick="오늘추가()">＋ 손님 한 분 적기</button>
+
+    <p class="구역제목">저희에게 부탁하실 것</p>
+    <p class="안내">무엇이든 편하게 적어 두세요. 제가 보고 처리해 두겠습니다.</p>
+    <div id="요청목록"></div>
+    <button class="더하기" onclick="요청추가()">＋ 부탁 한 가지 적기</button>
+  </section>
+
+  <!-- ── 블로그 ───────────────────────────────────── -->
+  <section id="p2" hidden>
+    <p class="안내" id="블로그안내">네이버에 올라가면 이렇게 보입니다.<br>고칠 데가 있는 자리에만 「이 자리 고칠래요」를 눌러 적어 주세요.</p>
+    <div id="블로그목록"></div>
+  </section>
+
+  <!-- ── 찾기 ─────────────────────────────────────── -->
+  <section id="p3" hidden>
+    <p class="안내">이름을 한 글자만 넣어도 나옵니다.<br>손님 앞에서 보여 드려도 되는 화면이에요.</p>
+    <input id="찾을말" type="search" inputmode="search" placeholder="이름" autocomplete="off" oninput="찾기미룸()">
+    <div id="찾은목록"></div>
+    <div id="한명"></div>
+  </section>
+
+</main>
+
+<div class="오류" id="오류" hidden>
+  <button class="닫기" onclick="오류숨김()" aria-label="닫기">×</button>
+  <p class="큰">못 보냈어요</p>
+  <p id="오류말">인터넷이 잠깐 끊긴 것 같아요. 적으신 것은 그대로 있으니, 잠시 뒤에 「보내기」를 다시 눌러 주시면 됩니다.</p>
+</div>
+
+<div class="보내기바" id="보내기바">
+  <span class="수" id="센것">천천히 적어 주세요</span>
+  <button class="보내기" id="보내기" onclick="보내기()">보내기</button>
+</div>
+
+<nav class="탭바" id="탭바">
+  <button class="켬" onclick="탭(0,this)">
+    <svg viewBox="0 0 24 24"><path d="M6.5 3.5h3l1.5 4-2 1.5a12 12 0 0 0 6 6l1.5-2 4 1.5v3a2 2 0 0 1-2.2 2A17 17 0 0 1 4.5 5.7 2 2 0 0 1 6.5 3.5z"/></svg>
+    연락<span class="구슬" id="구슬0">12</span>
+  </button>
+  <button onclick="탭(1,this)">
+    <svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8.5 9h7M8.5 13h7M8.5 17h4"/></svg>
+    오늘<span class="구슬 숨김" id="구슬1">0</span>
+  </button>
+  <button onclick="탭(2,this)">
+    <svg viewBox="0 0 24 24"><path d="M4 5h11l5 5v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M15 5v5h5"/></svg>
+    블로그<span class="구슬" id="구슬2">1</span>
+  </button>
+  <button onclick="탭(3,this)">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>
+    찾기<span class="구슬 숨김" id="구슬3">0</span>
+  </button>
+</nav>
+
+<div class="끝화면" id="끝화면">
+  <div>
+    <div class="하트">💌</div>
+    <h2>잘 받았습니다</h2>
+    <p id="끝말"></p>
+    <button onclick="location.reload()">다시 열기</button>
+  </div>
+</div>
+
+<script>
+/* ───────────────────────────────────────────────────────────
+   A안 · 카드 대시보드 — 시안
+   자료는 화면 안에 박아 두었다. 서버를 안 부른다.
+   ─────────────────────────────────────────────────────────── */
+
+var 고른것 = ["통화했어요","안 받으셨어요","방문 약속","괜찮다고 하셔요","다음에 다시"];
+var NL = String.fromCharCode(10);
+
+/* 이름과 번호는 04_산출/연락명단.md 2026-09-09 판 그대로다.
+   번호가 없는 분은 없는 대로 둔다 — 지어내지 않는다. */
+var 연락 = [
+  {이름:"박기순", 전화:"010-3462-9902", 이유:"구입 90일 적합관리 — 오늘로 104일째",           결과:"", 말:""},
+  {이름:"김옥태", 전화:"010-9644-1027", 이유:"보장구 급여 재지원 11월 6일 — 58일 남았어요",   결과:"", 말:""},
+  {이름:"박효선", 전화:"010-3833-2391", 이유:"타센터 기기 내구연한 지남 — 재구입 상담",        결과:"", 말:""},
+  {이름:"윤천중", 전화:"010-8911-1304", 이유:"구입 180일 적합관리",                            결과:"", 말:""},
+  {이름:"이순안", 전화:"010-5185-7282", 이유:"구입 180일 적합관리",                            결과:"", 말:""},
+  {이름:"이종희", 전화:"010-7723-7769", 이유:"배터리 마지막 구입 2026년 5월 29일",             결과:"", 말:""},
+  {이름:"유숭열", 전화:"010-3030-3525", 이유:"마지막 방문 2025년 3월 7일 — 정기점검",          결과:"", 말:""},
+  {이름:"박순자", 전화:"010-2777-3391", 이유:"마지막 방문 2025년 3월 25일 — 정기점검",         결과:"", 말:""},
+  {이름:"홍춘길", 전화:"010-6472-8307", 이유:"마지막 방문 2025년 10월 31일 — 정기점검",        결과:"", 말:""},
+  {이름:"최창환", 전화:"010-8109-9392", 이유:"마지막 방문 2025년 11월 1일 — 정기점검",         결과:"", 말:""},
+  {이름:"김종희", 전화:"010-3815-6725", 이유:"마지막 방문 2025년 11월 4일 — 정기점검",         결과:"", 말:""},
+  {이름:"한석환", 전화:"",              이유:"배터리 마지막 구입 2025년 1월 14일",             결과:"", 말:""}
+];
+
+/* 여쭐 것 셋 — 운영_리듬.md 3항 「이번 달 물건」 칸 셋 그대로.
+   같은 자리에 같은 칸이라 그달만 특별히 묻는 것으로 안 읽힌다. */
+var 여쭐것 = [
+  {말:"이번 달에 나가는 판촉물이 무엇인가요", 거들:"예 — 딸기 장바구니", 답:""},
+  {말:"몇 개 남았어요",                       거들:"대충 적으셔도 됩니다",  답:""},
+  {말:"어디로 나갔어요",                       거들:"예 — 경로당 · 매장 앞 · 오시는 분", 답:""}
+];
+
+var 오늘 = [], 요청 = [];
+
+var 블로그글 = {
+  제목:"청주 보청기, 처음 맞추실 때 꼭 여쭤보세요",
+  덩어리:[
+    {종류:"글",   머리:"", 글:"안녕하세요, 청주 한마음보청기입니다." + NL + "오늘은 처음 오시는 분들이 가장 많이 하시는 질문 세 가지를 정리해 봤어요."},
+    {종류:"사진", 머리:"매장에서 청력검사를 받으시는 모습"},
+    {종류:"글",   머리:"하나 — 검사는 얼마나 걸리나요", 글:"편하게 앉으셔서 삼사십 분이면 끝납니다." + NL + "결과는 그 자리에서 함께 보면서 말씀드려요."},
+    {종류:"글",   머리:"둘 — 바로 맞춰야 하나요", 글:"아니요. 검사만 받고 가셔도 됩니다." + NL + "생각해 보시고 다시 오시는 분이 훨씬 많으세요."}
+  ]
+};
+var 블로그 = 블로그글.덩어리.map(function(d,i){
+  return {자리: d.머리 || ("글 " + (i+1)), 말:""};
+});
+
+/* 찾기 — 손님 앞에서 여는 화면이라 청력수치 · 금액은 애초에 담지 않는다.
+   미수 건수도 접힌 칸 안으로 내렸다 (옆에서 보이면 곤란한 자리다). */
+var 고객 = [
+  {이름:"김옥태", 나이:"78", 기기:"오티콘 리얼1 미니 RITE (양이)", 타센터기기:"", 최근접촉:"2026년 6월 12일",
+   가입일:"2023년 4월", 거래건수:"6", 급여신청일:"2021년 11월 6일", 급여만료:"2026년 11월 6일",
+   구입경로:"아드님 소개", 미수건수:"0", 휴대폰:"010-9644-1027", 보호자:"아드님 010-2233-4455", 메모:"귀지가 잘 차셔서 두 달에 한 번 오시라고 말씀드림"},
+  {이름:"김종희", 나이:"71", 기기:"포낙 오데오 L50 (우)", 타센터기기:"", 최근접촉:"2025년 11월 4일",
+   가입일:"2024년 9월", 거래건수:"2", 급여신청일:"", 급여만료:"", 구입경로:"매장 앞 지나다가",
+   미수건수:"1", 휴대폰:"010-3815-6725", 보호자:"", 메모:"오후 늦게 오시는 걸 편해하심"},
+  {이름:"김순덕", 나이:"83", 기기:"", 타센터기기:"타사 2019년 구입 (내구연한 지남)", 최근접촉:"2026년 8월 2일",
+   가입일:"2026년 8월", 거래건수:"0", 급여신청일:"", 급여만료:"", 타사만료:"2024년",
+   구입경로:"딸기 장바구니 받으시고", 미수건수:"0", 휴대폰:"010-4471-8820", 보호자:"따님 010-8890-1120", 메모:"상담만 받고 가심. 9월에 다시 오신다고 하셨음"}
+];
+
+/* ── 인사 · 날짜 ────────────────────────────────── */
+(function(){
+  var 이제 = new Date(), h = 이제.getHours();
+  var 요일 = ["일","월","화","수","목","금","토"][이제.getDay()];
+  document.getElementById("날짜").textContent =
+    (이제.getMonth()+1) + "월 " + 이제.getDate() + "일 " + 요일 + "요일";
+  document.getElementById("인사").textContent =
+    h < 11 ? "원장님, 좋은 아침이에요" :
+    h < 17 ? "원장님, 안녕하세요"      :
+             "원장님, 오늘도 고생하셨어요";
+})();
+
+function esc(s){
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
+  });
+}
+
+/* ── 탭 ─────────────────────────────────────────────
+   ⚠️ 칸 번호를 배열로 박아 두지 않는다. 탭을 늘릴 때 같이 못 고쳐서
+      찾기 탭이 한 번도 안 열린 사고가 있었다 (2026-09-06). 세지 않고 찾는다. */
+var 지금탭 = 0;
+
+function 탭(i, b){
+  지금탭 = i;
+  var 칸들 = document.querySelectorAll("main > section[id^='p']");
+  for (var k = 0; k < 칸들.length; k++) 칸들[k].hidden = (칸들[k].id !== "p" + i);
+  var 단추들 = document.querySelectorAll(".탭바 button");
+  for (var j = 0; j < 단추들.length; j++) 단추들[j].classList.remove("켬");
+  b.classList.add("켬");
+
+  /* 찾기는 보는 화면이다. 진행 띠도 보내기 바도 안 붙인다 */
+  document.getElementById("띠").classList.toggle("숨김", i === 3);
+  document.getElementById("거르기").classList.toggle("숨김", i !== 0);
+  window.scrollTo(0, 0);
+  세기();
+  if (i === 3) { var 칸 = document.getElementById("찾을말"); if (칸) 칸.focus(); }
+}
+
+/* ── 진행 띠 ────────────────────────────────────── */
+var 남은것만 = false;
+
+function 거르기누름(){
+  남은것만 = !남은것만;
+  document.getElementById("거르기").classList.toggle("켬", 남은것만);
+  document.getElementById("거르기").textContent = 남은것만 ? "다시 전부" : "남은 것만";
+  연락그리기();
+}
+
+function 한것수(){
+  return 연락.filter(function(r){ return r.결과; }).length;
+}
+
+function 띠그리기(){
+  var 다 = 연락.length, 한 = 한것수(), 띠 = document.getElementById("띠");
+  var 막대 = document.getElementById("막대"), h = "";
+  for (var i = 0; i < 다; i++) h += '<span class="' + (i < 한 ? "참" : "") + '"></span>';
+  막대.innerHTML = h;
+
+  var 말 = document.getElementById("띠말");
+  if (한 === 0)      말.innerHTML = '<span class="수">' + 다 + '분</span> 계세요. 하신 것만 눌러 주세요';
+  else if (한 < 다)  말.innerHTML = '<span class="수">' + (다-한) + '분</span> 남으셨어요 <span style="font-size:15px;color:var(--sub)">· ' + 한 + '분 하셨어요</span>';
+  else               말.innerHTML = '<span class="수">' + 다 + '분</span> 다 하셨어요';
+  띠.classList.toggle("다함", 한 === 다 && 다 > 0);
+
+  구슬맞추기("구슬0", 다 - 한);
+}
+
+function 구슬맞추기(id, n){
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = n;
+  el.classList.toggle("숨김", !n);
+}
+
+/* ── 연락 카드 ──────────────────────────────────── */
+function 연락그리기(){
+  var el = document.getElementById("연락목록");
+
+  if (!연락.length){
+    el.innerHTML = '<div class="빈">이번 주는 연락드릴 분이 없어요.<br>편히 쉬세요.</div>';
+    띠그리기(); return;
+  }
+
+  var 남음 = 연락.filter(function(r){ return !r.결과; }).length;
+  var h = "";
+
+  if (남음 === 0){
+    h += '<div class="다끝"><p class="큰">열두 분 다 하셨어요</p>' +
+         '<p>아래 「보내기」를 눌러 주시면 다음 주 명단이 정확해집니다.</p></div>';
+  }
+
+  h += 연락.map(function(r, i){
+    if (r.결과){
+      if (남은것만) return "";
+      return '<div class="카드 끝">' +
+        '<span class="표">✓</span>' +
+        '<span class="글">' + esc(r.이름) + ' 님<em>' + esc(r.결과) +
+          (r.말 ? " · 메모 있음" : "") + '</em></span>' +
+        '<button class="고칠" onclick="되돌리기(' + i + ')">고칠래요</button>' +
+      '</div>';
+    }
+
+    var 번호 = r.전화.replace(/[^0-9]/g, "");
+    return '<div class="카드">' +
+      '<p class="이름">' + esc(r.이름) + ' 님</p>' +
+      '<p class="까닭">' + esc(r.이유) + '</p>' +
+      (번호
+        ? '<a class="걸기" href="tel:' + 번호 + '">' +
+            '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+            '<path d="M6.5 3.5h3l1.5 4-2 1.5a12 12 0 0 0 6 6l1.5-2 4 1.5v3a2 2 0 0 1-2.2 2A17 17 0 0 1 4.5 5.7 2 2 0 0 1 6.5 3.5z"/></svg>' +
+            esc(r.전화) + '</a>'
+        : '<div class="번호없음">번호가 없는 분이에요.<br>오시면 여쭤봐 주세요</div>') +
+      '<div class="나눔">하신 뒤에 눌러 주세요</div>' +
+      '<div class="고를것">' +
+        고른것.map(function(c){
+          return '<button onclick="고르기(' + i + ',&quot;' + c + '&quot;)">' + c + '</button>';
+        }).join("") +
+      '</div>' +
+      '<button class="메모단추" onclick="메모열기(' + i + ',this)">' +
+        (r.말 ? '메모 접기' : '＋ 남기실 말씀 있으시면') + '</button>' +
+      '<div class="메모칸' + (r.말 ? ' 켬' : '') + '" id="메모' + i + '">' +
+        '<textarea rows="2" placeholder="여기에 적어 주세요 (안 쓰셔도 돼요)" ' +
+          'oninput="연락[' + i + '].말=this.value;세기()">' + esc(r.말) + '</textarea>' +
+      '</div>' +
+    '</div>';
+  }).join("");
+
+  if (남은것만 && 남음 === 0 && 연락.length){
+    h += '<div class="빈">남은 분이 없어요.<br>「다시 전부」를 누르시면 하신 것도 보입니다.</div>';
+  }
+
+  el.innerHTML = h;
+  띠그리기();
+}
+
+function 메모열기(i, b){
+  var 칸 = document.getElementById("메모" + i);
+  var 열림 = 칸.classList.toggle("켬");
+  b.textContent = 열림 ? "메모 접기" : "＋ 남기실 말씀 있으시면";
+  if (열림) 칸.querySelector("textarea").focus();
+}
+
+function 고르기(i, c){
+  연락[i].결과 = (연락[i].결과 === c) ? "" : c;
+  연락그리기(); 세기();
+}
+function 되돌리기(i){
+  연락[i].결과 = "";
+  연락그리기(); 세기();
+}
+
+/* ── 여쭐 것 셋 ─────────────────────────────────── */
+function 여쭐것그리기(){
+  document.getElementById("여쭐것목록").innerHTML = 여쭐것.map(function(q, i){
+    return '<div class="카드">' +
+      '<p style="margin:0;font-size:17px;line-height:1.5">' + esc(q.말) + '</p>' +
+      (q.거들 ? '<p class="까닭" style="margin-top:4px">' + esc(q.거들) + '</p>' : "") +
+      '<input type="text" placeholder="아시는 만큼만" value="' + esc(q.답) + '" ' +
+        'oninput="여쭐것[' + i + '].답=this.value;세기()">' +
+    '</div>';
+  }).join("");
+}
+
+/* ── 오늘 · 부탁 ────────────────────────────────── */
+function 오늘추가(){ 오늘.push({누구:"",무슨일:"",다음:""}); 오늘그리기(); 세기(); }
+function 요청추가(){ 요청.push({무엇:"",언제까지:""});        요청그리기(); 세기(); }
+
+function 오늘그리기(){
+  var el = document.getElementById("오늘목록");
+  if (!오늘.length){
+    el.innerHTML = '<div class="빈">아직 적으신 것이 없어요.<br>오신 분이 있으면 아래를 눌러 주세요.</div>';
+    return;
+  }
+  el.innerHTML = 오늘.map(function(r, i){
+    return '<div class="카드">' +
+      '<label>어떤 분이 오셨나요</label>' +
+      '<input value="' + esc(r.누구) + '" placeholder="김 어머님" oninput="오늘[' + i + '].누구=this.value;세기()">' +
+      '<label>무슨 일이 있었나요</label>' +
+      '<textarea rows="2" placeholder="보청기 소리가 작다고 오셨어요" oninput="오늘[' + i + '].무슨일=this.value;세기()">' + esc(r.무슨일) + '</textarea>' +
+      '<label>다음에 할 일이 있다면 (안 쓰셔도 돼요)</label>' +
+      '<input value="' + esc(r.다음) + '" placeholder="2주 뒤 확인 전화" oninput="오늘[' + i + '].다음=this.value;세기()">' +
+      '<button class="고칠래" onclick="오늘지우기(' + i + ')">이 칸 지우기</button>' +
+    '</div>';
+  }).join("");
+}
+function 오늘지우기(i){ 오늘.splice(i,1); 오늘그리기(); 세기(); }
+
+function 요청그리기(){
+  var el = document.getElementById("요청목록");
+  if (!요청.length){
+    el.innerHTML = '<div class="빈">부탁하실 것이 생기면 여기에 적어 두세요.</div>';
+    return;
+  }
+  el.innerHTML = 요청.map(function(r, i){
+    return '<div class="카드">' +
+      '<label>무엇을 해 드릴까요</label>' +
+      '<textarea rows="2" placeholder="딸기 장바구니 1,000개 주문해 주세요" oninput="요청[' + i + '].무엇=this.value;세기()">' + esc(r.무엇) + '</textarea>' +
+      '<label>언제까지 필요하세요 (안 쓰셔도 돼요)</label>' +
+      '<input value="' + esc(r.언제까지) + '" placeholder="추석 전에요" oninput="요청[' + i + '].언제까지=this.value;세기()">' +
+      '<button class="고칠래" onclick="요청지우기(' + i + ')">이 칸 지우기</button>' +
+    '</div>';
+  }).join("");
+}
+function 요청지우기(i){ 요청.splice(i,1); 요청그리기(); 세기(); }
+
+/* ── 블로그 ─────────────────────────────────────── */
+function 블로그그리기(){
+  var 안내 = document.getElementById("블로그안내");
+  var el = document.getElementById("블로그목록");
+
+  if (!블로그글 || !블로그글.덩어리.length){
+    안내.textContent = "지금 보실 글이 없어요. 새 글이 나오면 여기에 올라옵니다.";
+    el.innerHTML = '<div class="빈">보실 글이 없어요.</div>';
+    구슬맞추기("구슬2", 0);
+    return;
+  }
+
+  var h = '<div class="머리띠">제목<span>' + esc(블로그글.제목) + '</span></div>';
+  h += 블로그글.덩어리.map(function(d, i){
+    var 속;
+    if (d.종류 === "사진"){
+      속 = '<div class="빈그림">여기에 사진이 들어갑니다<br>' + esc(d.머리) +
+           '<br><span style="font-size:12.5px">아직 안 만들었어요</span></div>' +
+           '<div class="사진표">' + esc(d.머리) + '</div>';
+    } else {
+      속 = (d.머리 ? '<p class="소제">' + esc(d.머리) + '</p>' : "") +
+           '<p class="글">' + d.글.split(NL).map(esc).join("<br>") + '</p>';
+    }
+    return '<div class="종이">' + 속 +
+      '<button class="고칠래" onclick="고칠래(' + i + ',this)">이 자리 고칠래요</button>' +
+      '<div class="적는칸" id="적는' + i + '">' +
+        '<textarea rows="2" placeholder="어떻게 고칠까요" oninput="블로그[' + i + '].말=this.value;세기()"></textarea>' +
+      '</div></div>';
+  }).join("");
+
+  h += '<div class="카드"><label>그 밖에 하고 싶은 말씀</label>' +
+       '<textarea rows="3" placeholder="글 전체에 대해 하실 말씀" oninput="블로그전체(this.value)"></textarea></div>';
+  el.innerHTML = h;
+}
+
+function 고칠래(i, b){
+  var 칸 = document.getElementById("적는" + i);
+  var 열림 = 칸.classList.toggle("켬");
+  b.textContent = 열림 ? "접기" : "이 자리 고칠래요";
+  if (열림) 칸.querySelector("textarea").focus();
+}
+
+function 블로그전체(v){
+  var 자리 = null;
+  for (var i = 0; i < 블로그.length; i++) if (블로그[i].자리 === "전체") 자리 = 블로그[i];
+  if (!자리){ 자리 = {자리:"전체", 말:""}; 블로그.push(자리); }
+  자리.말 = v;
+  세기();
+}
+
+/* ── 찾기 ───────────────────────────────────────── */
+var 찾기타이머 = null, 찾은사람 = [];
+
+function 찾기미룸(){ clearTimeout(찾기타이머); 찾기타이머 = setTimeout(찾기, 250); }
+
+function 찾기(){
+  var 말 = document.getElementById("찾을말").value.trim();
+  var 목록 = document.getElementById("찾은목록");
+  document.getElementById("한명").innerHTML = "";
+  if (!말){ 목록.innerHTML = ""; return; }
+
+  찾은사람 = 고객.filter(function(r){ return r.이름.indexOf(말) >= 0; });
+
+  if (!찾은사람.length){
+    목록.innerHTML = '<div class="빈">그 이름은 없어요.<br>한 글자만 넣어 보셔도 됩니다.</div>';
+    return;
+  }
+  if (찾은사람.length === 1){ 목록.innerHTML = ""; 한명그리기(0); return; }
+
+  목록.innerHTML = 찾은사람.map(function(r, i){
+    return '<button class="고른이" onclick="한명그리기(' + i + ')">' +
+           esc(r.이름) + (r.나이 ? " · " + esc(r.나이) + "세" : "") + '</button>';
+  }).join("");
+}
+
+/* 한 분만 편다. 여럿을 한 화면에 안 둔다 —
+   손님께 돌려 보여 드려도 다른 분 이름이 안 보이게 하려는 것이다. */
+function 한명그리기(i){
+  var r = 찾은사람[i];
+  if (!r) return;
+  var 줄 = function(제목, 값){
+    if (!값) return "";
+    return '<div class="줄"><span class="키">' + 제목 + '</span><span class="값">' + esc(값) + '</span></div>';
+  };
+  var 번호 = String(r.휴대폰 || "").replace(/[^0-9]/g, "");
+
+  var h = '<div class="카드 사람">' +
+    '<p class="이름">' + esc(r.이름) + ' 님' +
+      (r.나이 ? ' <span style="font-size:16px;color:var(--sub)">' + esc(r.나이) + '세</span>' : "") + '</p>' +
+    줄("쓰시는 기기", r.기기) +
+    줄("타사 기기", r.타센터기기) +
+    줄("마지막 방문", r.최근접촉) +
+    줄("오신 지", r.가입일) +
+    줄("거래", r.거래건수 ? r.거래건수 + "건" : "") +
+    줄("급여 신청", r.급여신청일) +
+    줄("급여 재지원", r.급여만료) +
+    줄("타사 만료", r.타사만료) +
+    줄("어떻게 오셨나", r.구입경로) +
+    /* 연락처 · 메모 · 미수는 접어 둔다. 손님 옆에서 펴져 있으면 안 되는 것들이다 */
+    '<details><summary>연락처 · 메모 (손님 앞에서는 접어 두세요)</summary>' +
+      줄("휴대폰", r.휴대폰) +
+      줄("보호자", r.보호자) +
+      (r.미수건수 && r.미수건수 !== "0" ? 줄("미수", r.미수건수 + "건") : "") +
+      줄("메모", r.메모) +
+      (번호.length >= 9 ? '<a class="걸기" href="tel:' + 번호 + '">전화 걸기</a>' : "") +
+    '</details>' +
+  '</div>';
+  document.getElementById("한명").innerHTML = h;
+}
+
+/* ── 센 것 · 보내기 ─────────────────────────────── */
+function 세기(){
+  var n = 연락.filter(function(r){ return r.결과 || r.말; }).length
+        + 오늘.filter(function(r){ return r.누구 || r.무슨일 || r.다음; }).length
+        + 요청.filter(function(r){ return r.무엇; }).length
+        + 블로그.filter(function(r){ return r.말; }).length
+        + 여쭐것.filter(function(r){ return r.답; }).length;
+
+  document.getElementById("센것").textContent =
+    n ? (n + "건 적어 주셨어요") : "천천히 적어 주세요";
+
+  var 바 = document.getElementById("보내기바");
+  var 보임 = n > 0 && 지금탭 !== 3;          /* 찾기는 보는 화면이라 안 띄운다 */
+  바.classList.toggle("켬", 보임);
+  document.body.classList.toggle("보낼것있음", 보임);
+
+  구슬맞추기("구슬1", 오늘.filter(function(r){ return r.누구 || r.무슨일; }).length
+                    + 요청.filter(function(r){ return r.무엇; }).length);
+  띠그리기();
+}
+
+function 오류보임(말){
+  var el = document.getElementById("오류");
+  if (말) document.getElementById("오류말").textContent = 말;
+  el.hidden = false;
+}
+function 오류숨김(){ document.getElementById("오류").hidden = true; }
+
+function 보내기(){
+  var b = document.getElementById("보내기");
+  오류숨김();
+  b.disabled = true; b.textContent = "보내는 중";
+
+  setTimeout(function(){
+    /* 실제 화면은 서버가 돌려준 값을 보고 가른다.
+       2026-09-03 에 돌려받은 값을 안 보고 성공 화면을 띄워, 안 저장된 것을
+       저장된 줄 아신 적이 있다. 시안에서는 인터넷 끊김만 흉내 낸다. */
+    var 됨 = navigator.onLine !== false;
+    if (됨){
+      var n = document.getElementById("센것").textContent;
+      document.getElementById("끝말").textContent = n + ". 고맙습니다!";
+      document.getElementById("끝화면").classList.add("켬");
+    } else {
+      b.disabled = false; b.textContent = "보내기";
+      오류보임("인터넷이 잠깐 끊긴 것 같아요. 적으신 것은 그대로 있으니, 잠시 뒤에 「보내기」를 다시 눌러 주시면 됩니다.");
+    }
+  }, 700);
+}
+
+/* ── 처음 그리기 ────────────────────────────────── */
+연락그리기();
+여쭐것그리기();
+오늘그리기();
+요청그리기();
+블로그그리기();
+세기();
+</script>
+</body>
+</html>
