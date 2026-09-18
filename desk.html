@@ -218,7 +218,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-19c';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-19d';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   (function () { var m = decodeURIComponent(location.search || '').match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고)
   var $ = function (id) { return document.getElementById(id); };
@@ -375,7 +375,7 @@ a { color: var(--강조); }
         '<div class="때">' + (상태 ? 상태 + ' · ' : '') + (x.기한 ? esc(x.기한) + ' 까지 · ' : '') + 며칠째(x.시각) + (며칠째(x.시각) ? ' · ' : '') + 때글(x.시각) + (x.배경 || x.할일전문 ? ' · <span style="color:var(--강조)">열어 보기 ›</span>' : '') + '</div>' +
         (끝났나 ? '<div style="margin-top:8px"><span class="칩 끝">끝냈어요</span></div>' : (x.대상 === '유니스' ? '' : '<div style="margin-top:10px"><button class="단추 테" data-끝="' + esc(x.id) + '">끝냈어요</button></div>')) + '</div>';
     }
-    if (열린할일) { var 하나 = 목록.filter(function (y) { return y.id === 열린할일; })[0]; if (하나) return 할일상세(하나); 열린할일 = ''; }
+    if (열린할일id) { var 하나 = 목록.filter(function (y) { return y.id === 열린할일id; })[0]; if (하나) return 할일상세(하나); 열린할일id = ''; }
     var 열림 = 목록.filter(function (x) { return x.단계 !== '완료' && !끝난할일(x.id); });
     var 끝 = 목록.filter(function (x) { return x.단계 === '완료' || 끝난할일(x.id); });
     var h = '';
@@ -517,8 +517,8 @@ a { color: var(--강조); }
     }
     return h;
   }
-  var 열린할일 = '';
-  (function () { var m = decodeURIComponent(location.search || '').match(/[?&]할일=([^&]+)/); if (m) { 열린할일 = m[1]; 탭 = '할일'; } })();
+  var 열린할일id = '';
+  (function () { var m = decodeURIComponent(location.search || '').match(/[?&]할일=([^&]+)/); if (m) { 열린할일id = m[1]; 탭 = '할일'; } })();
   function 할일상세(x) {
     var h = '<section class="카드 블로그상세"><button class="더" data-할일닫기="1">‹ 목록으로</button><h2 style="margin-top:8px">' + esc(x.제목) + '</h2>';
     h += '<div class="한줄" style="margin-bottom:8px">' + esc(x.어디서 || x.출처 || '') + (x.덧 ? ' · ' + esc(x.덧) : '') + (x.기한 ? ' · ' + esc(x.기한) + ' 까지' : '') + '</div>';
@@ -628,18 +628,18 @@ a { color: var(--강조); }
       var x = ((자료 && 자료.피드.할일) || []).filter(function (y) { return y.id === id; })[0];
       보내기짐({ 종류: '단계', id: id, 단계: 단계, 사유: 사유 }).then(function (j) {
         if (!j || !j.됨) throw new Error();
-        if (단계 === '얘기중' && x) { var 글 = '[정하실 것 · ' + x.제목 + '] ' + 사유; 보내기({ 종류: '글', 글: 글 }, { 누가: '나', 종류: '글', 글: 글, 시각: 지금iso(), 임시: Date.now() }); 열린할일 = ''; return; }
-        토스트(단계 === '결정' ? '정하신 대로 처리할게요.' : 단계 === '보류' ? '나중에 다시 올릴게요.' : '끝낸 것으로 적었어요.'); 열린할일 = ''; 받아오기();
+        if (단계 === '얘기중' && x) { var 글 = '[정하실 것 · ' + x.제목 + '] ' + 사유; 보내기({ 종류: '글', 글: 글 }, { 누가: '나', 종류: '글', 글: 글, 시각: 지금iso(), 임시: Date.now() }); 열린할일id = ''; return; }
+        토스트(단계 === '결정' ? '정하신 대로 처리할게요.' : 단계 === '보류' ? '나중에 다시 올릴게요.' : '끝낸 것으로 적었어요.'); 열린할일id = ''; 받아오기();
       }).catch(function () { 결.disabled = false; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); });
       return;
     }
-    if (e.target.closest('[data-할일닫기]')) { 열린할일 = ''; 그리기(); return; }
-    var 할 = e.target.closest('[data-할일]'); if (할 && !e.target.closest('button')) { var hx = ((자료 && 자료.피드.할일) || []).filter(function (y) { return y.id === 할.getAttribute('data-할일'); })[0]; if (hx && (hx.배경 || hx.할일전문 || hx.대상 === '유니스')) { 열린할일 = hx.id; 탭 = '할일'; 그리기(); window.scrollTo(0, 0); } return; }
+    if (e.target.closest('[data-할일닫기]')) { 열린할일id = ''; 그리기(); return; }
+    var 할 = e.target.closest('[data-할일]'); if (할 && !e.target.closest('button')) { var hx = ((자료 && 자료.피드.할일) || []).filter(function (y) { return y.id === 할.getAttribute('data-할일'); })[0]; if (hx && (hx.배경 || hx.할일전문 || hx.대상 === '유니스')) { 열린할일id = hx.id; 탭 = '할일'; 그리기(); window.scrollTo(0, 0); } return; }
     var 블 = e.target.closest('[data-블로그]'); if (블) { 열린블로그 = 블.getAttribute('data-블로그'); 탭 = '받은것'; 그리기(); window.scrollTo(0, 0); return; }
     if (e.target.closest('[data-블로그닫기]')) { 열린블로그 = ''; 그리기(); return; }
     var 복 = e.target.closest('[data-복사]'); if (복) { var id = 복.getAttribute('data-복사'), x = ((자료 && 자료.피드.받은것) || []).filter(function (y) { return y.id === id; })[0]; if (x) { var t = 복사용글(x); (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { 토스트('본문을 복사했어요. 블로그 글쓰기에 붙여 넣으세요.'); }, function () { 토스트('복사가 안 돼요. 글을 길게 눌러 복사해 주세요.'); }); } return; }
     var 단 = e.target.closest('[data-단계]'); if (단) { var 단계 = 단.getAttribute('data-단계'), 사유 = ''; if (단계 === '보류') { 사유 = window.prompt('안 쓰시는 이유를 한 줄 적어 주시면 다음 글에 반영해요(안 적어도 돼요)', '') || ''; } 단.disabled = true; 보내기짐({ 종류: '단계', id: 단.getAttribute('data-id'), 단계: 단계, 사유: 사유 }).then(function (j) { if (!j || !j.됨) throw new Error(); 토스트(단계 === '썼어요' ? '고마워요. 다음 글을 채워 둘게요.' : 단계 === '보류' ? '적어 두었어요.' : '다시 초안으로 두었어요.'); 받아오기(); }).catch(function () { 단.disabled = false; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); }); return; }
-    var 더 = e.target.closest('[data-가]'); if (더) { if (더.getAttribute('data-블로그열기')) 열린블로그 = 더.getAttribute('data-블로그열기'); if (더.getAttribute('data-할일열기')) 열린할일 = 더.getAttribute('data-할일열기'); 가기(더.getAttribute('data-가'), 더.getAttribute('data-초점'), 더.getAttribute('data-펼침열기'), 더.getAttribute('data-스크롤')); return; }
+    var 더 = e.target.closest('[data-가]'); if (더) { if (더.getAttribute('data-블로그열기')) 열린블로그 = 더.getAttribute('data-블로그열기'); if (더.getAttribute('data-할일열기')) 열린할일id = 더.getAttribute('data-할일열기'); 가기(더.getAttribute('data-가'), 더.getAttribute('data-초점'), 더.getAttribute('data-펼침열기'), 더.getAttribute('data-스크롤')); return; }
     var g = e.target.closest('[data-갈래]'); if (g) { 갈래 = g.getAttribute('data-갈래'); 그리기(); return; }
     var 끝 = e.target.closest('[data-끝]'); if (끝) { 끝내기(끝.getAttribute('data-끝'), 끝); return; }
     var 정 = e.target.closest('[data-정렬]'); if (정) { var k = 정.getAttribute('data-정렬'); if (재고정렬.키 === k) 재고정렬.방향 = -재고정렬.방향; else { 재고정렬.키 = k; 재고정렬.방향 = k === '남음' ? -1 : 1; } 그리기(); return; }
