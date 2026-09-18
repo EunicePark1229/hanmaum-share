@@ -1,6 +1,6 @@
 /* 한마음 데스크 — 서비스 워커 (2026-09-18 · 1단계: 껍데기만 캐시 · 2단계: 웹 푸시)
    껍데기(desk.html · 글씨체 · 아이콘)는 캐시해서 전파가 약해도 열리게 하고, 자료(뒷단·desk-org.json)는 늘 새로 받는다. */
-var 이름 = 'desk-v3';   // desk.html 을 고쳐 올릴 때마다 숫자를 올린다 — 안 올리면 폰은 옛 화면을 계속 연다(09-18)
+var 이름 = 'desk-v4';   // desk.html 을 고쳐 올릴 때마다 숫자를 올린다 — 안 올리면 폰은 옛 화면을 계속 연다(09-18)
 var 껍데기 = ['./desk.html', './desk.webmanifest', './desk-icon.svg', './undongjang.woff2'];
 self.addEventListener('install', function (e) { e.waitUntil(caches.open(이름).then(function (c) { return c.addAll(껍데기); }).then(function () { return self.skipWaiting(); })); });
 self.addEventListener('activate', function (e) { e.waitUntil(caches.keys().then(function (ks) { return Promise.all(ks.filter(function (k) { return k !== 이름; }).map(function (k) { return caches.delete(k); })); }).then(function () { return self.clients.claim(); })); });
@@ -21,8 +21,12 @@ self.addEventListener('push', function (e) {
 });
 self.addEventListener('notificationclick', function (e) {
   e.notification.close();
+  // 09-18 유니스 「알림 클릭한 거 같은데 사라짐」 — 같은 사이트의 다른 화면(원장님 화면 등)을 대신 띄우거나, 띄우기가 조용히 실패할 수 있었다.
+  // 데스크 화면이 열려 있으면 그것을 앞으로, 없으면 새로 연다. 앞으로 못 가져오면 새로 연다.
+  var 주소 = new URL('./desk.html', self.registration.scope).href;
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (cs) {
-    for (var i = 0; i < cs.length; i++) { if ('focus' in cs[i]) return cs[i].focus(); }
-    return self.clients.openWindow('./desk.html');
-  }));
+    var 데스크 = cs.filter(function (c) { return (c.url || '').indexOf('desk.html') >= 0; });
+    if (데스크.length && 'focus' in 데스크[0]) return 데스크[0].focus().catch(function () { return self.clients.openWindow(주소); });
+    return self.clients.openWindow(주소);
+  }).catch(function () { return self.clients.openWindow(주소); }));
 });
