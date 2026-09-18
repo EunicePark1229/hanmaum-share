@@ -83,6 +83,8 @@ tr.상세 .안 div span:last-child { white-space: nowrap; color: var(--글); }
 .줄 .때 .며칠 { color: var(--살핌); }
 .홈격자 [data-가], .숫자셋 [data-가], .줄[data-가], span[data-가], .블로그줄 { cursor: pointer; }
 .블로그줄 { display: flex; gap: 12px; align-items: flex-start; }
+.할일줄 { cursor: pointer; }
+details { margin: 10px 0; } details summary { cursor: pointer; color: var(--강조); font-size: 15px; }
 .썸작 { width: 72px; height: 72px; object-fit: cover; border-radius: 10px; flex: 0 0 72px; background: var(--강조연); }
 .단추줄 { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
 .단추줄 .단추 { height: 44px; padding: 0 14px; }
@@ -216,7 +218,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-19a';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-19b';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   (function () { var m = decodeURIComponent(location.search || '').match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고)
   var $ = function (id) { return document.getElementById(id); };
@@ -287,7 +289,7 @@ a { color: var(--강조); }
   function 며칠째(iso) { if (!iso) return ''; var d = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000); if (isNaN(d) || d < 1) return ''; return '<span class="며칠' + (d >= 7 ? ' 오래' : '') + '">' + d + '일째</span>'; }
   function 할일줄(x, 덧있나) {
     var 며 = 며칠째(x.시각);
-    return '<div class="줄" data-가="할일" data-초점="' + esc(x.id) + '"><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄 || '') + (덧있나 && x.덧 ? ' · ' + esc(x.덧) : '') + '</div><div class="때">' + (x.기한 ? esc(x.기한) + ' 까지 · ' : '') + (며 ? 며 + ' · ' : '') + 때글(x.시각) + '</div></div>';
+    return '<div class="줄" data-가="할일" data-초점="' + esc(x.id) + '" data-할일열기="' + esc(x.id) + '"><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄 || '') + (덧있나 && x.덧 ? ' · ' + esc(x.덧) : '') + '</div><div class="때">' + (x.기한 ? esc(x.기한) + ' 까지 · ' : '') + (며 ? 며 + ' · ' : '') + 때글(x.시각) + '</div></div>';
   }
   function 신호(급, 말) { return '<span class="신호 ' + 급 + '">' + esc(말) + '</span>'; }
   function 글씨체표() { return ''; }   // 글씨체는 IBM Plex Sans KR 로 정해짐(09-18) — 시안 표는 뗐다
@@ -368,10 +370,12 @@ a { color: var(--강조); }
     var 목록 = ((자료 && 자료.피드.할일) || []).slice().reverse();
     if (!목록.length) return '<div class="카드"><div class="빈">하실 것이 없어요. 새로 생기면 종이 켜져요.</div></div>';
     function 한줄(x, 끝났나) {
-      return '<div class="줄" data-id="' + esc(x.id) + '"><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄 || '') + (x.덧 ? ' · ' + esc(x.덧) : '') + '</div>' +
-        '<div class="때">' + (x.기한 ? esc(x.기한) + ' 까지 · ' : '') + 때글(x.시각) + '</div>' +
-        (끝났나 ? '<div style="margin-top:8px"><span class="칩 끝">끝냈어요</span></div>' : '<div style="margin-top:10px"><button class="단추 테" data-끝="' + esc(x.id) + '">끝냈어요</button></div>') + '</div>';
+      var 상태 = x.단계 === '결정' ? 신호('좋음', '정함' + (x.사유 ? ' · ' + x.사유.slice(0, 30) : '')) : x.단계 === '보류' ? 신호('모름', '나중에') : x.단계 === '얘기중' ? 신호('살핌', '얘기 중') : '';
+      return '<div class="줄 할일줄" data-할일="' + esc(x.id) + '" data-id="' + esc(x.id) + '"><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄 || '') + (x.덧 ? ' · ' + esc(x.덧) : '') + '</div>' +
+        '<div class="때">' + (상태 ? 상태 + ' · ' : '') + (x.기한 ? esc(x.기한) + ' 까지 · ' : '') + 며칠째(x.시각) + (며칠째(x.시각) ? ' · ' : '') + 때글(x.시각) + (x.배경 || x.할일전문 ? ' · <span style="color:var(--강조)">열어 보기 ›</span>' : '') + '</div>' +
+        (끝났나 ? '<div style="margin-top:8px"><span class="칩 끝">끝냈어요</span></div>' : (x.대상 === '유니스' ? '' : '<div style="margin-top:10px"><button class="단추 테" data-끝="' + esc(x.id) + '">끝냈어요</button></div>')) + '</div>';
     }
+    if (열린할일) { var 하나 = 목록.filter(function (y) { return y.id === 열린할일; })[0]; if (하나) return 할일상세(하나); 열린할일 = ''; }
     var 열림 = 목록.filter(function (x) { return x.단계 !== '완료' && !끝난할일(x.id); });
     var 끝 = 목록.filter(function (x) { return x.단계 === '완료' || 끝난할일(x.id); });
     var h = '';
@@ -513,6 +517,30 @@ a { color: var(--강조); }
     }
     return h;
   }
+  var 열린할일 = '';
+  (function () { var m = decodeURIComponent(location.search || '').match(/[?&]할일=([^&]+)/); if (m) { 열린할일 = m[1]; 탭 = '할일'; } })();
+  function 할일상세(x) {
+    var h = '<section class="카드 블로그상세"><button class="더" data-할일닫기="1">‹ 목록으로</button><h2 style="margin-top:8px">' + esc(x.제목) + '</h2>';
+    h += '<div class="한줄" style="margin-bottom:8px">' + esc(x.어디서 || x.출처 || '') + (x.덧 ? ' · ' + esc(x.덧) : '') + (x.기한 ? ' · ' + esc(x.기한) + ' 까지' : '') + '</div>';
+    if (x.단계 && x.단계 !== '작성') h += '<div style="margin:6px 0 10px">' + (x.단계 === '결정' ? 신호('좋음', '정하셨어요 · ' + (x.사유 || '')) : x.단계 === '보류' ? 신호('모름', '나중에 · ' + (x.사유 || '')) : x.단계 === '얘기중' ? 신호('살핌', '얘기 중 · ' + (x.사유 || '')) : x.단계 === '완료' ? 신호('좋음', '끝냈어요') : 신호('모름', x.단계)) + '</div>';
+    if (x.배경) h += '<h3>무엇을 정하나</h3><div class="본문글">' + 마크다운(x.배경) + '</div>';
+    if (x.할일전문) h += '<h3>제안 · 할 일</h3><div class="본문글">' + 마크다운(x.할일전문) + '</div>';
+    if (!x.배경 && !x.할일전문) h += '<div class="본문글"><p>' + esc(x.한줄 || '') + '</p></div>';
+    if (x.초안) h += '<details><summary>답장 초안 보기</summary><div class="본문글">' + 마크다운(x.초안) + '</div></details>';
+    if (x.원문) h += '<details><summary>받은 그대로 보기</summary><div class="본문글"><pre>' + esc(x.원문) + '</pre></div></details>';
+    if (x.대상 === '유니스' && x.단계 !== '완료') {
+      h += '<h3>어떻게 할까요</h3><div class="단추줄">';
+      h += '<button class="단추" data-결정="결정" data-사유="그대로 진행" data-id="' + esc(x.id) + '">그대로 진행</button>';
+      h += '<button class="단추 테" data-결정="결정" data-메모="1" data-id="' + esc(x.id) + '">이렇게 바꿔서</button>';
+      h += '<button class="단추 테" data-결정="결정" data-사유="안 함" data-id="' + esc(x.id) + '">안 해</button>';
+      h += '<button class="단추 테" data-결정="얘기중" data-메모="1" data-id="' + esc(x.id) + '">더 얘기하자</button>';
+      h += '<button class="단추 테" data-결정="보류" data-메모="1" data-id="' + esc(x.id) + '">나중에</button>';
+      h += '<button class="단추 테" data-결정="완료" data-사유="끝냈어요" data-id="' + esc(x.id) + '">끝냈어요</button>';
+      h += '</div><div class="한줄" style="color:var(--보조)">「이렇게 바꿔서」·「더 얘기하자」·「나중에」는 한 줄 적는 칸이 떠요. 적으신 건 제가 읽고 앱 대화에 답을 남깁니다.</div>';
+    }
+    if (x.출처) h += '<div class="한줄" style="margin-top:12px;color:var(--흐림)">출처 · ' + esc(x.출처) + '</div>';
+    return h + '</section>';
+  }
   var 열린블로그 = '';
   (function () { var m = decodeURIComponent(location.search || '').match(/[?&]블로그=([^&]+)/); if (m) { 열린블로그 = m[1]; 탭 = '받은것'; } })();   // 알림·링크로 초안 하나를 바로 열 때
   function 마크다운(글) {
@@ -592,11 +620,25 @@ a { color: var(--강조); }
   // ── 누르기 ──
   $('탭').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; 탭 = b.getAttribute('data-탭'); 그리기(); });
   $('본문').addEventListener('click', function (e) {
+    var 결 = e.target.closest('[data-결정]'); if (결) {
+      var 단계 = 결.getAttribute('data-결정'), id = 결.getAttribute('data-id'), 사유 = 결.getAttribute('data-사유') || '';
+      if (결.getAttribute('data-메모')) { var 메 = window.prompt(단계 === '얘기중' ? '어떤 점을 더 얘기할까요? 한 줄이면 돼요.' : 단계 === '보류' ? '언제쯤 다시 볼까요? (예: 10월 초 · 원장님 답 뒤)' : '어떻게 바꿔서 진행할까요?', ''); if (메 === null) return; 사유 = (단계 === '결정' ? '바꿔서 · ' : '') + 메; }
+      결.disabled = true;
+      var x = ((자료 && 자료.피드.할일) || []).filter(function (y) { return y.id === id; })[0];
+      보내기짐({ 종류: '단계', id: id, 단계: 단계, 사유: 사유 }).then(function (j) {
+        if (!j || !j.됨) throw new Error();
+        if (단계 === '얘기중' && x) { var 글 = '[정하실 것 · ' + x.제목 + '] ' + 사유; 보내기({ 종류: '글', 글: 글 }, { 누가: '나', 종류: '글', 글: 글, 시각: 지금iso(), 임시: Date.now() }); 열린할일 = ''; return; }
+        토스트(단계 === '결정' ? '정하신 대로 처리할게요.' : 단계 === '보류' ? '나중에 다시 올릴게요.' : '끝낸 것으로 적었어요.'); 열린할일 = ''; 받아오기();
+      }).catch(function () { 결.disabled = false; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); });
+      return;
+    }
+    if (e.target.closest('[data-할일닫기]')) { 열린할일 = ''; 그리기(); return; }
+    var 할 = e.target.closest('[data-할일]'); if (할 && !e.target.closest('button')) { var hx = ((자료 && 자료.피드.할일) || []).filter(function (y) { return y.id === 할.getAttribute('data-할일'); })[0]; if (hx && (hx.배경 || hx.할일전문 || hx.대상 === '유니스')) { 열린할일 = hx.id; 탭 = '할일'; 그리기(); window.scrollTo(0, 0); } return; }
     var 블 = e.target.closest('[data-블로그]'); if (블) { 열린블로그 = 블.getAttribute('data-블로그'); 탭 = '받은것'; 그리기(); window.scrollTo(0, 0); return; }
     if (e.target.closest('[data-블로그닫기]')) { 열린블로그 = ''; 그리기(); return; }
     var 복 = e.target.closest('[data-복사]'); if (복) { var id = 복.getAttribute('data-복사'), x = ((자료 && 자료.피드.받은것) || []).filter(function (y) { return y.id === id; })[0]; if (x) { var t = 복사용글(x); (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { 토스트('본문을 복사했어요. 블로그 글쓰기에 붙여 넣으세요.'); }, function () { 토스트('복사가 안 돼요. 글을 길게 눌러 복사해 주세요.'); }); } return; }
     var 단 = e.target.closest('[data-단계]'); if (단) { var 단계 = 단.getAttribute('data-단계'), 사유 = ''; if (단계 === '보류') { 사유 = window.prompt('안 쓰시는 이유를 한 줄 적어 주시면 다음 글에 반영해요(안 적어도 돼요)', '') || ''; } 단.disabled = true; 보내기짐({ 종류: '단계', id: 단.getAttribute('data-id'), 단계: 단계, 사유: 사유 }).then(function (j) { if (!j || !j.됨) throw new Error(); 토스트(단계 === '썼어요' ? '고마워요. 다음 글을 채워 둘게요.' : 단계 === '보류' ? '적어 두었어요.' : '다시 초안으로 두었어요.'); 받아오기(); }).catch(function () { 단.disabled = false; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); }); return; }
-    var 더 = e.target.closest('[data-가]'); if (더) { if (더.getAttribute('data-블로그열기')) 열린블로그 = 더.getAttribute('data-블로그열기'); 가기(더.getAttribute('data-가'), 더.getAttribute('data-초점'), 더.getAttribute('data-펼침열기'), 더.getAttribute('data-스크롤')); return; }
+    var 더 = e.target.closest('[data-가]'); if (더) { if (더.getAttribute('data-블로그열기')) 열린블로그 = 더.getAttribute('data-블로그열기'); if (더.getAttribute('data-할일열기')) 열린할일 = 더.getAttribute('data-할일열기'); 가기(더.getAttribute('data-가'), 더.getAttribute('data-초점'), 더.getAttribute('data-펼침열기'), 더.getAttribute('data-스크롤')); return; }
     var g = e.target.closest('[data-갈래]'); if (g) { 갈래 = g.getAttribute('data-갈래'); 그리기(); return; }
     var 끝 = e.target.closest('[data-끝]'); if (끝) { 끝내기(끝.getAttribute('data-끝'), 끝); return; }
     var 정 = e.target.closest('[data-정렬]'); if (정) { var k = 정.getAttribute('data-정렬'); if (재고정렬.키 === k) 재고정렬.방향 = -재고정렬.방향; else { 재고정렬.키 = k; 재고정렬.방향 = k === '남음' ? -1 : 1; } 그리기(); return; }
