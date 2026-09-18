@@ -47,6 +47,7 @@ main { padding: 16px 16px 96px; max-width: 720px; margin: 0 auto; }
 .단추:disabled { opacity: .5; }
 .칩 { display: inline-block; padding: 2px 10px; border-radius: 999px; background: var(--강조연); color: var(--강조); font-size: 14px; margin-right: 6px; }
 .칩.끝 { background: #EEF2F3; color: var(--흐림); }
+body.끌어옴::after { content: '여기에 놓으면 보내요'; position: fixed; inset: 12px; border: 2px dashed var(--강조); border-radius: 16px; background: rgba(31,111,95,.06); color: var(--강조); font-size: 20px; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 60; }
 nav.탭 { position: fixed; left: 0; right: 0; bottom: 0; background: var(--카드); border-top: 1px solid var(--선); display: flex; padding-bottom: env(safe-area-inset-bottom); z-index: 5; }
 nav.탭 button { flex: 1; height: 60px; border: 0; background: transparent; color: var(--흐림); font-size: 14px; display: grid; place-items: center; gap: 2px; }
 nav.탭 button.켬 { color: var(--강조); }
@@ -119,7 +120,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-18i';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-18j';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var $ = function (id) { return document.getElementById(id); };
   var 저장 = { get: function (k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } },
@@ -192,7 +193,7 @@ a { color: var(--강조); }
     if (!줄들.length) return '<div class="카드"><div class="빈">아래에 적어 보내시면 됩니다. 사진과 음성도 돼요.</div></div>';
     return '<div class="대화">' + 줄들.map(function (x) {
       if (x.누가 === '나') {
-        var 몸 = x.종류 === '사진' ? '<div>사진 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '음성' ? '<div>음성 · ' + esc(x.파일이름 || '') + '</div>' : esc(x.글);
+        var 몸 = x.종류 === '사진' ? '<div>사진 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '음성' ? '<div>음성 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '파일' ? '<div>파일 · ' + esc(x.파일이름 || '') + '</div>' : esc(x.글);
         if (x.미리보기) 몸 = '<img src="' + x.미리보기 + '" alt="보낸 사진">';
         return '<div class="말 나">' + 몸 + '<div class="때">' + 때글(x.시각) + ' · ' + (x.상태 === '보내는중' ? '보내는 중' : '받았어요') + '</div></div>';
       }
@@ -326,6 +327,41 @@ a { color: var(--강조); }
       var 이름 = '사진_' + 지금iso().replace(/[-:T]/g, '').slice(0, 14) + '.jpg';
       보내기({ 종류: '사진', 글: '', 파일이름: 이름, 파일형식: 'image/jpeg', 파일: r.base64 }, { 누가: '나', 종류: '사진', 파일이름: 이름, 미리보기: r.dataUrl, 시각: 지금iso(), 임시: Date.now() });
     });
+  });
+  // 붙여넣은 캡처 · 끌어다 놓은 파일 — 사진은 줄여서, 그 밖 파일은 그대로(1.5MB 까지 · 뒷단 한 줄 한도)
+  var 파일한도 = 1500000;
+  function 파일보내기(f) {
+    if (!f) return;
+    if ((f.type || '').indexOf('image/') === 0) {
+      줄이기(f).then(function (r) {
+        var 이름 = '사진_' + 지금iso().replace(/[-:T]/g, '').slice(0, 14) + '.jpg';
+        보내기({ 종류: '사진', 글: '', 파일이름: 이름, 파일형식: 'image/jpeg', 파일: r.base64 }, { 누가: '나', 종류: '사진', 파일이름: 이름, 미리보기: r.dataUrl, 시각: 지금iso(), 임시: Date.now() });
+      });
+      return;
+    }
+    if (f.size > 파일한도) { 토스트('파일이 커요(' + Math.round(f.size / 1024) + 'KB · ' + Math.round(파일한도 / 1024) + 'KB 까지). 사진이면 캡처로, 문서면 PDF 로 줄여 주세요.'); return; }
+    var fr = new FileReader();
+    fr.onload = function () {
+      var base64 = String(fr.result).split(',')[1];
+      var 이름 = (f.name || ('파일_' + 지금iso().replace(/[-:T]/g, '').slice(0, 14))).slice(0, 80);
+      보내기({ 종류: '파일', 글: '', 파일이름: 이름, 파일형식: f.type || 'application/octet-stream', 파일: base64 }, { 누가: '나', 종류: '파일', 파일이름: 이름, 시각: 지금iso(), 임시: Date.now() });
+    };
+    fr.readAsDataURL(f);
+  }
+  document.addEventListener('paste', function (e) {
+    var items = (e.clipboardData && e.clipboardData.items) || [];
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].kind === 'file') { var f = items[i].getAsFile(); if (f) { e.preventDefault(); 파일보내기(f); 토스트('붙여넣은 것을 보내요.'); return; } }
+    }
+  });
+  document.addEventListener('dragover', function (e) { e.preventDefault(); document.body.classList.add('끌어옴'); });
+  document.addEventListener('dragleave', function (e) { if (!e.relatedTarget) document.body.classList.remove('끌어옴'); });
+  document.addEventListener('drop', function (e) {
+    e.preventDefault(); document.body.classList.remove('끌어옴');
+    var fs = (e.dataTransfer && e.dataTransfer.files) || [];
+    if (!fs.length) return;
+    for (var i = 0; i < Math.min(fs.length, 5); i++) 파일보내기(fs[i]);
+    if (fs.length > 5) 토스트('한 번에 5개까지 보내요. 나머지는 다시 끌어다 놓아 주세요.');
   });
   function 줄이기(f) {
     return new Promise(function (res) {
