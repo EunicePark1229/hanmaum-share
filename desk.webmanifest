@@ -1,0 +1,13 @@
+{
+  "name": "한마음 데스크",
+  "short_name": "한마음",
+  "start_url": "./desk.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#1F6F5F",
+  "lang": "ko",
+  "icons": [
+    { "src": "desk-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
