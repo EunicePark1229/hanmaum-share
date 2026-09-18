@@ -81,6 +81,16 @@ tr.상세 .안 div span:last-child { white-space: nowrap; color: var(--글); }
 .막대 > i { display: block; height: 100%; background: var(--강조); border-radius: 999px; }
 .막대글 { display: flex; justify-content: space-between; font-size: 14px; color: var(--보조); }
 .줄 .때 .며칠 { color: var(--살핌); }
+.홈격자 [data-가], .숫자셋 [data-가], .줄[data-가], span[data-가] { cursor: pointer; }
+@media (hover: hover) { span[data-가]:hover .신호 { filter: brightness(.92); text-decoration: underline; } }
+.입력줄들 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.입력줄들 label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--보조); }
+.입력줄들 input { height: 44px; padding: 0 12px; border: 1px solid var(--선); border-radius: 10px; background: var(--바탕); font-size: 16px; color: var(--글); }
+.입력줄들 label:nth-child(3) { grid-column: 1 / -1; }
+@media (min-width: 900px) { .입력줄들 { grid-template-columns: 1fr 1fr 2fr 1fr 1fr; } .입력줄들 label:nth-child(3) { grid-column: auto; } }
+@media (hover: hover) { .숫자셋 [data-가]:hover .큰수, .한줄 span[data-가]:hover { color: var(--강조); text-decoration: underline; } }
+@keyframes 깜빡 { 0% { background: var(--강조연); box-shadow: 0 0 0 4px var(--강조연); } 100% { background: transparent; box-shadow: none; } }
+.강조 { animation: 깜빡 2.2s ease-out; border-radius: 12px; }
 .줄 .때 .며칠.오래 { color: var(--막힘); }
 .글씨체표 { font-size: 13px; color: var(--흐림); text-align: right; margin: -8px 0 8px; }
 .막대그래프 { display: flex; align-items: flex-end; gap: 6px; height: 64px; margin-top: 8px; }
@@ -198,7 +208,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-18n';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-18q';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   (function () { var m = decodeURIComponent(location.search || '').match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고)
   var $ = function (id) { return document.getElementById(id); };
@@ -239,9 +249,9 @@ a { color: var(--강조); }
   function 안읽은것() {
     if (!자료) return [];
     var 목록 = [];
-    (자료.피드.답 || []).forEach(function (x) { 목록.push({ 종류: '답', 시각: x.시각, 제목: x.제목, 탭: '대화' }); });
-    (자료.피드.할일 || []).forEach(function (x) { if (x.단계 !== '완료') 목록.push({ 종류: '할 일', 시각: x.시각, 제목: x.제목, 탭: '할일' }); });
-    (자료.피드.안내 || []).forEach(function (x) { 목록.push({ 종류: '안내', 시각: x.시각, 제목: x.제목, 탭: '홈' }); });
+    (자료.피드.답 || []).forEach(function (x) { 목록.push({ 종류: '답', id: x.id, 시각: x.시각, 제목: x.제목, 탭: '대화' }); });
+    (자료.피드.할일 || []).forEach(function (x) { if (x.단계 !== '완료') 목록.push({ 종류: '할 일', id: x.id, 시각: x.시각, 제목: x.제목, 탭: '할일' }); });
+    (자료.피드.안내 || []).forEach(function (x) { 목록.push({ 종류: '안내', id: x.id, 시각: x.시각, 제목: x.제목, 탭: '홈' }); });
     return 목록.filter(function (x) { return 새것인가(x.시각); }).sort(function (a, b) { return a.시각 < b.시각 ? 1 : -1; });
   }
   function 배지그리기() { var n = 안읽은것().length; var b = $('배지'); b.textContent = n ? String(n) : ''; b.setAttribute('data-n', n); }
@@ -269,7 +279,7 @@ a { color: var(--강조); }
   function 며칠째(iso) { if (!iso) return ''; var d = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000); if (isNaN(d) || d < 1) return ''; return '<span class="며칠' + (d >= 7 ? ' 오래' : '') + '">' + d + '일째</span>'; }
   function 할일줄(x, 덧있나) {
     var 며 = 며칠째(x.시각);
-    return '<div class="줄"><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄 || '') + (덧있나 && x.덧 ? ' · ' + esc(x.덧) : '') + '</div><div class="때">' + (x.기한 ? esc(x.기한) + ' 까지 · ' : '') + (며 ? 며 + ' · ' : '') + 때글(x.시각) + '</div></div>';
+    return '<div class="줄" data-가="할일" data-초점="' + esc(x.id) + '"><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄 || '') + (덧있나 && x.덧 ? ' · ' + esc(x.덧) : '') + '</div><div class="때">' + (x.기한 ? esc(x.기한) + ' 까지 · ' : '') + (며 ? 며 + ' · ' : '') + 때글(x.시각) + '</div></div>';
   }
   function 신호(급, 말) { return '<span class="신호 ' + 급 + '">' + esc(말) + '</span>'; }
   function 글씨체표() { return ''; }   // 글씨체는 IBM Plex Sans KR 로 정해짐(09-18) — 시안 표는 뗐다
@@ -288,12 +298,12 @@ a { color: var(--강조); }
     if (대표인가()) {
       var 오래 = 결정.filter(function (x) { return (Date.now() - new Date(x.시각).getTime()) / 86400000 >= 7; }).length;
       h += '<section class="카드 넓게"><h2>정하실 것 <button class="더" data-가="할일">전부 보기</button></h2>';
-      h += (결정.length ? 신호(오래 ? '막힘' : (결정.length > 5 ? '살핌' : '좋음'), 오래 ? '7일 넘은 것 ' + 오래 : (결정.length > 5 ? '쌓이는 중' : '정상')) : 신호('좋음', '비어 있음'));
+      h += '<span data-가="할일">' + (결정.length ? 신호(오래 ? '막힘' : (결정.length > 5 ? '살핌' : '좋음'), 오래 ? '7일 넘은 것 ' + 오래 : (결정.length > 5 ? '쌓이는 중' : '정상')) : 신호('좋음', '비어 있음')) + '</span>';
       h += 결정.length ? '<div class="큰수">' + 결정.length + '</div>' + 결정.slice(0, 3).map(function (x) { return 할일줄(x, true); }).join('') : '<div class="빈">지금 정하실 것이 없어요.</div>';
       h += '</section>';
     }
     h += '<section class="카드"><h2>새로 온 것 <button class="더" data-가="알림">전부 보기</button></h2>';
-    h += 새.length ? '<div class="큰수">' + 새.length + '</div><div class="한줄" style="color:var(--보조)">' + esc(새[0].종류 + ' · ' + 새[0].제목) + (새.length > 1 ? ' 외 ' + (새.length - 1) : '') + '</div>' : '<div class="빈">지금은 없어요. 답이나 할 일이 오면 여기와 종에 떠요.</div>';
+    h += 새.length ? '<div class="줄" data-가="' + esc(새[0].탭) + '" data-초점="' + esc(새[0].id || '') + '"><div class="큰수">' + 새.length + '</div><div class="한줄" style="color:var(--보조)">' + esc(새[0].종류 + ' · ' + 새[0].제목) + (새.length > 1 ? ' 외 ' + (새.length - 1) : '') + '</div></div>' : '<div class="빈">지금은 없어요. 답이나 할 일이 오면 여기와 종에 떠요.</div>';
     h += '</section>';
     if (!대표인가()) {
       h += '<section class="카드"><h2>하실 것 <button class="더" data-가="할일">전부 보기</button></h2>';
@@ -303,21 +313,21 @@ a { color: var(--강조); }
     if (장) {
       h += '<section class="카드"><h2>' + (대표인가() ? '이번 달 장부' : '이번 달 판매·매입') + ' <button class="더" data-가="장부">자세히</button></h2><div class="숫자셋">';
       if (대표인가()) {
-        h += '<div><div class="큰수">' + 만원(장.판매 && 장.판매.금액) + '</div><div class="한줄">매출</div></div>';
-        h += '<div><div class="큰수" style="color:' + ((장.손익 || 0) >= 0 ? 'var(--좋음)' : 'var(--막힘)') + '">' + 만원(장.손익) + '</div><div class="한줄">손익 ' + ((장.손익 || 0) >= 0 ? '(남음)' : '(모자람)') + '</div></div>';
-        h += '<div><div class="큰수">' + 만원(장.분기선까지) + '</div><div class="한줄">분기선까지</div></div>';
+        h += '<div data-가="장부" data-펼침열기="판매"><div class="큰수">' + 만원(장.판매 && 장.판매.금액) + '</div><div class="한줄">매출</div></div>';
+        h += '<div data-가="장부" data-펼침열기="운영비"><div class="큰수" style="color:' + ((장.손익 || 0) >= 0 ? 'var(--좋음)' : 'var(--막힘)') + '">' + 만원(장.손익) + '</div><div class="한줄">손익 ' + ((장.손익 || 0) >= 0 ? '(남음)' : '(모자람)') + '</div></div>';
+        h += '<div data-가="장부" data-스크롤="최근"><div class="큰수">' + 만원(장.분기선까지) + '</div><div class="한줄">분기선까지</div></div>';
         var 비 = 장.손익분기 ? Math.max(0, Math.min(100, Math.round(100 * ((장.판매 && 장.판매.금액) || 0) / 장.손익분기))) : 0;
         h += '</div><div class="막대"><i style="width:' + 비 + '%"></i></div><div class="막대글"><span>이번 달 매출 ' + 비 + '%</span><span>손익분기 ' + 만원(장.손익분기) + '</span></div><div style="display:none">';
       } else {
-        h += '<div><div class="큰수">' + ((장.판매 && 장.판매.건수) || 0) + '건</div><div class="한줄">판매</div></div>';
-        h += '<div><div class="큰수">' + ((장.매입 && 장.매입.건수) || 0) + '건</div><div class="한줄">매입</div></div>';
-        h += '<div><div class="큰수">' + ((장.미지급 || []).length) + '곳</div><div class="한줄">미지급 거래처</div></div>';
+        h += '<div data-가="장부" data-펼침열기="판매"><div class="큰수">' + ((장.판매 && 장.판매.건수) || 0) + '건</div><div class="한줄">판매</div></div>';
+        h += '<div data-가="장부" data-펼침열기="매입"><div class="큰수">' + ((장.매입 && 장.매입.건수) || 0) + '건</div><div class="한줄">매입</div></div>';
+        h += '<div data-가="장부" data-스크롤="미지급"><div class="큰수">' + ((장.미지급 || []).length) + '곳</div><div class="한줄">미지급 거래처</div></div>';
       }
       h += '</div></section>';
     }
     if (대표인가()) {
       h += '<section class="카드"><h2>원장님 쪽 <button class="더" data-가="받은것">받은 것 전부</button></h2>';
-      h += '<div class="한줄">원장님이 하실 것 ' + 원장할일.length + ' · 재고 보청기 ' + ((재 && 재.합 && 재.합['보청기']) || 0) + '대</div>';
+      h += '<div class="한줄"><span data-가="할일" data-스크롤="원장님">원장님이 하실 것 ' + 원장할일.length + '</span> · <span data-가="재고">재고 보청기 ' + ((재 && 재.합 && 재.합['보청기']) || 0) + '대</span></div>';
       h += 받.length ? 받.map(function (x) { return '<div class="줄"><span class="칩">' + esc(x.갈래) + '</span><a href="' + esc(x.주소) + '" target="_blank" rel="noopener">' + esc(x.제목) + '</a><div class="때">' + 때글(x.시각) + '</div></div>'; }).join('') : '';
       h += '</section>';
     } else {
@@ -325,13 +335,13 @@ a { color: var(--강조); }
       h += 받.length ? 받.map(function (x) { return '<div class="줄"><span class="칩">' + esc(x.갈래) + '</span><a href="' + esc(x.주소) + '" target="_blank" rel="noopener">' + esc(x.제목) + '</a><div class="때">' + 때글(x.시각) + '</div></div>'; }).join('') : '<div class="빈">아직 없어요.</div>';
       h += '</section>';
     }
-    if (안) h += '<section class="카드"><h2>안내</h2><div class="줄"><div class="제목">' + esc(안.제목) + '</div><div class="한줄">' + esc(안.글) + '</div><div class="때">' + 때글(안.시각) + '</div></div></section>';
+    if (안) h += '<section class="카드"><h2>안내 <button class="더" data-가="알림">전부 보기</button></h2><div class="줄" data-가="알림"><div class="제목">' + esc(안.제목) + '</div><div class="한줄">' + esc(안.글) + '</div><div class="때">' + 때글(안.시각) + '</div></div></section>';
     return h;
   }
   function 대화() {
     var 줄들 = [];
     ((자료 && 자료.대화) || []).forEach(function (x) { 줄들.push({ 누가: '나', id: x.id, 시각: x.시각, 글: x.글, 종류: x.종류, 파일이름: x.파일이름, 상태: x.상태 }); });
-    ((자료 && 자료.피드.답) || []).forEach(function (x) { 줄들.push({ 누가: '우리', 시각: x.시각, 제목: x.제목, 글: x.글, 파일: x.파일 }); });
+    ((자료 && 자료.피드.답) || []).forEach(function (x) { 줄들.push({ 누가: '우리', id: x.id, 시각: x.시각, 제목: x.제목, 글: x.글, 파일: x.파일 }); });
     (JSON.parse(저장.get('보낸것') || '[]')).forEach(function (x) { if (!줄들.some(function (y) { return y.누가 === '나' && y.시각 === x.시각; })) 줄들.push(x); });
     줄들.sort(function (a, b) { return a.시각 < b.시각 ? -1 : 1; });
     if (!줄들.length) return '<div class="카드"><div class="빈">아래에 적어 보내시면 됩니다. 사진과 음성도 돼요.</div></div>';
@@ -343,14 +353,14 @@ a { color: var(--강조); }
         return '<div class="말 나">' + 몸 + '<div class="때">' + 때글(x.시각) + ' · ' + (x.상태 === '보내는중' ? '보내는 중' : '받았어요') + '</div></div>';
       }
       var 파일 = (x.파일 || []).map(function (f) { return '<div>파일 · ' + esc(f.이름) + '</div>'; }).join('');
-      return '<div class="말 우리">' + (x.제목 ? '<div class="제목">' + esc(x.제목) + '</div>' : '') + esc(x.글) + 파일 + '<div class="때">' + 때글(x.시각) + '</div></div>';
+      return '<div class="말 우리" data-id="' + esc(x.id || '') + '">' + (x.제목 ? '<div class="제목">' + esc(x.제목) + '</div>' : '') + esc(x.글) + 파일 + '<div class="때">' + 때글(x.시각) + '</div></div>';
     }).join('') + '</div>';
   }
   function 할일() {
     var 목록 = ((자료 && 자료.피드.할일) || []).slice().reverse();
     if (!목록.length) return '<div class="카드"><div class="빈">하실 것이 없어요. 새로 생기면 종이 켜져요.</div></div>';
     function 한줄(x, 끝났나) {
-      return '<div class="줄"><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄 || '') + (x.덧 ? ' · ' + esc(x.덧) : '') + '</div>' +
+      return '<div class="줄" data-id="' + esc(x.id) + '"><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄 || '') + (x.덧 ? ' · ' + esc(x.덧) : '') + '</div>' +
         '<div class="때">' + (x.기한 ? esc(x.기한) + ' 까지 · ' : '') + 때글(x.시각) + '</div>' +
         (끝났나 ? '<div style="margin-top:8px"><span class="칩 끝">끝냈어요</span></div>' : '<div style="margin-top:10px"><button class="단추 테" data-끝="' + esc(x.id) + '">끝냈어요</button></div>') + '</div>';
     }
@@ -360,7 +370,7 @@ a { color: var(--강조); }
     if (대표인가()) {
       var 결정 = 열림.filter(function (x) { return x.대상 === '유니스'; }), 원장것 = 열림.filter(function (x) { return x.대상 !== '유니스'; });
       h += '<section class="카드"><h2>정하실 것 ' + 결정.length + '</h2>' + (결정.length ? 결정.map(function (x) { return 한줄(x, false); }).join('') : '<div class="빈">지금 정하실 것이 없어요.</div>') + '</section>';
-      h += '<section class="카드"><h2>원장님이 하실 것 ' + 원장것.length + '</h2>' + (원장것.length ? 원장것.map(function (x) { return 한줄(x, false); }).join('') : '<div class="빈">없어요.</div>') + '</section>';
+      h += '<section class="카드" data-구역="원장님"><h2>원장님이 하실 것 ' + 원장것.length + '</h2>' + (원장것.length ? 원장것.map(function (x) { return 한줄(x, false); }).join('') : '<div class="빈">없어요.</div>') + '</section>';
     } else {
       h += '<section class="카드"><h2>하실 것 ' + 열림.length + '</h2>' + (열림.length ? 열림.map(function (x) { return 한줄(x, false); }).join('') : '<div class="빈">다 하셨어요.</div>') + '</section>';
     }
@@ -372,23 +382,37 @@ a { color: var(--강조); }
     var 재 = 재고항목();
     if (!재) return 글씨체표() + '<div class="카드"><div class="빈">아직 재고를 못 셌어요. 장부(판매현황·매입현황)가 들어오면 여기에 보여요.</div></div>';
     var 볼 = (재.볼것 || []).length, 하나 = (재.묶음 || []).filter(function (r) { return r.갈래 === '보청기' && r.남음 === 1; }).length;
-    var h = 글씨체표() + '<section class="카드"><h2>' + esc(재.제목) + '</h2>' + (볼 ? 신호('살핌', '확인할 것 ' + 볼) : 신호('좋음', '장부와 맞음')) + ' ' + (하나 ? 신호('모름', '한 대 남은 모델 ' + 하나) : '') + '<div class="한줄" style="color:var(--보조);margin-top:8px">' + esc(재.한줄 || '') + ' · 센 때 ' + 때글(재.셈때) + '</div><div class="숫자셋" style="margin-top:12px">';
-    ['보청기', '데모', '판촉물'].forEach(function (k) { h += '<div><div class="큰수">' + ((재.합 && 재.합[k]) || 0) + '</div><div class="한줄">' + k + '</div></div>'; });
+    var h = '<section class="카드"><h2>' + esc(재.제목) + '</h2>' + (볼 ? '<span data-가="재고" data-스크롤="확인할것">' + 신호('살핌', '확인할 것 ' + 볼) + '</span>' : 신호('좋음', '장부와 맞음')) + ' ' + (하나 ? '<span data-가="재고" data-스크롤="보청기">' + 신호('모름', '한 대 남은 모델 ' + 하나) + '</span>' : '') + '<div class="한줄" style="color:var(--보조);margin-top:8px">' + esc(재.한줄 || '') + ' · 센 때 ' + 때글(재.셈때) + '</div><div class="숫자셋" style="margin-top:12px">';
+    ['보청기', '데모', '판촉물'].forEach(function (k) { h += '<div data-가="재고" data-스크롤="' + k + '"><div class="큰수">' + ((재.합 && 재.합[k]) || 0) + '</div><div class="한줄">' + k + '</div></div>'; });
     h += '</div></section>';
     var 갈래들 = {};
     (재.묶음 || []).forEach(function (r) { (갈래들[r.갈래] = 갈래들[r.갈래] || []).push(r); });
     function 정렬(rows) { var k = 재고정렬.키, d = 재고정렬.방향; return rows.slice().sort(function (a, b) { var x = a[k], y = b[k]; if (typeof x === 'number') return (x - y) * d; return String(x).localeCompare(String(y), 'ko') * d; }); }
     function 머리(k, 글, 오른쪽) { var c = 재고정렬.키 === k ? (재고정렬.방향 > 0 ? ' class="오름"' : ' class="내림"') : ''; return '<th data-정렬="' + k + '"' + c + (오른쪽 ? ' style="text-align:right"' : '') + '>' + 글 + '</th>'; }
     Object.keys(갈래들).forEach(function (g) {
-      h += '<section class="카드"><h2>' + esc(g) + ' ' + 갈래들[g].reduce(function (a, r) { return a + r.남음; }, 0) + '</h2><table class="표"><tr>' + 머리('브랜드', '브랜드') + 머리('모델', '모델') + 머리('남음', '남음', true) + '</tr>';
+      h += '<section class="카드" data-구역="' + esc(g) + '"><h2>' + esc(g) + ' ' + 갈래들[g].reduce(function (a, r) { return a + r.남음; }, 0) + '</h2><table class="표"><tr>' + 머리('브랜드', '브랜드') + 머리('모델', '모델') + 머리('남음', '남음', true) + '</tr>';
       h += 정렬(갈래들[g]).map(function (r) { return '<tr><td>' + esc(r.브랜드) + '</td><td>' + esc(r.모델) + '</td><td class="수"' + (r.남음 === 1 && g === '보청기' ? ' style="color:var(--살핌)"' : '') + '>' + r.남음 + '</td></tr>'; }).join('');
       h += '</table></section>';
     });
     if (볼) {
-      h += '<section class="카드"><h2>확인할 것 ' + 볼 + '</h2><div class="한줄" style="color:var(--보조);margin-bottom:8px">장부만으로는 못 맞춘 모델이에요. 대화에 「모델 · 실제 개수」로 적어 주시면 맞춥니다.</div>';
+      h += '<section class="카드" data-구역="확인할것"><h2>확인할 것 ' + 볼 + '</h2><div class="한줄" style="color:var(--보조);margin-bottom:8px">장부만으로는 못 맞춘 모델이에요. 대화에 「모델 · 실제 개수」로 적어 주시면 맞춥니다.</div>';
       h += 재.볼것.map(function (r) { return '<div class="줄"><div class="제목">' + esc(r.모델) + '</div><div class="한줄">' + esc(r.왜) + '</div></div>'; }).join('') + '</section>';
     }
     return h;
+  }
+  var 입력구분 = '판매';
+  function 입력칸() {
+    if (대표인가()) return '';
+    var 오늘 = 지금iso().slice(0, 10);
+    return '<section class="카드 입력카드"><h2>오늘 입력</h2><div class="한줄" style="color:var(--보조);margin-bottom:10px">판매·매입 한 건씩 적어 보내시면 저희가 장부에 옮깁니다. 영수증·거래명세서는 사진으로 올리셔도 돼요.</div>' +
+      '<div class="갈래줄"><button class="' + (입력구분 === '판매' ? '켬' : '') + '" data-입력구분="판매">판매</button><button class="' + (입력구분 === '매입' ? '켬' : '') + '" data-입력구분="매입">매입</button><button class="' + (입력구분 === '기타' ? '켬' : '') + '" data-입력구분="기타">그 밖(비용 등)</button></div>' +
+      '<div class="입력줄들">' +
+      '<label>날짜<input id="입_날짜" type="date" value="' + 오늘 + '"></label>' +
+      '<label>' + (입력구분 === '매입' ? '거래처' : 입력구분 === '판매' ? '고객' : '어디에') + '<input id="입_상대" placeholder="' + (입력구분 === '매입' ? '예) 시그니아' : 입력구분 === '판매' ? '예) 홍길동' : '예) 한국전력') + '"></label>' +
+      '<label>내용<input id="입_내용" placeholder="' + (입력구분 === '판매' ? '모델 · 좌/우 · 보장구 여부' : '무엇을') + '"></label>' +
+      '<label>금액(원)<input id="입_금액" inputmode="numeric" placeholder="예) 1800000"></label>' +
+      '<label>메모<input id="입_메모" placeholder="안 적어도 돼요"></label>' +
+      '</div><div style="display:flex;gap:8px;margin-top:10px"><button class="단추" id="입_보내기" style="flex:1">보내기</button><button class="단추 테" id="입_사진">사진 올리기</button></div></section>';
   }
   var 펼침 = {}, 상세정렬 = {};
   (function () { var m = decodeURIComponent(location.search || '').match(/[?&]펼침=([^&]+)/); if (m) 펼침[m[1]] = true; })();   // 링크로 특정 총액을 펼친 채 열기(?탭=장부&펼침=운영비)
@@ -415,7 +439,7 @@ a { color: var(--강조); }
   }
   function 장부() {
     var 장 = 장부항목();
-    if (!장) return 글씨체표() + '<div class="카드"><div class="빈">아직 장부가 안 왔어요.</div></div>';
+    if (!장) return 입력칸() + '<div class="카드"><div class="빈">아직 장부가 안 왔어요.</div></div>';
     var 상세 = 장.상세 || {};
     function 줄(키, 이름, 건수, 금액, 굵게) {
       var 있음 = (상세[키] || []).length > 0, 열 = 펼침[키] ? ' 열림' : '';
@@ -423,8 +447,8 @@ a { color: var(--강조); }
       if (있음 && 펼침[키]) h += '<tr class="상세"><td colspan="3"><div class="안">' + 상세표(키, 상세[키]) + '</div></td></tr>';
       return h;
     }
-    var 급 = 대표인가() ? ((장.손익 || 0) >= 0 ? 신호('좋음', '이번 달 남음') : 신호('살핌', '이번 달 모자람')) : ((장.미지급 || []).length ? 신호('살핌', '미지급 ' + 장.미지급.length + '곳') : 신호('좋음', '미지급 없음'));
-    var h = 글씨체표() + '<section class="카드"><h2>' + esc(장.연월) + ' ' + esc(장.제목) + '</h2>' + 급 + '<div class="한줄" style="color:var(--보조);margin-top:8px">' + esc(장.한줄 || '') + ' · 총액을 누르면 줄이 펼쳐져요</div>';
+    var 급 = 대표인가() ? ((장.손익 || 0) >= 0 ? 신호('좋음', '이번 달 남음') : 신호('살핌', '이번 달 모자람')) : ((장.미지급 || []).length ? '<span data-가="장부" data-스크롤="미지급">' + 신호('살핌', '미지급 ' + 장.미지급.length + '곳') + '</span>' : 신호('좋음', '미지급 없음'));
+    var h = 입력칸() + '<section class="카드"><h2>' + esc(장.연월) + ' ' + esc(장.제목) + '</h2>' + 급 + '<div class="한줄" style="color:var(--보조);margin-top:8px">' + esc(장.한줄 || '') + ' · 총액을 누르면 줄이 펼쳐져요</div>';
     h += '<table class="표" style="margin-top:12px"><tr><th></th><th style="text-align:right">건수</th><th style="text-align:right">금액</th></tr>';
     h += 줄('판매', '판매', (장.판매 && 장.판매.건수) || 0, 장.판매 && 장.판매.금액);
     h += 줄('매입', '매입', (장.매입 && 장.매입.건수) || 0, 장.매입 && 장.매입.금액);
@@ -435,13 +459,13 @@ a { color: var(--강조); }
     }
     h += '</table></section>';
     if ((장.미지급 || []).length) {
-      h += '<section class="카드"><h2>거래처 미지급 ' + 장.미지급.length + '</h2><table class="표">' + 장.미지급.map(function (m) { return '<tr><td>' + esc(m.거래처 || m.이름 || '') + '</td><td class="수">' + 원(m.금액) + '</td></tr>'; }).join('') + '</table></section>';
+      h += '<section class="카드" data-구역="미지급"><h2>거래처 미지급 ' + 장.미지급.length + '</h2><table class="표">' + 장.미지급.map(function (m) { return '<tr><td>' + esc(m.거래처 || m.이름 || '') + '</td><td class="수">' + 원(m.금액) + '</td></tr>'; }).join('') + '</table></section>';
     }
     if (대표인가()) {
-      h += '<section class="카드"><h2>누적</h2><div class="숫자셋"><div><div class="큰수">' + 만원(장.누적매출) + '</div><div class="한줄">누적 매출</div></div><div><div class="큰수" style="color:' + ((장.누적손익 || 0) >= 0 ? 'var(--좋음)' : 'var(--막힘)') + '">' + 만원(장.누적손익) + '</div><div class="한줄">누적 손익</div></div><div><div class="큰수">' + 만원(장.미수) + '</div><div class="한줄">미수</div></div></div></section>';
+      h += '<section class="카드"><h2>누적</h2><div class="숫자셋"><div data-가="장부" data-스크롤="최근"><div class="큰수">' + 만원(장.누적매출) + '</div><div class="한줄">누적 매출</div></div><div data-가="장부" data-스크롤="최근"><div class="큰수" style="color:' + ((장.누적손익 || 0) >= 0 ? 'var(--좋음)' : 'var(--막힘)') + '">' + 만원(장.누적손익) + '</div><div class="한줄">누적 손익</div></div><div><div class="큰수">' + 만원(장.미수) + '</div><div class="한줄">미수</div></div></div></section>';
       if ((장.최근 || []).length) {
         var 최대 = Math.max.apply(null, 장.최근.map(function (m) { return Math.abs(m.손익 || 0); }).concat([1]));
-        h += '<section class="카드"><h2>최근 여섯 달 손익</h2><div class="막대그래프">' + 장.최근.map(function (m) { var v = m.손익 || 0; return '<div class="' + (v >= 0 ? '플러스' : '마이너스') + '" style="height:' + Math.max(4, Math.round(60 * Math.abs(v) / 최대)) + 'px" title="' + esc(m.연월) + ' ' + 만원(v) + '"><span>' + esc(m.연월.slice(5)) + '월</span></div>'; }).join('') + '</div><div style="height:22px"></div>';
+        h += '<section class="카드" data-구역="최근"><h2>최근 여섯 달 손익</h2><div class="막대그래프">' + 장.최근.map(function (m) { var v = m.손익 || 0; return '<div class="' + (v >= 0 ? '플러스' : '마이너스') + '" style="height:' + Math.max(4, Math.round(60 * Math.abs(v) / 최대)) + 'px" title="' + esc(m.연월) + ' ' + 만원(v) + '"><span>' + esc(m.연월.slice(5)) + '월</span></div>'; }).join('') + '</div><div style="height:22px"></div>';
         h += '<table class="표"><tr><th>달</th><th style="text-align:right">매출</th><th style="text-align:right">손익</th></tr>' + 장.최근.map(function (m) { return '<tr><td>' + esc(m.연월) + '</td><td class="수">' + 만원(m.매출) + '</td><td class="수" style="color:' + ((m.손익 || 0) >= 0 ? 'var(--좋음)' : 'var(--막힘)') + '">' + 만원(m.손익) + '</td></tr>'; }).join('') + '</table></section>';
       }
     }
@@ -473,10 +497,19 @@ a { color: var(--강조); }
   // ── 누르기 ──
   $('탭').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; 탭 = b.getAttribute('data-탭'); 그리기(); });
   $('본문').addEventListener('click', function (e) {
-    var 더 = e.target.closest('[data-가]'); if (더) { var 가 = 더.getAttribute('data-가'); if (가 === '알림') 알림열기(); else { 탭 = 가; 그리기(); } return; }
+    var 더 = e.target.closest('[data-가]'); if (더) { 가기(더.getAttribute('data-가'), 더.getAttribute('data-초점'), 더.getAttribute('data-펼침열기'), 더.getAttribute('data-스크롤')); return; }
     var g = e.target.closest('[data-갈래]'); if (g) { 갈래 = g.getAttribute('data-갈래'); 그리기(); return; }
     var 끝 = e.target.closest('[data-끝]'); if (끝) { 끝내기(끝.getAttribute('data-끝'), 끝); return; }
     var 정 = e.target.closest('[data-정렬]'); if (정) { var k = 정.getAttribute('data-정렬'); if (재고정렬.키 === k) 재고정렬.방향 = -재고정렬.방향; else { 재고정렬.키 = k; 재고정렬.방향 = k === '남음' ? -1 : 1; } 그리기(); return; }
+    var 입구 = e.target.closest('[data-입력구분]'); if (입구) { 입력구분 = 입구.getAttribute('data-입력구분'); 그리기(); return; }
+    if (e.target.id === '입_사진') { $('사진파일').click(); return; }
+    if (e.target.id === '입_보내기') {
+      var 상 = ($('입_상대').value || '').trim(), 내 = ($('입_내용').value || '').trim(), 금 = ($('입_금액').value || '').replace(/[^0-9]/g, ''), 메 = ($('입_메모').value || '').trim(), 날 = $('입_날짜').value || 지금iso().slice(0, 10);
+      if (!상 && !내 && !금) { 토스트('고객·거래처나 내용, 금액 중 하나는 적어 주세요.'); return; }
+      var 글 = '[장부 ' + 입력구분 + '] ' + 날 + ' · ' + (상 || '(상대 없음)') + ' · ' + (내 || '(내용 없음)') + ' · ' + (금 ? Number(금).toLocaleString('ko-KR') + '원' : '(금액 없음)') + (메 ? ' · ' + 메 : '');
+      보내기({ 종류: '글', 글: 글 }, { 누가: '나', 종류: '글', 글: 글, 시각: 지금iso(), 임시: Date.now() });
+      return;
+    }
     var 상정 = e.target.closest('[data-상세정렬]'); if (상정) { var pr = 상정.getAttribute('data-상세정렬').split('|'), 정 = 상세정렬[pr[0]] || { 키: '일자', 방향: 1 }; if (정.키 === pr[1]) 정.방향 = -정.방향; else { 정.키 = pr[1]; 정.방향 = pr[1] === '금액' ? -1 : 1; } 상세정렬[pr[0]] = 정; 그리기(); return; }
     var 펼 = e.target.closest('[data-펼침]'); if (펼) { var kk = 펼.getAttribute('data-펼침'); 펼침[kk] = !펼침[kk]; 그리기(); return; }
   });
@@ -489,14 +522,14 @@ a { color: var(--강조); }
     // 최근 것 전부(읽은 것 포함) — 종을 여는 순간 읽은 것으로 적히는데, 그래도 목록은 남아 있어야 「무엇이 왔었나」를 다시 볼 수 있다
     if (!자료) return [];
     var 목록 = [];
-    (자료.피드.답 || []).forEach(function (x) { 목록.push({ 종류: '답', 시각: x.시각, 제목: x.제목, 탭: '대화' }); });
-    (자료.피드.할일 || []).forEach(function (x) { if (x.단계 !== '완료' && !끝난할일(x.id)) 목록.push({ 종류: '할 일', 시각: x.시각, 제목: x.제목, 탭: '할일' }); });
-    (자료.피드.안내 || []).forEach(function (x) { 목록.push({ 종류: '안내', 시각: x.시각, 제목: x.제목, 탭: '홈' }); });
+    (자료.피드.답 || []).forEach(function (x) { 목록.push({ 종류: '답', id: x.id, 시각: x.시각, 제목: x.제목, 탭: '대화' }); });
+    (자료.피드.할일 || []).forEach(function (x) { if (x.단계 !== '완료' && !끝난할일(x.id)) 목록.push({ 종류: '할 일', id: x.id, 시각: x.시각, 제목: x.제목, 탭: '할일' }); });
+    (자료.피드.안내 || []).forEach(function (x) { 목록.push({ 종류: '안내', id: x.id, 시각: x.시각, 제목: x.제목, 탭: '홈' }); });
     return 목록.sort(function (a, b) { return a.시각 < b.시각 ? 1 : -1; }).slice(0, 30);
   }
   function 알림열기() {
     var 목 = 알림목록전부();
-    $('알림목록').innerHTML = 목.length ? 목.map(function (x) { return '<div class="줄" data-탭가="' + x.탭 + '">' + (새것인가(x.시각) ? '<span class="점" title="새"></span>' : '') + '<span class="칩 끝">' + esc(x.종류) + '</span>' + esc(x.제목) + '<div class="때">' + 때글(x.시각) + '</div></div>'; }).join('') : '<div class="빈">아직 온 것이 없어요. 답·할 일·안내가 오면 여기에 남아요.</div>';
+    $('알림목록').innerHTML = 목.length ? 목.map(function (x) { return '<div class="줄" data-탭가="' + x.탭 + '" data-초점="' + esc(x.id || '') + '">' + (새것인가(x.시각) ? '<span class="점" title="새"></span>' : '') + '<span class="칩 끝">' + esc(x.종류) + '</span>' + esc(x.제목) + '<div class="때">' + 때글(x.시각) + '</div></div>'; }).join('') : '<div class="빈">아직 온 것이 없어요. 답·할 일·안내가 오면 여기에 남아요.</div>';
     $('알림시트').classList.add('보임');
     푸시상태그리기();
     var 지금 = new Date(); 지금.setMilliseconds(0);
@@ -540,7 +573,18 @@ a { color: var(--강조); }
   }
   document.addEventListener('click', function (e) { if (e.target && e.target.id === '푸시켜기') 푸시켜기(); });
   $('알림닫기').addEventListener('click', function () { $('알림시트').classList.remove('보임'); });
-  $('알림시트').addEventListener('click', function (e) { if (e.target === $('알림시트')) $('알림시트').classList.remove('보임'); var 줄 = e.target.closest('[data-탭가]'); if (줄) { 탭 = 줄.getAttribute('data-탭가'); $('알림시트').classList.remove('보임'); 그리기(); } });
+  $('알림시트').addEventListener('click', function (e) { if (e.target === $('알림시트')) $('알림시트').classList.remove('보임'); var 줄 = e.target.closest('[data-탭가]'); if (줄) { $('알림시트').classList.remove('보임'); 가기(줄.getAttribute('data-탭가'), 줄.getAttribute('data-초점')); } });
+  // 홈·알림의 항목을 누르면 그 탭의 그 자리로 — 펼칠 것은 펼치고, 그 줄로 내려가 잠깐 강조(2026-09-18 유니스)
+  function 가기(어디, 초점, 펼칠것, 구역) {
+    if (어디 === '알림') { 알림열기(); return; }
+    if (펼칠것) 펼침[펼칠것] = true;
+    탭 = 어디 || '홈'; 그리기();
+    var 대상 = null;
+    if (초점) 대상 = document.querySelector('[data-id="' + 초점.replace(/"/g, '') + '"]');
+    if (!대상 && 구역) 대상 = document.querySelector('[data-구역="' + 구역 + '"]');
+    if (!대상 && 펼칠것) 대상 = document.querySelector('[data-펼침="' + 펼칠것 + '"]');
+    if (대상) { setTimeout(function () { 대상.scrollIntoView({ behavior: 'smooth', block: 'center' }); 대상.classList.add('강조'); setTimeout(function () { 대상.classList.remove('강조'); }, 2200); }, 60); }
+  }
 
   // ── 보내기(글·사진·음성) ──
   function 보낸것기록(x) { var 목 = JSON.parse(저장.get('보낸것') || '[]'); 목.push(x); 저장.set('보낸것', JSON.stringify(목.slice(-30))); }
