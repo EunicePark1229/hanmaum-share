@@ -85,6 +85,7 @@ tr.상세 .안 div span:last-child { white-space: nowrap; color: var(--글); }
 @media (hover: hover) { span[data-가]:hover .신호 { filter: brightness(.92); text-decoration: underline; } }
 .입력줄들 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .입력줄들 label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--보조); }
+.입력줄들 select { height: 44px; padding: 0 10px; border: 1px solid var(--선); border-radius: 10px; background: var(--바탕); font-size: 16px; color: var(--글); width: 100%; min-width: 0; }
 .입력줄들 input { height: 44px; padding: 0 12px; border: 1px solid var(--선); border-radius: 10px; background: var(--바탕); font-size: 16px; color: var(--글); width: 100%; min-width: 0; }
 .입력줄들 label { min-width: 0; }
 .입력줄들 label:nth-child(3) { grid-column: 1 / -1; }
@@ -202,7 +203,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-18s';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-18t';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   (function () { var m = decodeURIComponent(location.search || '').match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고)
   var $ = function (id) { return document.getElementById(id); };
@@ -341,7 +342,7 @@ a { color: var(--강조); }
     if (!줄들.length) return '<div class="카드"><div class="빈">아래에 적어 보내시면 됩니다. 사진과 음성도 돼요.</div></div>';
     return '<div class="대화">' + 줄들.map(function (x) {
       if (x.누가 === '나') {
-        var 몸 = x.종류 === '사진' ? '<div>사진 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '음성' ? '<div>음성 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '파일' ? '<div>파일 · ' + esc(x.파일이름 || '') + '</div>' : esc(x.글);
+        var 몸 = x.종류 === '사진' ? '<div>사진 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '음성' ? '<div>음성 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '파일' ? '<div>파일 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '장부입력' ? 장부한줄(x.글) : esc(x.글);
         if (x.미리보기) 몸 = '<img class="썸" src="' + x.미리보기 + '" alt="보낸 사진">';
         else if (x.종류 === '사진' && x.id && 설정 && 설정.뒷단.indexOf('script.google') < 0) 몸 = '<img class="썸" loading="lazy" src="' + 뒷단주소('p=file&id=' + encodeURIComponent(x.id)) + '" alt="보낸 사진">';
         return '<div class="말 나">' + 몸 + '<div class="때">' + 때글(x.시각) + ' · ' + (x.상태 === '보내는중' ? '보내는 중' : '받았어요') + '</div></div>';
@@ -394,20 +395,54 @@ a { color: var(--강조); }
     }
     return h;
   }
-  var 입력구분 = '판매';
+  var 입력구분 = '판매', 자세히 = false;
+  function 고르기(id, 목록, 첫말) { return '<select id="' + id + '"><option value="">' + (첫말 || '고르기') + '</option>' + (목록 || []).map(function (v) { return '<option value="' + esc(v) + '">' + esc(v) + '</option>'; }).join('') + '</select>'; }
+  function 칸(id, 이름, 자리, 종류) { return '<label>' + 이름 + '<input id="' + id + '" ' + (종류 || '') + ' placeholder="' + esc(자리 || '') + '"></label>'; }
   function 입력칸() {
     if (대표인가()) return '';
-    var 오늘 = 지금iso().slice(0, 10);
-    return '<section class="카드 입력카드"><h2>오늘 입력</h2><div class="한줄" style="color:var(--보조);margin-bottom:10px">판매·매입 한 건씩 적어 보내시면 저희가 장부에 옮깁니다. 영수증·거래명세서는 사진으로 올리셔도 돼요.</div>' +
-      '<div class="갈래줄"><button class="' + (입력구분 === '판매' ? '켬' : '') + '" data-입력구분="판매">판매</button><button class="' + (입력구분 === '매입' ? '켬' : '') + '" data-입력구분="매입">매입</button><button class="' + (입력구분 === '기타' ? '켬' : '') + '" data-입력구분="기타">그 밖(비용 등)</button></div>' +
-      '<div class="입력줄들">' +
-      '<label>날짜<input id="입_날짜" type="date" value="' + 오늘 + '"></label>' +
-      '<label>' + (입력구분 === '매입' ? '거래처' : 입력구분 === '판매' ? '고객' : '어디에') + '<input id="입_상대" placeholder="' + (입력구분 === '매입' ? '예) 시그니아' : 입력구분 === '판매' ? '예) 홍길동' : '예) 한국전력') + '"></label>' +
-      '<label>내용<input id="입_내용" placeholder="' + (입력구분 === '판매' ? '모델 · 좌/우 · 보장구 여부' : '무엇을') + '"></label>' +
-      '<label>금액(원)<input id="입_금액" inputmode="numeric" placeholder="예) 1800000"></label>' +
-      '<label>메모<input id="입_메모" placeholder="안 적어도 돼요"></label>' +
-      '</div><div style="display:flex;gap:8px;margin-top:10px"><button class="단추" id="입_보내기" style="flex:1">보내기</button><button class="단추 테" id="입_사진">사진 올리기</button></div></section>';
+    var L = (설정 && 설정.장부입력) || {};
+    var 오늘 = 지금iso().slice(0, 10), h = '';
+    h += '<section class="카드 입력카드"><h2>오늘 입력 <button class="더" id="입_자세히">' + (자세히 ? '간단히' : '자세히') + '</button></h2>';
+    h += '<div class="한줄" style="color:var(--보조);margin-bottom:10px">여기 적으신 것이 그대로 장부가 돼요(엑셀에 따로 안 적으셔도 됩니다). 영수증·거래명세서는 사진으로 올리셔도 돼요.</div>';
+    h += '<div class="갈래줄">' + ['판매', '매입', '비용'].map(function (g) { return '<button class="' + (입력구분 === g ? '켬' : '') + '" data-입력구분="' + g + '">' + (g === '비용' ? '비용(운영비)' : g) + '</button>'; }).join('') + '</div>';
+    h += '<div class="입력줄들">';
+    h += '<label>날짜<input id="입_날짜" type="date" value="' + 오늘 + '"></label>';
+    if (입력구분 === '판매') {
+      h += 칸('입_상대', '고객', '예) 홍길동');
+      h += '<label>제품구분' + 고르기('입_과목', L.제품구분) + '</label>';
+      h += 칸('입_내용', '제품명 · 내용', '예) 실크 기성형_CIC R');
+      h += 칸('입_금액', '판매가(원)', '예) 1800000', 'inputmode="numeric"');
+      h += '<label>결제' + 고르기('입_수단', L.결제) + '</label>';
+      if (자세히) {
+        h += 칸('입_모델', '모델명', '예) SILK C&G 3IX');
+        h += '<label>브랜드' + 고르기('입_브랜드', L.브랜드) + '</label>';
+        h += 칸('입_시리얼', 'S/N', '');
+        h += 칸('입_수량', '수량', '1', 'inputmode="numeric"');
+        h += '<label>방문경로' + 고르기('입_경로', L.방문경로) + '</label>';
+        h += 칸('입_메모', '메모', '');
+      }
+    } else if (입력구분 === '매입') {
+      h += '<label>거래처(브랜드)' + 고르기('입_브랜드', L.브랜드) + '</label>';
+      h += 칸('입_내용', '품명 · 모델', '예) PURE312 5AX 보장구');
+      h += 칸('입_금액', '합계 금액(원)', '예) 290000', 'inputmode="numeric"');
+      if (자세히) {
+        h += 칸('입_수량', '수량', '1', 'inputmode="numeric"');
+        h += '<label>결제' + 고르기('입_수단', L.결제) + '</label>';
+        h += 칸('입_메모', '메모', '');
+      }
+    } else {
+      h += '<label>과목' + 고르기('입_과목', L.과목) + '</label>';
+      h += 칸('입_상대', '어디에', '예) 우체국택배');
+      h += 칸('입_내용', '내용', '예) 조순례님 보청기 발송');
+      h += 칸('입_금액', '금액(원)', '예) 7760', 'inputmode="numeric"');
+      h += '<label>결제' + 고르기('입_수단', L.결제) + '</label>';
+      if (자세히) h += 칸('입_메모', '메모', '');
+    }
+    h += '</div><div style="display:flex;gap:8px;margin-top:10px"><button class="단추" id="입_보내기" style="flex:1">장부에 넣기</button><button class="단추 테" id="입_사진">사진 올리기</button></div></section>';
+    return h;
   }
+  function 값(id) { var el = $(id); return el ? String(el.value || '').trim() : ''; }
+  function 장부한줄(글) { try { var o = JSON.parse(글); return '<div><span class="칩">장부 ' + esc(o.구분 || '') + '</span>' + esc((o.날짜 || '') + ' · ' + (o.상대 || '') + ' · ' + (o.내용 || '') + ' · ' + (Number(o.금액) || 0).toLocaleString('ko-KR') + '원') + '</div>'; } catch (e) { return esc(글); } }
   var 펼침 = {}, 상세정렬 = {};
   (function () { var m = decodeURIComponent(location.search || '').match(/[?&]펼침=([^&]+)/); if (m) 펼침[m[1]] = true; })();   // 링크로 특정 총액을 펼친 채 열기(?탭=장부&펼침=운영비)
   function 상세표(키, rows) {
@@ -497,12 +532,17 @@ a { color: var(--강조); }
     var 끝 = e.target.closest('[data-끝]'); if (끝) { 끝내기(끝.getAttribute('data-끝'), 끝); return; }
     var 정 = e.target.closest('[data-정렬]'); if (정) { var k = 정.getAttribute('data-정렬'); if (재고정렬.키 === k) 재고정렬.방향 = -재고정렬.방향; else { 재고정렬.키 = k; 재고정렬.방향 = k === '남음' ? -1 : 1; } 그리기(); return; }
     var 입구 = e.target.closest('[data-입력구분]'); if (입구) { 입력구분 = 입구.getAttribute('data-입력구분'); 그리기(); return; }
+    if (e.target.id === '입_자세히') { 자세히 = !자세히; 그리기(); return; }
     if (e.target.id === '입_사진') { $('사진파일').click(); return; }
     if (e.target.id === '입_보내기') {
-      var 상 = ($('입_상대').value || '').trim(), 내 = ($('입_내용').value || '').trim(), 금 = ($('입_금액').value || '').replace(/[^0-9]/g, ''), 메 = ($('입_메모').value || '').trim(), 날 = $('입_날짜').value || 지금iso().slice(0, 10);
-      if (!상 && !내 && !금) { 토스트('고객·거래처나 내용, 금액 중 하나는 적어 주세요.'); return; }
-      var 글 = '[장부 ' + 입력구분 + '] ' + 날 + ' · ' + (상 || '(상대 없음)') + ' · ' + (내 || '(내용 없음)') + ' · ' + (금 ? Number(금).toLocaleString('ko-KR') + '원' : '(금액 없음)') + (메 ? ' · ' + 메 : '');
-      보내기({ 종류: '글', 글: 글 }, { 누가: '나', 종류: '글', 글: 글, 시각: 지금iso(), 임시: Date.now() });
+      var 항목 = { 구분: 입력구분, 날짜: 값('입_날짜') || 지금iso().slice(0, 10), 상대: 값('입_상대') || 값('입_브랜드'), 내용: 값('입_내용'), 금액: Number(값('입_금액').replace(/[^0-9]/g, '') || 0),
+                  수단: 값('입_수단'), 과목: 값('입_과목'), 브랜드: 값('입_브랜드'), 모델: 값('입_모델'), 시리얼: 값('입_시리얼'), 수량: Number(값('입_수량') || 1), 경로: 값('입_경로'), 메모: 값('입_메모') };
+      if (!항목.금액) { 토스트('금액을 적어 주세요.'); var g = $('입_금액'); if (g) g.focus(); return; }
+      if (!항목.상대 && !항목.내용) { 토스트((입력구분 === '판매' ? '고객' : 입력구분 === '매입' ? '거래처' : '어디에') + '나 내용 중 하나는 적어 주세요.'); return; }
+      var 글 = JSON.stringify(항목);
+      var 한줄 = '[장부 ' + 입력구분 + '] ' + 항목.날짜 + ' · ' + (항목.상대 || '') + ' · ' + (항목.내용 || '') + ' · ' + 항목.금액.toLocaleString('ko-KR') + '원';
+      보내기({ 종류: '장부입력', 글: 글 }, { 누가: '나', 종류: '장부입력', 글: 한줄, 시각: 지금iso(), 임시: Date.now() });
+      토스트('장부에 넣었어요. 1분 안에 숫자에 반영돼요.');
       return;
     }
     var 상정 = e.target.closest('[data-상세정렬]'); if (상정) { var pr = 상정.getAttribute('data-상세정렬').split('|'), 정 = 상세정렬[pr[0]] || { 키: '일자', 방향: 1 }; if (정.키 === pr[1]) 정.방향 = -정.방향; else { 정.키 = pr[1]; 정.방향 = pr[1] === '금액' ? -1 : 1; } 상세정렬[pr[0]] = 정; 그리기(); return; }
