@@ -7,6 +7,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="manifest" href="desk.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600&family=Noto+Sans+KR:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/sunn-us/SUIT@2/fonts/static/woff2/SUIT.css">
 <title>한마음 데스크</title>
 <!--
   한마음 데스크 — 원장님용 웹앱 (2026-09-18)
@@ -18,6 +22,20 @@
 -->
 <style>
 @font-face { font-family: '운동장'; src: url('undongjang.woff2') format('woff2'); font-display: swap; }
+@font-face { font-family: 'Paperlogy'; src: url('paperlogy-4.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Paperlogy'; src: url('paperlogy-7.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+/* 글씨체 시안 — 탭마다 다른 후보(2026-09-18 유니스 「페이지마다 다른 글씨체 · 그 중 내가 고른다」). 고르면 하나로 합친다 */
+body[data-탭="홈"] { font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
+body[data-탭="대화"] { font-family: '운동장', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
+body[data-탭="할일"] { font-family: 'Paperlogy', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
+body[data-탭="재고"] { font-family: 'SUIT', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
+body[data-탭="장부"] { font-family: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
+body[data-탭="받은것"] { font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
+/* 색감 시안 — 탭마다 강조색 하나(한 화면엔 하나). 홈 초록 · 대화 초록 · 할 일 보라 · 재고 파랑 · 장부 황토 */
+body[data-탭="할일"] { --강조: #6B4E9B; --강조연: #EFEAF6; }
+body[data-탭="재고"] { --강조: #1F5F8C; --강조연: #E6EFF6; }
+body[data-탭="장부"] { --강조: #8C5A1F; --강조연: #F6EFE6; }
+body[data-탭="받은것"] { --강조: #5B6672; --강조연: #EEF0F2; }
 :root {
   --바탕: #F5F6F8; --카드: #FFFFFF; --글: #191F28; --보조: #4E5968; --흐림: #8B95A1;
   --강조: #1F6F5F; --강조연: #E6F1EE; --선: #E5E7EB; --좋음: #2E7D32; --살핌: #B26A00; --막힘: #C62828;
@@ -38,8 +56,43 @@ main { padding: 16px 16px 96px; max-width: 720px; margin: 0 auto; }
 .큰수 { font-size: 30px; line-height: 1.2; }
 .줄 { padding: 12px 0; border-top: 1px solid var(--선); }
 .줄:first-of-type { border-top: 0; padding-top: 0; }
-.줄 .제목 { font-size: 17px; }
-.줄 .한줄 { font-size: 14px; color: var(--보조); margin-top: 2px; white-space: pre-wrap; }
+.줄 .제목 { font-size: 17px; font-weight: 600; color: var(--글); }
+.줄 .한줄 { font-size: 15px; color: var(--보조); margin-top: 3px; white-space: pre-wrap; padding-left: 10px; border-left: 3px solid var(--강조연); }
+/* 누를 수 있는 것은 커서가 올라가면 보인다(2026-09-18 유니스) */
+button, [data-가], [data-펼침], [data-정렬], a { cursor: pointer; }
+@media (hover: hover) {
+  .카드 h2 .더:hover { text-decoration: underline; }
+  .단추:hover { filter: brightness(.93); }
+  .단추.테:hover { background: var(--강조연); }
+  .표 th[data-정렬]:hover { color: var(--강조); text-decoration: underline; }
+  tr[data-펼침]:hover td, .줄[data-가]:hover, .줄[data-탭가]:hover { background: var(--강조연); }
+  nav.탭 button:hover { color: var(--강조); }
+}
+tr[data-펼침] td:first-child::before { content: '›'; display: inline-block; width: 16px; color: var(--강조); transition: transform .15s; }
+tr[data-펼침].열림 td:first-child::before { transform: rotate(90deg); }
+tr.상세 td { background: #FAFBFC; font-size: 15px; color: var(--보조); padding: 0; }
+tr.상세 .안 { padding: 6px 4px 10px 20px; }
+tr.상세 .안 div { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0; border-bottom: 1px dashed var(--선); }
+tr.상세 .안 div span:last-child { white-space: nowrap; color: var(--글); }
+.표 th[data-정렬]::after { content: ' ↕'; color: var(--흐림); font-size: 12px; }
+.표 th[data-정렬].오름::after { content: ' ↑'; color: var(--강조); }
+.표 th[data-정렬].내림::after { content: ' ↓'; color: var(--강조); }
+.표 tr:nth-child(even) td { background: #FAFBFC; }
+/* 눈에 보이는 관리 — 상태는 색 + 말 · 목표 대비 막대 · 며칠째 */
+.신호 { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; padding: 2px 10px; border-radius: 999px; }
+.신호::before { content: ''; width: 10px; height: 10px; border-radius: 999px; background: currentColor; }
+.신호.좋음 { color: var(--좋음); background: #E8F3E9; } .신호.살핌 { color: var(--살핌); background: #FBF1E3; } .신호.막힘 { color: var(--막힘); background: #FBE9E9; } .신호.모름 { color: var(--흐림); background: #EEF2F3; }
+.막대 { height: 10px; border-radius: 999px; background: var(--강조연); overflow: hidden; margin: 8px 0 4px; }
+.막대 > i { display: block; height: 100%; background: var(--강조); border-radius: 999px; }
+.막대글 { display: flex; justify-content: space-between; font-size: 14px; color: var(--보조); }
+.줄 .때 .며칠 { color: var(--살핌); }
+.줄 .때 .며칠.오래 { color: var(--막힘); }
+.글씨체표 { font-size: 13px; color: var(--흐림); text-align: right; margin: -8px 0 8px; }
+.막대그래프 { display: flex; align-items: flex-end; gap: 6px; height: 64px; margin-top: 8px; }
+.막대그래프 div { flex: 1; background: var(--강조연); border-radius: 6px 6px 0 0; position: relative; min-height: 4px; }
+.막대그래프 div.플러스 { background: var(--강조); }
+.막대그래프 div.마이너스 { background: #E8B4B4; }
+.막대그래프 div span { position: absolute; top: 100%; left: 0; right: 0; text-align: center; font-size: 12px; color: var(--흐림); margin-top: 4px; }
 .줄 .때 { font-size: 14px; color: var(--흐림); margin-top: 4px; }
 .빈 { color: var(--흐림); font-size: 16px; padding: 8px 0; }
 .단추 { height: 48px; padding: 0 18px; border-radius: 12px; border: 1px solid var(--강조); background: var(--강조); color: #fff; font-size: 16px; }
@@ -127,7 +180,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-18k';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-18l';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   (function () { var m = decodeURIComponent(location.search || '').match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고)
   var $ = function (id) { return document.getElementById(id); };
@@ -195,9 +248,13 @@ a { color: var(--강조); }
   }
   function 원(n) { if (n === null || n === undefined || isNaN(n)) return '-'; var v = Math.round(Number(n)); return (v < 0 ? '-' : '') + Math.abs(v).toLocaleString('ko-KR') + '원'; }
   function 만원(n) { if (n === null || n === undefined || isNaN(n)) return '-'; var v = Math.round(Number(n) / 10000); return (v < 0 ? '-' : '') + Math.abs(v).toLocaleString('ko-KR') + '만원'; }
+  function 며칠째(iso) { if (!iso) return ''; var d = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000); if (isNaN(d) || d < 1) return ''; return '<span class="며칠' + (d >= 7 ? ' 오래' : '') + '">' + d + '일째</span>'; }
   function 할일줄(x, 덧있나) {
-    return '<div class="줄"><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄 || '') + (덧있나 && x.덧 ? ' · ' + esc(x.덧) : '') + '</div>' + (x.기한 ? '<div class="때">' + esc(x.기한) + ' 까지</div>' : '') + '</div>';
+    var 며 = 며칠째(x.시각);
+    return '<div class="줄"><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄 || '') + (덧있나 && x.덧 ? ' · ' + esc(x.덧) : '') + '</div><div class="때">' + (x.기한 ? esc(x.기한) + ' 까지 · ' : '') + (며 ? 며 + ' · ' : '') + 때글(x.시각) + '</div></div>';
   }
+  function 신호(급, 말) { return '<span class="신호 ' + 급 + '">' + esc(말) + '</span>'; }
+  function 글씨체표() { var f = { 홈: 'Pretendard', 대화: '학교안심 운동장 L', 할일: 'Paperlogy', 재고: 'SUIT', 장부: 'IBM Plex Sans KR', 받은것: 'Noto Sans KR' }[탭]; return f ? '<div class="글씨체표">글씨체 시안 · ' + f + '</div>' : ''; }
   function 장부항목() { var f = (자료 && 자료.피드.장부) || []; var id = 대표인가() ? 'l-대표' : 'l-원장'; return f.filter(function (x) { return x.id === id; })[0] || f[0]; }
   function 재고항목() { return ((자료 && 자료.피드.재고) || [])[0]; }
 
@@ -211,7 +268,9 @@ a { color: var(--강조); }
     var 장 = 장부항목(), 재 = 재고항목();
     var h = '';
     if (대표인가()) {
+      var 오래 = 결정.filter(function (x) { return (Date.now() - new Date(x.시각).getTime()) / 86400000 >= 7; }).length;
       h += '<section class="카드"><h2>정하실 것 <button class="더" data-가="할일">전부 보기</button></h2>';
+      h += (결정.length ? 신호(오래 ? '막힘' : (결정.length > 5 ? '살핌' : '좋음'), 오래 ? '7일 넘은 것 ' + 오래 : (결정.length > 5 ? '쌓이는 중' : '정상')) : 신호('좋음', '비어 있음'));
       h += 결정.length ? '<div class="큰수">' + 결정.length + '</div>' + 결정.slice(0, 3).map(function (x) { return 할일줄(x, true); }).join('') : '<div class="빈">지금 정하실 것이 없어요.</div>';
       h += '</section>';
     }
@@ -227,8 +286,10 @@ a { color: var(--강조); }
       h += '<section class="카드"><h2>' + (대표인가() ? '이번 달 장부' : '이번 달 판매·매입') + ' <button class="더" data-가="장부">자세히</button></h2><div class="숫자셋">';
       if (대표인가()) {
         h += '<div><div class="큰수">' + 만원(장.판매 && 장.판매.금액) + '</div><div class="한줄">매출</div></div>';
-        h += '<div><div class="큰수">' + 만원(장.손익) + '</div><div class="한줄">손익</div></div>';
+        h += '<div><div class="큰수" style="color:' + ((장.손익 || 0) >= 0 ? 'var(--좋음)' : 'var(--막힘)') + '">' + 만원(장.손익) + '</div><div class="한줄">손익 ' + ((장.손익 || 0) >= 0 ? '(남음)' : '(모자람)') + '</div></div>';
         h += '<div><div class="큰수">' + 만원(장.분기선까지) + '</div><div class="한줄">분기선까지</div></div>';
+        var 비 = 장.손익분기 ? Math.max(0, Math.min(100, Math.round(100 * ((장.판매 && 장.판매.금액) || 0) / 장.손익분기))) : 0;
+        h += '</div><div class="막대"><i style="width:' + 비 + '%"></i></div><div class="막대글"><span>이번 달 매출 ' + 비 + '%</span><span>손익분기 ' + 만원(장.손익분기) + '</span></div><div style="display:none">';
       } else {
         h += '<div><div class="큰수">' + ((장.판매 && 장.판매.건수) || 0) + '건</div><div class="한줄">판매</div></div>';
         h += '<div><div class="큰수">' + ((장.매입 && 장.매입.건수) || 0) + '건</div><div class="한줄">매입</div></div>';
@@ -288,44 +349,60 @@ a { color: var(--강조); }
     if (끝.length) h += '<section class="카드"><h2>끝낸 것</h2>' + 끝.slice(0, 10).map(function (x) { return 한줄(x, true); }).join('') + '</section>';
     return h;
   }
+  var 재고정렬 = { 키: '남음', 방향: -1 };
   function 재고() {
     var 재 = 재고항목();
-    if (!재) return '<div class="카드"><div class="빈">아직 재고를 못 셌어요. 장부(판매현황·매입현황)가 들어오면 여기에 보여요.</div></div>';
-    var h = '<section class="카드"><h2>' + esc(재.제목) + '</h2><div class="한줄" style="color:var(--보조)">' + esc(재.한줄 || '') + ' · 센 때 ' + 때글(재.셈때) + '</div><div class="숫자셋" style="margin-top:12px">';
+    if (!재) return 글씨체표() + '<div class="카드"><div class="빈">아직 재고를 못 셌어요. 장부(판매현황·매입현황)가 들어오면 여기에 보여요.</div></div>';
+    var 볼 = (재.볼것 || []).length, 하나 = (재.묶음 || []).filter(function (r) { return r.갈래 === '보청기' && r.남음 === 1; }).length;
+    var h = 글씨체표() + '<section class="카드"><h2>' + esc(재.제목) + '</h2>' + (볼 ? 신호('살핌', '확인할 것 ' + 볼) : 신호('좋음', '장부와 맞음')) + ' ' + (하나 ? 신호('모름', '한 대 남은 모델 ' + 하나) : '') + '<div class="한줄" style="color:var(--보조);margin-top:8px">' + esc(재.한줄 || '') + ' · 센 때 ' + 때글(재.셈때) + '</div><div class="숫자셋" style="margin-top:12px">';
     ['보청기', '데모', '판촉물'].forEach(function (k) { h += '<div><div class="큰수">' + ((재.합 && 재.합[k]) || 0) + '</div><div class="한줄">' + k + '</div></div>'; });
     h += '</div></section>';
     var 갈래들 = {};
     (재.묶음 || []).forEach(function (r) { (갈래들[r.갈래] = 갈래들[r.갈래] || []).push(r); });
+    function 정렬(rows) { var k = 재고정렬.키, d = 재고정렬.방향; return rows.slice().sort(function (a, b) { var x = a[k], y = b[k]; if (typeof x === 'number') return (x - y) * d; return String(x).localeCompare(String(y), 'ko') * d; }); }
+    function 머리(k, 글, 오른쪽) { var c = 재고정렬.키 === k ? (재고정렬.방향 > 0 ? ' class="오름"' : ' class="내림"') : ''; return '<th data-정렬="' + k + '"' + c + (오른쪽 ? ' style="text-align:right"' : '') + '>' + 글 + '</th>'; }
     Object.keys(갈래들).forEach(function (g) {
-      h += '<section class="카드"><h2>' + esc(g) + ' ' + 갈래들[g].reduce(function (a, r) { return a + r.남음; }, 0) + '</h2><table class="표"><tr><th>브랜드</th><th>모델</th><th style="text-align:right">남음</th></tr>';
-      h += 갈래들[g].map(function (r) { return '<tr><td>' + esc(r.브랜드) + '</td><td>' + esc(r.모델) + '</td><td class="수">' + r.남음 + '</td></tr>'; }).join('');
+      h += '<section class="카드"><h2>' + esc(g) + ' ' + 갈래들[g].reduce(function (a, r) { return a + r.남음; }, 0) + '</h2><table class="표"><tr>' + 머리('브랜드', '브랜드') + 머리('모델', '모델') + 머리('남음', '남음', true) + '</tr>';
+      h += 정렬(갈래들[g]).map(function (r) { return '<tr><td>' + esc(r.브랜드) + '</td><td>' + esc(r.모델) + '</td><td class="수"' + (r.남음 === 1 && g === '보청기' ? ' style="color:var(--살핌)"' : '') + '>' + r.남음 + '</td></tr>'; }).join('');
       h += '</table></section>';
     });
-    if ((재.볼것 || []).length) {
-      h += '<section class="카드"><h2>확인할 것 ' + 재.볼것.length + '</h2><div class="한줄" style="color:var(--보조);margin-bottom:8px">장부만으로는 못 맞춘 모델이에요. 대화에 「모델 · 실제 개수」로 적어 주시면 맞춥니다.</div>';
+    if (볼) {
+      h += '<section class="카드"><h2>확인할 것 ' + 볼 + '</h2><div class="한줄" style="color:var(--보조);margin-bottom:8px">장부만으로는 못 맞춘 모델이에요. 대화에 「모델 · 실제 개수」로 적어 주시면 맞춥니다.</div>';
       h += 재.볼것.map(function (r) { return '<div class="줄"><div class="제목">' + esc(r.모델) + '</div><div class="한줄">' + esc(r.왜) + '</div></div>'; }).join('') + '</section>';
     }
     return h;
   }
+  var 펼침 = {};
   function 장부() {
     var 장 = 장부항목();
-    if (!장) return '<div class="카드"><div class="빈">아직 장부가 안 왔어요.</div></div>';
-    var h = '<section class="카드"><h2>' + esc(장.연월) + ' ' + esc(장.제목) + '</h2><div class="한줄" style="color:var(--보조)">' + esc(장.한줄 || '') + '</div>';
+    if (!장) return 글씨체표() + '<div class="카드"><div class="빈">아직 장부가 안 왔어요.</div></div>';
+    var 상세 = 장.상세 || {};
+    function 줄(키, 이름, 건수, 금액, 굵게) {
+      var 있음 = (상세[키] || []).length > 0, 열 = 펼침[키] ? ' 열림' : '';
+      var h = '<tr' + (있음 ? ' data-펼침="' + 키 + '" class="펼침가능' + 열 + '"' : '') + '><td>' + (있음 ? '' : '<span style="display:inline-block;width:16px"></span>') + (굵게 ? '<b>' : '') + 이름 + (굵게 ? '</b>' : '') + '</td><td class="수">' + (건수 === null ? '' : 건수) + '</td><td class="수">' + (굵게 ? '<b>' : '') + 원(금액) + (굵게 ? '</b>' : '') + '</td></tr>';
+      if (있음 && 펼침[키]) h += '<tr class="상세"><td colspan="3"><div class="안">' + 상세[키].map(function (r) { return '<div><span>' + esc((r.일자 || '').slice(5)) + ' · ' + esc(r.상대 || '') + (r.내용 ? ' · ' + esc(r.내용) : '') + '</span><span>' + 원(r.금액) + '</span></div>'; }).join('') + '</div></td></tr>';
+      return h;
+    }
+    var 급 = 대표인가() ? ((장.손익 || 0) >= 0 ? 신호('좋음', '이번 달 남음') : 신호('살핌', '이번 달 모자람')) : ((장.미지급 || []).length ? 신호('살핌', '미지급 ' + 장.미지급.length + '곳') : 신호('좋음', '미지급 없음'));
+    var h = 글씨체표() + '<section class="카드"><h2>' + esc(장.연월) + ' ' + esc(장.제목) + '</h2>' + 급 + '<div class="한줄" style="color:var(--보조);margin-top:8px">' + esc(장.한줄 || '') + ' · 총액을 누르면 줄이 펼쳐져요</div>';
     h += '<table class="표" style="margin-top:12px"><tr><th></th><th style="text-align:right">건수</th><th style="text-align:right">금액</th></tr>';
-    h += '<tr><td>판매</td><td class="수">' + ((장.판매 && 장.판매.건수) || 0) + '</td><td class="수">' + 원(장.판매 && 장.판매.금액) + '</td></tr>';
-    h += '<tr><td>매입</td><td class="수">' + ((장.매입 && 장.매입.건수) || 0) + '</td><td class="수">' + 원(장.매입 && 장.매입.금액) + '</td></tr>';
+    h += 줄('판매', '판매', (장.판매 && 장.판매.건수) || 0, 장.판매 && 장.판매.금액);
+    h += 줄('매입', '매입', (장.매입 && 장.매입.건수) || 0, 장.매입 && 장.매입.금액);
     if (대표인가()) {
-      h += '<tr><td>운영비</td><td></td><td class="수">' + 원(장.운영비) + '</td></tr><tr><td>고정비</td><td></td><td class="수">' + 원(장.고정비) + '</td></tr>';
-      h += '<tr><td><b>손익</b></td><td></td><td class="수"><b>' + 원(장.손익) + '</b></td></tr><tr><td>분기선(' + 만원(장.손익분기) + ')까지</td><td></td><td class="수">' + 원(장.분기선까지) + '</td></tr>';
+      h += 줄('운영비', '운영비', null, 장.운영비) + 줄('고정비', '고정비', null, 장.고정비);
+      h += '<tr><td><b>손익</b></td><td></td><td class="수" style="color:' + ((장.손익 || 0) >= 0 ? 'var(--좋음)' : 'var(--막힘)') + '"><b>' + 원(장.손익) + '</b></td></tr>';
+      h += '<tr><td>분기선(' + 만원(장.손익분기) + ')까지</td><td></td><td class="수">' + 원(장.분기선까지) + '</td></tr>';
     }
     h += '</table></section>';
     if ((장.미지급 || []).length) {
       h += '<section class="카드"><h2>거래처 미지급 ' + 장.미지급.length + '</h2><table class="표">' + 장.미지급.map(function (m) { return '<tr><td>' + esc(m.거래처 || m.이름 || '') + '</td><td class="수">' + 원(m.금액) + '</td></tr>'; }).join('') + '</table></section>';
     }
     if (대표인가()) {
-      h += '<section class="카드"><h2>누적</h2><div class="숫자셋"><div><div class="큰수">' + 만원(장.누적매출) + '</div><div class="한줄">누적 매출</div></div><div><div class="큰수">' + 만원(장.누적손익) + '</div><div class="한줄">누적 손익</div></div><div><div class="큰수">' + 만원(장.미수) + '</div><div class="한줄">미수</div></div></div></section>';
+      h += '<section class="카드"><h2>누적</h2><div class="숫자셋"><div><div class="큰수">' + 만원(장.누적매출) + '</div><div class="한줄">누적 매출</div></div><div><div class="큰수" style="color:' + ((장.누적손익 || 0) >= 0 ? 'var(--좋음)' : 'var(--막힘)') + '">' + 만원(장.누적손익) + '</div><div class="한줄">누적 손익</div></div><div><div class="큰수">' + 만원(장.미수) + '</div><div class="한줄">미수</div></div></div></section>';
       if ((장.최근 || []).length) {
-        h += '<section class="카드"><h2>최근 여섯 달</h2><table class="표"><tr><th>달</th><th style="text-align:right">매출</th><th style="text-align:right">손익</th></tr>' + 장.최근.map(function (m) { return '<tr><td>' + esc(m.연월) + '</td><td class="수">' + 만원(m.매출) + '</td><td class="수">' + 만원(m.손익) + '</td></tr>'; }).join('') + '</table></section>';
+        var 최대 = Math.max.apply(null, 장.최근.map(function (m) { return Math.abs(m.손익 || 0); }).concat([1]));
+        h += '<section class="카드"><h2>최근 여섯 달 손익</h2><div class="막대그래프">' + 장.최근.map(function (m) { var v = m.손익 || 0; return '<div class="' + (v >= 0 ? '플러스' : '마이너스') + '" style="height:' + Math.max(4, Math.round(60 * Math.abs(v) / 최대)) + 'px" title="' + esc(m.연월) + ' ' + 만원(v) + '"><span>' + esc(m.연월.slice(5)) + '월</span></div>'; }).join('') + '</div><div style="height:22px"></div>';
+        h += '<table class="표"><tr><th>달</th><th style="text-align:right">매출</th><th style="text-align:right">손익</th></tr>' + 장.최근.map(function (m) { return '<tr><td>' + esc(m.연월) + '</td><td class="수">' + 만원(m.매출) + '</td><td class="수" style="color:' + ((m.손익 || 0) >= 0 ? 'var(--좋음)' : 'var(--막힘)') + '">' + 만원(m.손익) + '</td></tr>'; }).join('') + '</table></section>';
       }
     }
     return h;
@@ -342,7 +419,8 @@ a { color: var(--강조); }
     var 본 = $('본문');
     var 화면 = { 홈: 홈, 대화: 대화, 할일: 할일, 재고: 재고, 장부: 장부, 받은것: 받은것 };
     if (!화면[탭]) 탭 = '홈';
-    본.innerHTML = 화면[탭]();
+    본.innerHTML = (탭 === '재고' || 탭 === '장부' ? '' : 글씨체표()) + 화면[탭]();
+    document.body.setAttribute('data-탭', 탭);
     탭그리기();
     $('입력줄').classList.toggle('보임', 탭 === '대화');
     document.body.classList.toggle('대화중', 탭 === '대화');
@@ -355,7 +433,9 @@ a { color: var(--강조); }
   $('본문').addEventListener('click', function (e) {
     var 더 = e.target.closest('[data-가]'); if (더) { var 가 = 더.getAttribute('data-가'); if (가 === '알림') 알림열기(); else { 탭 = 가; 그리기(); } return; }
     var g = e.target.closest('[data-갈래]'); if (g) { 갈래 = g.getAttribute('data-갈래'); 그리기(); return; }
-    var 끝 = e.target.closest('[data-끝]'); if (끝) { 끝내기(끝.getAttribute('data-끝'), 끝); }
+    var 끝 = e.target.closest('[data-끝]'); if (끝) { 끝내기(끝.getAttribute('data-끝'), 끝); return; }
+    var 정 = e.target.closest('[data-정렬]'); if (정) { var k = 정.getAttribute('data-정렬'); if (재고정렬.키 === k) 재고정렬.방향 = -재고정렬.방향; else { 재고정렬.키 = k; 재고정렬.방향 = k === '남음' ? -1 : 1; } 그리기(); return; }
+    var 펼 = e.target.closest('[data-펼침]'); if (펼) { var kk = 펼.getAttribute('data-펼침'); 펼침[kk] = !펼침[kk]; 그리기(); return; }
   });
   function 끝내기(id, b) {
     b.disabled = true; b.textContent = '보내는 중';
