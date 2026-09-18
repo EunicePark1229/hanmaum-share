@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FFFFFF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="desk.webmanifest">
+<title>한마음 데스크</title>
+<!--
+  한마음 데스크 — 원장님용 웹앱 (2026-09-18)
+  유니스 지시 — 「입력·출력을 앱으로 · 텔레그램의 편리함 그대로 · 답·할 일 알림은 앱 안에서 · 할 일은 게시판처럼」
+  UI 기준 — 09_Docs/UI_디자인기준.md (카드형 홈 · 넓은 여백 · 흰 바탕 · 아래 고정 탭 · 강조색 하나 · 글씨 16px 밑으로 안 내림)
+  자료 — desk-org.json(조직 설정 · 공개) + 뒷단(앱스 스크립트 ?p=desk&k=…) · 열쇠는 주소 조각 #k= 로 받아 이 폰에만 저장
+  안 담는 것 — 손익·세무 숫자 · 청력 수치 · 고객 명단 통째(명단은 「받은 것」 링크로만)
+  원본 — 03_한마음/_engine/데스크앱/desk.html · 올리기 — _Tools/publish_share.ps1
+-->
+<style>
+@font-face { font-family: '운동장'; src: url('undongjang.woff2') format('woff2'); font-display: swap; }
+:root {
+  --바탕: #F5F6F8; --카드: #FFFFFF; --글: #191F28; --보조: #4E5968; --흐림: #8B95A1;
+  --강조: #1F6F5F; --강조연: #E6F1EE; --선: #E5E7EB; --좋음: #2E7D32; --살핌: #B26A00; --막힘: #C62828;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--바탕); color: var(--글); font-family: '운동장', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; font-size: 16px; line-height: 1.5; -webkit-text-size-adjust: 100%; }
+button, input, textarea { font: inherit; }
+.위 { position: sticky; top: 0; z-index: 5; background: var(--카드); border-bottom: 1px solid var(--선); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
+.위 h1 { margin: 0; font-size: 20px; font-weight: 400; }
+.종 { position: relative; width: 44px; height: 44px; border: 0; background: transparent; border-radius: 12px; display: grid; place-items: center; }
+.종 svg { width: 26px; height: 26px; fill: none; stroke: var(--글); stroke-width: 1.8; }
+.배지 { position: absolute; top: 4px; right: 2px; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--강조); color: #fff; font-size: 13px; line-height: 20px; text-align: center; }
+.배지:empty, .배지[data-n="0"] { display: none; }
+main { padding: 16px 16px 96px; max-width: 720px; margin: 0 auto; }
+.카드 { background: var(--카드); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+.카드 h2 { margin: 0 0 12px; font-size: 17px; font-weight: 400; display: flex; justify-content: space-between; align-items: center; }
+.카드 h2 .더 { font-size: 14px; color: var(--강조); background: none; border: 0; padding: 0; }
+.큰수 { font-size: 30px; line-height: 1.2; }
+.줄 { padding: 12px 0; border-top: 1px solid var(--선); }
+.줄:first-of-type { border-top: 0; padding-top: 0; }
+.줄 .제목 { font-size: 17px; }
+.줄 .한줄 { font-size: 14px; color: var(--보조); margin-top: 2px; white-space: pre-wrap; }
+.줄 .때 { font-size: 14px; color: var(--흐림); margin-top: 4px; }
+.빈 { color: var(--흐림); font-size: 16px; padding: 8px 0; }
+.단추 { height: 48px; padding: 0 18px; border-radius: 12px; border: 1px solid var(--강조); background: var(--강조); color: #fff; font-size: 16px; }
+.단추.테 { background: var(--카드); color: var(--강조); }
+.단추:disabled { opacity: .5; }
+.칩 { display: inline-block; padding: 2px 10px; border-radius: 999px; background: var(--강조연); color: var(--강조); font-size: 14px; margin-right: 6px; }
+.칩.끝 { background: #EEF2F3; color: var(--흐림); }
+nav.탭 { position: fixed; left: 0; right: 0; bottom: 0; background: var(--카드); border-top: 1px solid var(--선); display: flex; padding-bottom: env(safe-area-inset-bottom); z-index: 5; }
+nav.탭 button { flex: 1; height: 60px; border: 0; background: transparent; color: var(--흐림); font-size: 14px; display: grid; place-items: center; gap: 2px; }
+nav.탭 button.켬 { color: var(--강조); }
+nav.탭 svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.대화 { display: flex; flex-direction: column; gap: 10px; }
+.말 { max-width: 86%; padding: 12px 14px; border-radius: 16px; white-space: pre-wrap; word-break: break-word; }
+.말.나 { align-self: flex-end; background: var(--강조연); border-bottom-right-radius: 4px; }
+.말.우리 { align-self: flex-start; background: var(--카드); border-bottom-left-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+.말 .때 { font-size: 13px; color: var(--흐림); margin-top: 6px; }
+.말 .제목 { font-size: 17px; margin-bottom: 4px; }
+.말 img { max-width: 100%; border-radius: 12px; display: block; }
+.입력줄 { position: fixed; left: 0; right: 0; bottom: calc(60px + env(safe-area-inset-bottom)); background: var(--카드); border-top: 1px solid var(--선); padding: 10px 12px; display: none; gap: 8px; align-items: flex-end; z-index: 5; }
+.입력줄.보임 { display: flex; }
+.입력줄 textarea { flex: 1; min-height: 48px; max-height: 140px; padding: 12px 14px; border: 1px solid var(--선); border-radius: 12px; resize: none; background: var(--바탕); }
+.입력줄 .둥 { width: 48px; height: 48px; border-radius: 12px; border: 1px solid var(--선); background: var(--카드); display: grid; place-items: center; }
+.입력줄 .둥 svg { width: 24px; height: 24px; fill: none; stroke: var(--글); stroke-width: 1.8; }
+.입력줄 .둥.녹음중 { background: #FDECEC; border-color: var(--막힘); }
+.시트 { position: fixed; inset: 0; background: rgba(25,31,40,.35); display: none; z-index: 9; }
+.시트.보임 { display: block; }
+.시트 .판 { position: absolute; left: 0; right: 0; bottom: 0; background: var(--카드); border-radius: 20px 20px 0 0; padding: 16px 16px 28px; max-height: 80vh; overflow: auto; }
+.시트 .판 h2 { margin: 0 0 8px; font-size: 20px; font-weight: 400; }
+.토스트 { position: fixed; left: 16px; right: 16px; bottom: 130px; background: var(--글); color: #fff; padding: 12px 16px; border-radius: 12px; font-size: 15px; display: none; z-index: 10; }
+.토스트.보임 { display: block; }
+.갈래줄 { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 8px; }
+.갈래줄 button { flex: 0 0 auto; height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--선); background: var(--카드); color: var(--보조); }
+.갈래줄 button.켬 { background: var(--강조연); border-color: var(--강조연); color: var(--강조); }
+a { color: var(--강조); }
+.숨김 { display: none !important; }
+@media (min-width: 900px) {
+  body { display: grid; grid-template-columns: 220px 1fr; }
+  .위 { grid-column: 1 / -1; }
+  nav.탭 { position: sticky; top: 73px; align-self: start; flex-direction: column; border-top: 0; border-right: 1px solid var(--선); height: calc(100vh - 73px); padding: 12px 0; }
+  nav.탭 button { flex: 0 0 auto; height: 52px; grid-template-columns: 24px 1fr; justify-items: start; padding: 0 20px; gap: 12px; font-size: 16px; }
+  main { padding: 24px; max-width: 960px; }
+  .입력줄 { left: 220px; bottom: 0; }
+}
+</style>
+</head>
+<body>
+<header class="위">
+  <h1 id="이름">한마음 데스크</h1>
+  <button class="종" id="종" aria-label="알림">
+    <svg viewBox="0 0 24 24"><path d="M6 17V11a6 6 0 0 1 12 0v6l2 2H4l2-2z"/><path d="M10 21a2 2 0 0 0 4 0"/></svg>
+    <span class="배지" id="배지" data-n="0"></span>
+  </button>
+</header>
+
+<nav class="탭" id="탭">
+  <button data-탭="홈" class="켬"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>홈</button>
+  <button data-탭="대화"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/></svg>대화</button>
+  <button data-탭="할일"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>할 일</button>
+  <button data-탭="받은것"><svg viewBox="0 0 24 24"><path d="M4 7h16v13H4zM4 7l2-3h12l2 3M9 11h6"/></svg>받은 것</button>
+</nav>
+
+<main id="본문"></main>
+
+<div class="입력줄" id="입력줄">
+  <button class="둥" id="사진단추" aria-label="사진"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+  <input type="file" id="사진파일" accept="image/*" class="숨김">
+  <button class="둥" id="음성단추" aria-label="음성"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+  <textarea id="글" rows="1" placeholder="적어 주세요"></textarea>
+  <button class="단추" id="보내기">보내기</button>
+</div>
+
+<div class="시트" id="알림시트"><div class="판"><h2>알림</h2><div id="알림목록"></div><div style="margin-top:12px"><button class="단추 테" id="알림닫기" style="width:100%">닫기</button></div></div></div>
+<div class="토스트" id="토스트"></div>
+
+<script>
+(function () {
+  'use strict';
+  var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
+  var $ = function (id) { return document.getElementById(id); };
+  var 저장 = { get: function (k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } },
+               set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+
+  // 열쇠 — 링크의 #k=… 을 이 폰에만 저장한다. 주소창에는 안 남긴다
+  var m = (location.hash || '').match(/k=([A-Za-z0-9_\-]+)/);
+  if (m) { 저장.set('데스크열쇠', m[1]); history.replaceState(null, '', location.pathname); }
+  열쇠 = 저장.get('데스크열쇠');
+
+  function 토스트(말) { var t = $('토스트'); t.textContent = 말; t.classList.add('보임'); setTimeout(function () { t.classList.remove('보임'); }, 2600); }
+  function 때글(iso) { if (!iso) return ''; var d = new Date(iso); if (isNaN(d)) return iso; var 오늘 = new Date();
+    var 같은날 = d.toDateString() === 오늘.toDateString();
+    var hh = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+    return 같은날 ? hh : (d.getMonth() + 1) + '/' + d.getDate() + ' ' + hh; }
+  function 새것인가(iso) { var 읽은 = (자료 && 자료.읽은때) || 저장.get('읽은때') || ''; return !읽은 || iso > 읽은; }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  // ── 뒷단 ──
+  function 뒷단주소(q) { return 설정.뒷단 + (설정.뒷단.indexOf('?') < 0 ? '?' : '&') + q + '&k=' + encodeURIComponent(열쇠); }
+  function 받아오기() {
+    if (!설정 || !열쇠) return Promise.resolve();
+    return fetch(뒷단주소('p=desk'), { redirect: 'follow' }).then(function (r) { return r.json(); }).then(function (j) {
+      if (!j || !j.됨) { if (j && j.왜 === '열쇠') 토스트('링크가 맞지 않아요. 대표님께 다시 받아 주세요.'); return; }
+      자료 = j; 저장.set('자료', JSON.stringify(j)); 그리기();
+    }).catch(function () { /* 조용히 — 다음 30초에 다시 */ });
+  }
+  function 보내기짐(짐) {
+    짐.k = 열쇠;
+    return fetch(설정.뒷단, { method: 'POST', body: JSON.stringify(짐), headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow' })
+      .then(function (r) { return r.json(); });
+  }
+
+  // ── 그리기 ──
+  function 안읽은것() {
+    if (!자료) return [];
+    var 목록 = [];
+    (자료.피드.답 || []).forEach(function (x) { 목록.push({ 종류: '답', 시각: x.시각, 제목: x.제목, 탭: '대화' }); });
+    (자료.피드.할일 || []).forEach(function (x) { if (x.단계 !== '완료') 목록.push({ 종류: '할 일', 시각: x.시각, 제목: x.제목, 탭: '할일' }); });
+    (자료.피드.안내 || []).forEach(function (x) { 목록.push({ 종류: '안내', 시각: x.시각, 제목: x.제목, 탭: '홈' }); });
+    return 목록.filter(function (x) { return 새것인가(x.시각); }).sort(function (a, b) { return a.시각 < b.시각 ? 1 : -1; });
+  }
+  function 배지그리기() { var n = 안읽은것().length; var b = $('배지'); b.textContent = n ? String(n) : ''; b.setAttribute('data-n', n); }
+  function 끝난할일(id) { var 체크 = (자료 && 자료.체크) || ''; return 체크.indexOf('"' + id + '"') >= 0 || 저장.get('끝_' + id) === '1'; }
+  function 열린할일() { return ((자료 && 자료.피드.할일) || []).filter(function (x) { return x.단계 !== '완료' && !끝난할일(x.id); }); }
+
+  function 홈() {
+    var 새 = 안읽은것(), 할 = 열린할일(), 받 = ((자료 && 자료.피드.받은것) || []).slice(-3).reverse(), 안 = ((자료 && 자료.피드.안내) || []).slice(-1)[0];
+    var h = '';
+    h += '<section class="카드"><h2>새로 온 것 <button class="더" data-가="알림">전부 보기</button></h2>';
+    h += 새.length ? '<div class="큰수">' + 새.length + '</div><div class="한줄" style="color:var(--보조)">' + esc(새[0].종류 + ' · ' + 새[0].제목) + (새.length > 1 ? ' 외 ' + (새.length - 1) : '') + '</div>' : '<div class="빈">지금은 없어요. 답이나 할 일이 오면 여기와 종에 떠요.</div>';
+    h += '</section>';
+    h += '<section class="카드"><h2>하실 것 <button class="더" data-가="할일">전부 보기</button></h2>';
+    h += 할.length ? 할.slice(0, 3).map(function (x) { return '<div class="줄"><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄) + '</div>' + (x.기한 ? '<div class="때">' + esc(x.기한) + ' 까지</div>' : '') + '</div>'; }).join('') : '<div class="빈">하실 것이 없어요.</div>';
+    h += '</section>';
+    h += '<section class="카드"><h2>최근 받은 것 <button class="더" data-가="받은것">전부 보기</button></h2>';
+    h += 받.length ? 받.map(function (x) { return '<div class="줄"><span class="칩">' + esc(x.갈래) + '</span><a href="' + esc(x.주소) + '" target="_blank" rel="noopener">' + esc(x.제목) + '</a><div class="때">' + 때글(x.시각) + '</div></div>'; }).join('') : '<div class="빈">아직 없어요.</div>';
+    h += '</section>';
+    if (안) h += '<section class="카드"><h2>안내</h2><div class="줄"><div class="제목">' + esc(안.제목) + '</div><div class="한줄">' + esc(안.글) + '</div><div class="때">' + 때글(안.시각) + '</div></div></section>';
+    return h;
+  }
+  function 대화() {
+    var 줄들 = [];
+    ((자료 && 자료.대화) || []).forEach(function (x) { 줄들.push({ 누가: '나', 시각: x.시각, 글: x.글, 종류: x.종류, 파일이름: x.파일이름, 상태: x.상태 }); });
+    ((자료 && 자료.피드.답) || []).forEach(function (x) { 줄들.push({ 누가: '우리', 시각: x.시각, 제목: x.제목, 글: x.글, 파일: x.파일 }); });
+    (JSON.parse(저장.get('보낸것') || '[]')).forEach(function (x) { if (!줄들.some(function (y) { return y.누가 === '나' && y.시각 === x.시각; })) 줄들.push(x); });
+    줄들.sort(function (a, b) { return a.시각 < b.시각 ? -1 : 1; });
+    if (!줄들.length) return '<div class="카드"><div class="빈">아래에 적어 보내시면 됩니다. 사진과 음성도 돼요.</div></div>';
+    return '<div class="대화">' + 줄들.map(function (x) {
+      if (x.누가 === '나') {
+        var 몸 = x.종류 === '사진' ? '<div>사진 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '음성' ? '<div>음성 · ' + esc(x.파일이름 || '') + '</div>' : esc(x.글);
+        if (x.미리보기) 몸 = '<img src="' + x.미리보기 + '" alt="보낸 사진">';
+        return '<div class="말 나">' + 몸 + '<div class="때">' + 때글(x.시각) + ' · ' + (x.상태 === '보내는중' ? '보내는 중' : '받았어요') + '</div></div>';
+      }
+      var 파일 = (x.파일 || []).map(function (f) { return '<div>파일 · ' + esc(f.이름) + '</div>'; }).join('');
+      return '<div class="말 우리">' + (x.제목 ? '<div class="제목">' + esc(x.제목) + '</div>' : '') + esc(x.글) + 파일 + '<div class="때">' + 때글(x.시각) + '</div></div>';
+    }).join('') + '</div>';
+  }
+  function 할일() {
+    var 목록 = ((자료 && 자료.피드.할일) || []).slice().reverse();
+    if (!목록.length) return '<div class="카드"><div class="빈">하실 것이 없어요. 새로 생기면 종이 켜져요.</div></div>';
+    var 열림 = 목록.filter(function (x) { return x.단계 !== '완료' && !끝난할일(x.id); });
+    var 끝 = 목록.filter(function (x) { return x.단계 === '완료' || 끝난할일(x.id); });
+    function 한줄(x, 끝났나) {
+      return '<div class="줄"><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄) + '</div>' +
+        '<div class="때">' + (x.기한 ? esc(x.기한) + ' 까지 · ' : '') + 때글(x.시각) + '</div>' +
+        (끝났나 ? '<div style="margin-top:8px"><span class="칩 끝">끝냈어요</span></div>' : '<div style="margin-top:10px"><button class="단추 테" data-끝="' + esc(x.id) + '">끝냈어요</button></div>') + '</div>';
+    }
+    return '<section class="카드"><h2>하실 것 ' + 열림.length + '</h2>' + (열림.length ? 열림.map(function (x) { return 한줄(x, false); }).join('') : '<div class="빈">다 하셨어요.</div>') + '</section>' +
+      (끝.length ? '<section class="카드"><h2>끝낸 것</h2>' + 끝.slice(0, 10).map(function (x) { return 한줄(x, true); }).join('') + '</section>' : '');
+  }
+  function 받은것() {
+    var 목록 = ((자료 && 자료.피드.받은것) || []).slice().reverse();
+    var 갈래들 = (설정.받은것갈래 || []);
+    var h = '<div class="갈래줄"><button class="' + (갈래 ? '' : '켬') + '" data-갈래="">전부</button>' + 갈래들.map(function (g) { return '<button class="' + (갈래 === g ? '켬' : '') + '" data-갈래="' + esc(g) + '">' + esc(g) + '</button>'; }).join('') + '</div>';
+    var 골 = 갈래 ? 목록.filter(function (x) { return x.갈래 === 갈래; }) : 목록;
+    h += '<section class="카드">' + (골.length ? 골.map(function (x) { return '<div class="줄"><span class="칩">' + esc(x.갈래) + '</span><a href="' + esc(x.주소) + '" target="_blank" rel="noopener">' + esc(x.제목) + '</a><div class="때">' + 때글(x.시각) + '</div></div>'; }).join('') : '<div class="빈">아직 없어요. 블로그 초안·문자 문안·명단·자료가 오면 여기에 모여요.</div>') + '</section>';
+    return h;
+  }
+  function 그리기() {
+    var 본 = $('본문');
+    본.innerHTML = { 홈: 홈, 대화: 대화, 할일: 할일, 받은것: 받은것 }[탭]();
+    $('입력줄').classList.toggle('보임', 탭 === '대화');
+    Array.prototype.forEach.call(document.querySelectorAll('nav.탭 button'), function (b) { b.classList.toggle('켬', b.getAttribute('data-탭') === 탭); });
+    배지그리기();
+    if (탭 === '대화') window.scrollTo(0, document.body.scrollHeight);
+  }
+
+  // ── 누르기 ──
+  $('탭').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; 탭 = b.getAttribute('data-탭'); 그리기(); });
+  $('본문').addEventListener('click', function (e) {
+    var 더 = e.target.closest('[data-가]'); if (더) { var 가 = 더.getAttribute('data-가'); if (가 === '알림') 알림열기(); else { 탭 = 가; 그리기(); } return; }
+    var g = e.target.closest('[data-갈래]'); if (g) { 갈래 = g.getAttribute('data-갈래'); 그리기(); return; }
+    var 끝 = e.target.closest('[data-끝]'); if (끝) { 끝내기(끝.getAttribute('data-끝'), 끝); }
+  });
+  function 끝내기(id, b) {
+    b.disabled = true; b.textContent = '보내는 중';
+    보내기짐({ 종류: '끝냈어요', id: id }).then(function (j) { if (!j || !j.됨) throw new Error(); 저장.set('끝_' + id, '1'); 토스트('끝낸 것으로 적었어요.'); 받아오기().then(그리기); })
+      .catch(function () { b.disabled = false; b.textContent = '끝냈어요'; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); });
+  }
+  function 알림열기() {
+    var 목 = 안읽은것();
+    $('알림목록').innerHTML = 목.length ? 목.map(function (x) { return '<div class="줄" data-탭가="' + x.탭 + '"><span class="칩">' + esc(x.종류) + '</span>' + esc(x.제목) + '<div class="때">' + 때글(x.시각) + '</div></div>'; }).join('') : '<div class="빈">새로 온 것이 없어요.</div>';
+    $('알림시트').classList.add('보임');
+    var 지금 = new Date(); 지금.setMilliseconds(0);
+    var iso = 지금.getFullYear() + '-' + ('0' + (지금.getMonth() + 1)).slice(-2) + '-' + ('0' + 지금.getDate()).slice(-2) + 'T' + ('0' + 지금.getHours()).slice(-2) + ':' + ('0' + 지금.getMinutes()).slice(-2) + ':' + ('0' + 지금.getSeconds()).slice(-2);
+    저장.set('읽은때', iso); if (자료) 자료.읽은때 = iso;
+    보내기짐({ 종류: '읽음' }).catch(function () {});
+    배지그리기();
+  }
+  $('종').addEventListener('click', 알림열기);
+  $('알림닫기').addEventListener('click', function () { $('알림시트').classList.remove('보임'); });
+  $('알림시트').addEventListener('click', function (e) { if (e.target === $('알림시트')) $('알림시트').classList.remove('보임'); var 줄 = e.target.closest('[data-탭가]'); if (줄) { 탭 = 줄.getAttribute('data-탭가'); $('알림시트').classList.remove('보임'); 그리기(); } });
+
+  // ── 보내기(글·사진·음성) ──
+  function 보낸것기록(x) { var 목 = JSON.parse(저장.get('보낸것') || '[]'); 목.push(x); 저장.set('보낸것', JSON.stringify(목.slice(-30))); }
+  function 지금iso() { var d = new Date(); d.setMilliseconds(0); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2) + 'T' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) + ':' + ('0' + d.getSeconds()).slice(-2); }
+  function 보내기(짐, 화면항목) {
+    화면항목.상태 = '보내는중'; 보낸것기록(화면항목); 탭 = '대화'; 그리기();
+    return 보내기짐(짐).then(function (j) {
+      if (!j || !j.됨) throw new Error(j && j.왜 || '');
+      화면항목.상태 = '받음'; 화면항목.시각 = j.시각 || 화면항목.시각;
+      var 목 = JSON.parse(저장.get('보낸것') || '[]'); 목 = 목.map(function (x) { return x.임시 === 화면항목.임시 ? 화면항목 : x; }); 저장.set('보낸것', JSON.stringify(목));
+      토스트('받았어요. 확인하고 답 드릴게요.'); 그리기(); setTimeout(받아오기, 1500);
+    }).catch(function () {
+      var 목 = JSON.parse(저장.get('보낸것') || '[]'); 목 = 목.filter(function (x) { return x.임시 !== 화면항목.임시; }); 저장.set('보낸것', JSON.stringify(목));
+      그리기(); 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.');
+    });
+  }
+  $('보내기').addEventListener('click', function () {
+    var 글 = $('글').value.trim(); if (!글) return; $('글').value = '';
+    보내기({ 종류: '글', 글: 글 }, { 누가: '나', 종류: '글', 글: 글, 시각: 지금iso(), 임시: Date.now() });
+  });
+  $('글').addEventListener('input', function () { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 140) + 'px'; });
+  $('사진단추').addEventListener('click', function () { $('사진파일').click(); });
+  $('사진파일').addEventListener('change', function () {
+    var f = this.files && this.files[0]; if (!f) return; this.value = '';
+    줄이기(f).then(function (r) {
+      var 이름 = '사진_' + 지금iso().replace(/[-:T]/g, '').slice(0, 14) + '.jpg';
+      보내기({ 종류: '사진', 글: '', 파일이름: 이름, 파일형식: 'image/jpeg', 파일: r.base64 }, { 누가: '나', 종류: '사진', 파일이름: 이름, 미리보기: r.dataUrl, 시각: 지금iso(), 임시: Date.now() });
+    });
+  });
+  function 줄이기(f) {
+    return new Promise(function (res) {
+      var img = new Image(); var url = URL.createObjectURL(f);
+      img.onload = function () {
+        var 최대 = 1600, w = img.width, h = img.height, 비 = Math.min(1, 최대 / Math.max(w, h));
+        var c = document.createElement('canvas'); c.width = Math.round(w * 비); c.height = Math.round(h * 비);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        var dataUrl = c.toDataURL('image/jpeg', 0.86); URL.revokeObjectURL(url);
+        res({ dataUrl: dataUrl, base64: dataUrl.split(',')[1] });
+      };
+      img.src = url;
+    });
+  }
+  var 녹음기 = null, 조각 = [];
+  $('음성단추').addEventListener('click', function () {
+    var b = this;
+    if (녹음기 && 녹음기.state === 'recording') { 녹음기.stop(); b.classList.remove('녹음중'); return; }
+    if (!navigator.mediaDevices || !window.MediaRecorder) { 토스트('이 폰에서는 음성 녹음이 안 돼요. 글로 적어 주세요.'); return; }
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function (st) {
+      조각 = []; 녹음기 = new MediaRecorder(st);
+      녹음기.ondataavailable = function (e) { if (e.data.size) 조각.push(e.data); };
+      녹음기.onstop = function () {
+        st.getTracks().forEach(function (t) { t.stop(); });
+        var blob = new Blob(조각, { type: 녹음기.mimeType || 'audio/webm' });
+        var fr = new FileReader();
+        fr.onload = function () {
+          var base64 = String(fr.result).split(',')[1];
+          var 확장 = (blob.type.indexOf('mp4') >= 0 || blob.type.indexOf('aac') >= 0) ? 'm4a' : 'webm';
+          var 이름 = '음성_' + 지금iso().replace(/[-:T]/g, '').slice(0, 14) + '.' + 확장;
+          보내기({ 종류: '음성', 글: '', 파일이름: 이름, 파일형식: blob.type, 파일: base64 }, { 누가: '나', 종류: '음성', 파일이름: 이름, 시각: 지금iso(), 임시: Date.now() });
+        };
+        fr.readAsDataURL(blob);
+      };
+      녹음기.start(); b.classList.add('녹음중'); 토스트('녹음 중이에요. 다시 누르면 보내요.');
+    }).catch(function () { 토스트('마이크를 쓸 수 없어요. 글로 적어 주세요.'); });
+  });
+
+  // ── 시작 ──
+  fetch('desk-org.json', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) {
+    설정 = j; $('이름').textContent = (j.짧은이름 || '한마음') + ' 데스크'; document.title = $('이름').textContent;
+    if (j.강조색) document.documentElement.style.setProperty('--강조', j.강조색);
+    try { 자료 = JSON.parse(저장.get('자료') || 'null'); } catch (e) { 자료 = null; }
+    그리기();
+    if (!열쇠) { $('본문').innerHTML = '<div class="카드"><div class="제목">대표님께 받은 링크로 열어 주세요.</div><div class="한줄" style="color:var(--보조)">링크에 열쇠가 들어 있어요. 한 번 열면 이 폰에 남아요.</div></div>'; return; }
+    받아오기();
+    setInterval(function () { if (!document.hidden) 받아오기(); }, 30000);
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) 받아오기(); });
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('desk-sw.js').catch(function () {});
+  }).catch(function () { $('본문').innerHTML = '<div class="카드"><div class="빈">설정을 못 읽었어요. 잠시 뒤 다시 열어 주세요.</div></div>'; });
+})();
+</script>
+</body>
+</html>
