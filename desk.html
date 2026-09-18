@@ -239,9 +239,18 @@ a { color: var(--강조); }
     보내기짐({ 종류: '끝냈어요', id: id }).then(function (j) { if (!j || !j.됨) throw new Error(); 저장.set('끝_' + id, '1'); 토스트('끝낸 것으로 적었어요.'); 받아오기().then(그리기); })
       .catch(function () { b.disabled = false; b.textContent = '끝냈어요'; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); });
   }
+  function 알림목록전부() {
+    // 최근 것 전부(읽은 것 포함) — 종을 여는 순간 읽은 것으로 적히는데, 그래도 목록은 남아 있어야 「무엇이 왔었나」를 다시 볼 수 있다
+    if (!자료) return [];
+    var 목록 = [];
+    (자료.피드.답 || []).forEach(function (x) { 목록.push({ 종류: '답', 시각: x.시각, 제목: x.제목, 탭: '대화' }); });
+    (자료.피드.할일 || []).forEach(function (x) { if (x.단계 !== '완료' && !끝난할일(x.id)) 목록.push({ 종류: '할 일', 시각: x.시각, 제목: x.제목, 탭: '할일' }); });
+    (자료.피드.안내 || []).forEach(function (x) { 목록.push({ 종류: '안내', 시각: x.시각, 제목: x.제목, 탭: '홈' }); });
+    return 목록.sort(function (a, b) { return a.시각 < b.시각 ? 1 : -1; }).slice(0, 30);
+  }
   function 알림열기() {
-    var 목 = 안읽은것();
-    $('알림목록').innerHTML = 목.length ? 목.map(function (x) { return '<div class="줄" data-탭가="' + x.탭 + '"><span class="칩">' + esc(x.종류) + '</span>' + esc(x.제목) + '<div class="때">' + 때글(x.시각) + '</div></div>'; }).join('') : '<div class="빈">새로 온 것이 없어요.</div>';
+    var 목 = 알림목록전부();
+    $('알림목록').innerHTML = 목.length ? 목.map(function (x) { return '<div class="줄" data-탭가="' + x.탭 + '">' + (새것인가(x.시각) ? '<span class="칩">새</span>' : '') + '<span class="칩 끝">' + esc(x.종류) + '</span>' + esc(x.제목) + '<div class="때">' + 때글(x.시각) + '</div></div>'; }).join('') : '<div class="빈">아직 온 것이 없어요. 답·할 일·안내가 오면 여기에 남아요.</div>';
     $('알림시트').classList.add('보임');
     푸시상태그리기();
     var 지금 = new Date(); 지금.setMilliseconds(0);
@@ -257,20 +266,31 @@ a { color: var(--강조); }
     var 칸 = $('푸시칸'); if (!칸) return;
     var 됨 = ('Notification' in window) && ('serviceWorker' in navigator) && ('PushManager' in window);
     if (!됨) { 칸.innerHTML = '<div class="한줄" style="color:var(--보조)">이 폰·브라우저는 알림을 못 받아요. 아이폰이면 공유 → 홈 화면에 추가 뒤에 다시 열어 주세요.</div>'; return; }
-    if (Notification.permission === 'granted' && 저장.get('푸시구독') === '1') { 칸.innerHTML = '<div class="한줄" style="color:var(--좋음)">폰 알림이 켜져 있어요.</div>'; }
-    else if (Notification.permission === 'denied') { 칸.innerHTML = '<div class="한줄" style="color:var(--보조)">알림이 꺼져 있어요. 폰 설정 → 앱 → 알림에서 켜 주세요.</div>'; }
+    if (Notification.permission === 'granted' && 저장.get('푸시구독') === '1') { 칸.innerHTML = '<div class="한줄" style="color:var(--좋음)">이 기기의 알림이 켜져 있어요.</div>'; }
+    else if (Notification.permission === 'denied') { 칸.innerHTML = '<div class="한줄" style="color:var(--보조)">이 기기의 알림이 꺼져 있어요. 폰이면 설정 → 앱 → 알림에서, 컴퓨터면 주소창 자물쇠 → 알림에서 켜고 다시 눌러 주세요.</div>'; }
+    else { var b = $('푸시켜기'); if (b) { b.disabled = false; b.textContent = '폰 알림 켜기'; } }
   }
+  function 푸시단추(글, 잠금) { var b = $('푸시켜기'); if (b) { b.disabled = !!잠금; b.textContent = 글; } }
   function urlB64ToU8(b) { var p = '='.repeat((4 - b.length % 4) % 4); var s = (b + p).replace(/-/g, '+').replace(/_/g, '/'); var r = atob(s); var u = new Uint8Array(r.length); for (var i = 0; i < r.length; i++) u[i] = r.charCodeAt(i); return u; }
   function 푸시켜기() {
-    if (!설정.푸시공개키) { 토스트('아직 알림 열쇠가 없어요.'); return; }
+    if (!설정 || !설정.푸시공개키) { 토스트('아직 알림 열쇠가 없어요.'); return; }
+    if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) { 토스트('이 브라우저는 알림을 못 받아요.'); return; }
+    푸시단추('켜는 중…', true);
+    // 09-18 데스크톱에서 눌렀는데 아무 표시가 없던 것 — 허용 창이 조용히 닫히면(default) 아무 말도 안 했고, 준비가 안 끝나면 끝없이 기다렸다
+    var 준비 = new Promise(function (ok, no) { var t = setTimeout(function () { no(new Error('준비')); }, 8000); navigator.serviceWorker.ready.then(function (r) { clearTimeout(t); ok(r); }, no); });
     Notification.requestPermission().then(function (perm) {
-      if (perm !== 'granted') { 푸시상태그리기(); return; }
-      return navigator.serviceWorker.ready.then(function (reg) {
+      if (perm === 'denied') { 푸시상태그리기(); 토스트('알림이 차단돼 있어요. 주소창 자물쇠(또는 종) → 알림 → 허용 뒤 다시 눌러 주세요.'); return; }
+      if (perm !== 'granted') { 푸시단추('폰 알림 켜기', false); 토스트('허용 창이 안 뜨거나 닫혔어요. 주소창 자물쇠(또는 종) → 알림 → 허용 뒤 다시 눌러 주세요.'); return; }
+      return 준비.then(function (reg) {
         return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64ToU8(설정.푸시공개키) });
       }).then(function (sub) {
         return 보내기짐({ 종류: '구독', 구독: sub.toJSON() });
-      }).then(function (j) { if (!j || !j.됨) throw new Error(); 저장.set('푸시구독', '1'); 토스트('폰 알림을 켰어요.'); 푸시상태그리기(); });
-    }).catch(function () { 토스트('지금은 알림을 못 켰어요. 잠시 뒤 다시 눌러 주세요.'); });
+      }).then(function (j) { if (!j || !j.됨) throw new Error('저장'); 저장.set('푸시구독', '1'); 토스트('이 기기의 알림을 켰어요. 시험 알림 한 통이 곧 와요.'); 푸시상태그리기(); });
+    }).catch(function (e) {
+      푸시단추('폰 알림 켜기', false);
+      var 왜 = (e && e.message) || '';
+      토스트(왜 === '준비' ? '앱 준비가 안 끝났어요. 화면을 한 번 새로 고친 뒤 다시 눌러 주세요.' : 왜 === '저장' ? '알림은 켰는데 저장이 안 됐어요. 잠시 뒤 다시 눌러 주세요.' : '지금은 알림을 못 켰어요(' + 왜.slice(0, 40) + '). 잠시 뒤 다시 눌러 주세요.');
+    });
   }
   document.addEventListener('click', function (e) { if (e.target && e.target.id === '푸시켜기') 푸시켜기(); });
   $('알림닫기').addEventListener('click', function () { $('알림시트').classList.remove('보임'); });
