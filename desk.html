@@ -285,7 +285,7 @@ a { color: var(--강조); }
         return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64ToU8(설정.푸시공개키) });
       }).then(function (sub) {
         return 보내기짐({ 종류: '구독', 구독: sub.toJSON() });
-      }).then(function (j) { if (!j || !j.됨) throw new Error('저장'); 저장.set('푸시구독', '1'); 토스트('이 기기의 알림을 켰어요. 시험 알림 한 통이 곧 와요.'); 푸시상태그리기(); });
+      }).then(function (j) { if (!j || !j.됨) throw new Error('저장'); 저장.set('푸시구독', '1'); 토스트('이 기기의 알림을 켰어요.'); 푸시상태그리기(); });
     }).catch(function (e) {
       푸시단추('폰 알림 켜기', false);
       var 왜 = (e && e.message) || '';
