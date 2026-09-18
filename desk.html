@@ -218,7 +218,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-19b';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-19c';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   (function () { var m = decodeURIComponent(location.search || '').match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고)
   var $ = function (id) { return document.getElementById(id); };
@@ -530,7 +530,8 @@ a { color: var(--강조); }
     if (x.원문) h += '<details><summary>받은 그대로 보기</summary><div class="본문글"><pre>' + esc(x.원문) + '</pre></div></details>';
     if (x.대상 === '유니스' && x.단계 !== '완료') {
       h += '<h3>어떻게 할까요</h3><div class="단추줄">';
-      h += '<button class="단추" data-결정="결정" data-사유="그대로 진행" data-id="' + esc(x.id) + '">그대로 진행</button>';
+      (x.선택지 || []).forEach(function (o) { h += '<button class="단추" data-결정="결정" data-사유="' + esc(o) + '" data-id="' + esc(x.id) + '">' + esc(o.length > 28 ? o.slice(0, 28) + '…' : o) + '</button>'; });
+      if (!(x.선택지 || []).length) h += '<button class="단추" data-결정="결정" data-사유="그대로 진행" data-id="' + esc(x.id) + '">그대로 진행</button>';
       h += '<button class="단추 테" data-결정="결정" data-메모="1" data-id="' + esc(x.id) + '">이렇게 바꿔서</button>';
       h += '<button class="단추 테" data-결정="결정" data-사유="안 함" data-id="' + esc(x.id) + '">안 해</button>';
       h += '<button class="단추 테" data-결정="얘기중" data-메모="1" data-id="' + esc(x.id) + '">더 얘기하자</button>';
