@@ -111,7 +111,9 @@ a { color: var(--강조); }
   <button class="단추" id="보내기">보내기</button>
 </div>
 
-<div class="시트" id="알림시트"><div class="판"><h2>알림</h2><div id="알림목록"></div><div style="margin-top:12px"><button class="단추 테" id="알림닫기" style="width:100%">닫기</button></div></div></div>
+<div class="시트" id="알림시트"><div class="판"><h2>알림</h2><div id="알림목록"></div>
+  <div id="푸시칸" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--선)"><div class="한줄" style="color:var(--보조);margin-bottom:8px">앱을 닫아 두어도 새 답·할 일·안내가 오면 폰에 알림이 떠요.</div><button class="단추" id="푸시켜기" style="width:100%">폰 알림 켜기</button></div>
+  <div style="margin-top:12px"><button class="단추 테" id="알림닫기" style="width:100%">닫기</button></div></div></div>
 <div class="토스트" id="토스트"></div>
 
 <script>
@@ -241,6 +243,7 @@ a { color: var(--강조); }
     var 목 = 안읽은것();
     $('알림목록').innerHTML = 목.length ? 목.map(function (x) { return '<div class="줄" data-탭가="' + x.탭 + '"><span class="칩">' + esc(x.종류) + '</span>' + esc(x.제목) + '<div class="때">' + 때글(x.시각) + '</div></div>'; }).join('') : '<div class="빈">새로 온 것이 없어요.</div>';
     $('알림시트').classList.add('보임');
+    푸시상태그리기();
     var 지금 = new Date(); 지금.setMilliseconds(0);
     var iso = 지금.getFullYear() + '-' + ('0' + (지금.getMonth() + 1)).slice(-2) + '-' + ('0' + 지금.getDate()).slice(-2) + 'T' + ('0' + 지금.getHours()).slice(-2) + ':' + ('0' + 지금.getMinutes()).slice(-2) + ':' + ('0' + 지금.getSeconds()).slice(-2);
     저장.set('읽은때', iso); if (자료) 자료.읽은때 = iso;
@@ -248,6 +251,28 @@ a { color: var(--강조); }
     배지그리기();
   }
   $('종').addEventListener('click', 알림열기);
+
+  // ── 폰 알림(웹 푸시) — 단추를 눌러야 권한을 물을 수 있다. 구독은 뒷단에 저장하고 노트북(데스크.py)이 보낸다
+  function 푸시상태그리기() {
+    var 칸 = $('푸시칸'); if (!칸) return;
+    var 됨 = ('Notification' in window) && ('serviceWorker' in navigator) && ('PushManager' in window);
+    if (!됨) { 칸.innerHTML = '<div class="한줄" style="color:var(--보조)">이 폰·브라우저는 알림을 못 받아요. 아이폰이면 공유 → 홈 화면에 추가 뒤에 다시 열어 주세요.</div>'; return; }
+    if (Notification.permission === 'granted' && 저장.get('푸시구독') === '1') { 칸.innerHTML = '<div class="한줄" style="color:var(--좋음)">폰 알림이 켜져 있어요.</div>'; }
+    else if (Notification.permission === 'denied') { 칸.innerHTML = '<div class="한줄" style="color:var(--보조)">알림이 꺼져 있어요. 폰 설정 → 앱 → 알림에서 켜 주세요.</div>'; }
+  }
+  function urlB64ToU8(b) { var p = '='.repeat((4 - b.length % 4) % 4); var s = (b + p).replace(/-/g, '+').replace(/_/g, '/'); var r = atob(s); var u = new Uint8Array(r.length); for (var i = 0; i < r.length; i++) u[i] = r.charCodeAt(i); return u; }
+  function 푸시켜기() {
+    if (!설정.푸시공개키) { 토스트('아직 알림 열쇠가 없어요.'); return; }
+    Notification.requestPermission().then(function (perm) {
+      if (perm !== 'granted') { 푸시상태그리기(); return; }
+      return navigator.serviceWorker.ready.then(function (reg) {
+        return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64ToU8(설정.푸시공개키) });
+      }).then(function (sub) {
+        return 보내기짐({ 종류: '구독', 구독: sub.toJSON() });
+      }).then(function (j) { if (!j || !j.됨) throw new Error(); 저장.set('푸시구독', '1'); 토스트('폰 알림을 켰어요.'); 푸시상태그리기(); });
+    }).catch(function () { 토스트('지금은 알림을 못 켰어요. 잠시 뒤 다시 눌러 주세요.'); });
+  }
+  document.addEventListener('click', function (e) { if (e.target && e.target.id === '푸시켜기') 푸시켜기(); });
   $('알림닫기').addEventListener('click', function () { $('알림시트').classList.remove('보임'); });
   $('알림시트').addEventListener('click', function (e) { if (e.target === $('알림시트')) $('알림시트').classList.remove('보임'); var 줄 = e.target.closest('[data-탭가]'); if (줄) { 탭 = 줄.getAttribute('data-탭가'); $('알림시트').classList.remove('보임'); 그리기(); } });
 
