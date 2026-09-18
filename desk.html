@@ -47,6 +47,17 @@ main { padding: 16px 16px 96px; max-width: 720px; margin: 0 auto; }
 .단추:disabled { opacity: .5; }
 .칩 { display: inline-block; padding: 2px 10px; border-radius: 999px; background: var(--강조연); color: var(--강조); font-size: 14px; margin-right: 6px; }
 .칩.끝 { background: #EEF2F3; color: var(--흐림); }
+.점 { display: inline-block; width: 10px; height: 10px; border-radius: 999px; background: var(--강조); margin-right: 8px; vertical-align: middle; }
+.힌트 { display: none; position: fixed; left: 0; right: 0; bottom: 132px; text-align: center; font-size: 14px; color: var(--흐림); pointer-events: none; }
+@media (hover: hover) and (pointer: fine) { body.대화중 .힌트 { display: block; } }
+.표 { width: 100%; border-collapse: collapse; font-size: 16px; }
+.표 td, .표 th { padding: 8px 4px; border-bottom: 1px solid var(--선); text-align: left; vertical-align: top; }
+.표 th { color: var(--보조); font-weight: normal; font-size: 14px; }
+.표 td.수 { text-align: right; white-space: nowrap; }
+.숫자셋 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.숫자셋 .큰수 { font-size: 24px; }
+.숫자셋 .한줄 { color: var(--보조); font-size: 14px; }
+.말 img.썸 { max-width: 220px; max-height: 220px; border-radius: 12px; display: block; }
 body.끌어옴::after { content: '여기에 놓으면 보내요'; position: fixed; inset: 12px; border: 2px dashed var(--강조); border-radius: 16px; background: rgba(31,111,95,.06); color: var(--강조); font-size: 20px; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 60; }
 nav.탭 { position: fixed; left: 0; right: 0; bottom: 0; background: var(--카드); border-top: 1px solid var(--선); display: flex; padding-bottom: env(safe-area-inset-bottom); z-index: 5; }
 nav.탭 button { flex: 1; height: 60px; border: 0; background: transparent; color: var(--흐림); font-size: 14px; display: grid; place-items: center; gap: 2px; }
@@ -95,12 +106,7 @@ a { color: var(--강조); }
   </button>
 </header>
 
-<nav class="탭" id="탭">
-  <button data-탭="홈" class="켬"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>홈</button>
-  <button data-탭="대화"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/></svg>대화</button>
-  <button data-탭="할일"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>할 일</button>
-  <button data-탭="받은것"><svg viewBox="0 0 24 24"><path d="M4 7h16v13H4zM4 7l2-3h12l2 3M9 11h6"/></svg>받은 것</button>
-</nav>
+<nav class="탭" id="탭"></nav>
 
 <main id="본문"></main>
 
@@ -115,13 +121,15 @@ a { color: var(--강조); }
 <div class="시트" id="알림시트"><div class="판"><h2>알림</h2><div id="알림목록"></div>
   <div id="푸시칸" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--선)"><div class="한줄" style="color:var(--보조);margin-bottom:8px">앱을 닫아 두어도 새 답·할 일·안내가 오면 폰에 알림이 떠요.</div><button class="단추" id="푸시켜기" style="width:100%">폰 알림 켜기</button></div>
   <div style="margin-top:12px"><button class="단추 테" id="알림닫기" style="width:100%">닫기</button></div></div></div>
+<div class="힌트" id="힌트">캡처는 Ctrl+V · 파일은 화면에 끌어다 놓기</div>
 <div class="토스트" id="토스트"></div>
 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-18j';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-18k';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
+  (function () { var m = decodeURIComponent(location.search || '').match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고)
   var $ = function (id) { return document.getElementById(id); };
   var 저장 = { get: function (k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } },
                set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
@@ -147,7 +155,7 @@ a { color: var(--강조); }
     if (!설정 || !열쇠) return Promise.resolve();
     return fetch(뒷단주소('p=desk'), { redirect: 'follow' }).then(function (r) { return r.json(); }).then(function (j) {
       if (!j || !j.됨) { if (j && j.왜 === '열쇠') 토스트('링크가 맞지 않아요. 대표님께 다시 받아 주세요.'); return; }
-      자료 = j; 저장.set('자료', JSON.stringify(j)); if (j.누구) { 누구 = j.누구; 저장.set('데스크누구', j.누구); } 그리기();
+      자료 = j; 저장.set('자료', JSON.stringify(j)); if (j.누구) { 누구 = j.누구; 저장.set('데스크누구', j.누구); } if (j.역할) 저장.set('데스크역할', j.역할); 그리기();
     }).catch(function () { /* 조용히 — 다음 30초에 다시 */ });
   }
   function 보내기짐(짐) {
@@ -169,24 +177,81 @@ a { color: var(--강조); }
   function 끝난할일(id) { var 체크 = (자료 && 자료.체크) || ''; return 체크.indexOf('"' + id + '"') >= 0 || 저장.get('끝_' + id) === '1'; }
   function 열린할일() { return ((자료 && 자료.피드.할일) || []).filter(function (x) { return x.단계 !== '완료' && !끝난할일(x.id); }); }
 
+  // ── 역할 · 탭 ──
+  var 탭아이콘 = {
+    홈: '<svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
+    대화: '<svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/></svg>',
+    할일: '<svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>',
+    재고: '<svg viewBox="0 0 24 24"><path d="M3 8l9-4 9 4v9l-9 4-9-4zM3 8l9 4 9-4M12 12v9"/></svg>',
+    장부: '<svg viewBox="0 0 24 24"><path d="M5 3h14v18H5zM8 8h8M8 12h8M8 16h5"/></svg>',
+    받은것: '<svg viewBox="0 0 24 24"><path d="M4 7h16v13H4zM4 7l2-3h12l2 3M9 11h6"/></svg>'
+  };
+  var 탭이름 = { 홈: '홈', 대화: '대화', 할일: '할 일', 재고: '재고', 장부: '장부', 받은것: '받은 것' };
+  function 역할() { return (자료 && 자료.역할) || 저장.get('데스크역할') || '원장'; }
+  function 대표인가() { var r = 역할(); return r === '대표' || r === '관리자'; }
+  function 탭목록() { var t = 설정 && 설정.탭; if (t && !Array.isArray(t)) t = t[역할()] || t['원장']; return (Array.isArray(t) && t.length) ? t : ['홈', '대화', '할일', '재고', '장부']; }
+  function 탭그리기() {
+    $('탭').innerHTML = 탭목록().map(function (k) { return '<button data-탭="' + k + '"' + (k === 탭 ? ' class="켬"' : '') + '>' + (탭아이콘[k] || '') + esc(탭이름[k] || k) + '</button>'; }).join('');
+  }
+  function 원(n) { if (n === null || n === undefined || isNaN(n)) return '-'; var v = Math.round(Number(n)); return (v < 0 ? '-' : '') + Math.abs(v).toLocaleString('ko-KR') + '원'; }
+  function 만원(n) { if (n === null || n === undefined || isNaN(n)) return '-'; var v = Math.round(Number(n) / 10000); return (v < 0 ? '-' : '') + Math.abs(v).toLocaleString('ko-KR') + '만원'; }
+  function 할일줄(x, 덧있나) {
+    return '<div class="줄"><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄 || '') + (덧있나 && x.덧 ? ' · ' + esc(x.덧) : '') + '</div>' + (x.기한 ? '<div class="때">' + esc(x.기한) + ' 까지</div>' : '') + '</div>';
+  }
+  function 장부항목() { var f = (자료 && 자료.피드.장부) || []; var id = 대표인가() ? 'l-대표' : 'l-원장'; return f.filter(function (x) { return x.id === id; })[0] || f[0]; }
+  function 재고항목() { return ((자료 && 자료.피드.재고) || [])[0]; }
+
+  // ── 홈 ──
   function 홈() {
-    var 새 = 안읽은것(), 할 = 열린할일(), 받 = ((자료 && 자료.피드.받은것) || []).slice(-3).reverse(), 안 = ((자료 && 자료.피드.안내) || []).slice(-1)[0];
+    var 새 = 안읽은것(), 받 = ((자료 && 자료.피드.받은것) || []).slice(-3).reverse(), 안 = ((자료 && 자료.피드.안내) || []).slice(-1)[0];
+    var 열린 = 열린할일();
+    var 내것 = 열린.filter(function (x) { return !x.대상 || x.대상 === '모두' || x.대상 === (자료 && 자료.누구); });
+    var 결정 = 열린.filter(function (x) { return x.대상 === '유니스'; });
+    var 원장할일 = 열린.filter(function (x) { return x.대상 === '원장님'; });
+    var 장 = 장부항목(), 재 = 재고항목();
     var h = '';
+    if (대표인가()) {
+      h += '<section class="카드"><h2>정하실 것 <button class="더" data-가="할일">전부 보기</button></h2>';
+      h += 결정.length ? '<div class="큰수">' + 결정.length + '</div>' + 결정.slice(0, 3).map(function (x) { return 할일줄(x, true); }).join('') : '<div class="빈">지금 정하실 것이 없어요.</div>';
+      h += '</section>';
+    }
     h += '<section class="카드"><h2>새로 온 것 <button class="더" data-가="알림">전부 보기</button></h2>';
     h += 새.length ? '<div class="큰수">' + 새.length + '</div><div class="한줄" style="color:var(--보조)">' + esc(새[0].종류 + ' · ' + 새[0].제목) + (새.length > 1 ? ' 외 ' + (새.length - 1) : '') + '</div>' : '<div class="빈">지금은 없어요. 답이나 할 일이 오면 여기와 종에 떠요.</div>';
     h += '</section>';
-    h += '<section class="카드"><h2>하실 것 <button class="더" data-가="할일">전부 보기</button></h2>';
-    h += 할.length ? 할.slice(0, 3).map(function (x) { return '<div class="줄"><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄) + '</div>' + (x.기한 ? '<div class="때">' + esc(x.기한) + ' 까지</div>' : '') + '</div>'; }).join('') : '<div class="빈">하실 것이 없어요.</div>';
-    h += '</section>';
-    h += '<section class="카드"><h2>최근 받은 것 <button class="더" data-가="받은것">전부 보기</button></h2>';
-    h += 받.length ? 받.map(function (x) { return '<div class="줄"><span class="칩">' + esc(x.갈래) + '</span><a href="' + esc(x.주소) + '" target="_blank" rel="noopener">' + esc(x.제목) + '</a><div class="때">' + 때글(x.시각) + '</div></div>'; }).join('') : '<div class="빈">아직 없어요.</div>';
-    h += '</section>';
+    if (!대표인가()) {
+      h += '<section class="카드"><h2>하실 것 <button class="더" data-가="할일">전부 보기</button></h2>';
+      h += 내것.length ? 내것.slice(0, 3).map(function (x) { return 할일줄(x, false); }).join('') : '<div class="빈">하실 것이 없어요.</div>';
+      h += '</section>';
+    }
+    if (장) {
+      h += '<section class="카드"><h2>' + (대표인가() ? '이번 달 장부' : '이번 달 판매·매입') + ' <button class="더" data-가="장부">자세히</button></h2><div class="숫자셋">';
+      if (대표인가()) {
+        h += '<div><div class="큰수">' + 만원(장.판매 && 장.판매.금액) + '</div><div class="한줄">매출</div></div>';
+        h += '<div><div class="큰수">' + 만원(장.손익) + '</div><div class="한줄">손익</div></div>';
+        h += '<div><div class="큰수">' + 만원(장.분기선까지) + '</div><div class="한줄">분기선까지</div></div>';
+      } else {
+        h += '<div><div class="큰수">' + ((장.판매 && 장.판매.건수) || 0) + '건</div><div class="한줄">판매</div></div>';
+        h += '<div><div class="큰수">' + ((장.매입 && 장.매입.건수) || 0) + '건</div><div class="한줄">매입</div></div>';
+        h += '<div><div class="큰수">' + ((장.미지급 || []).length) + '곳</div><div class="한줄">미지급 거래처</div></div>';
+      }
+      h += '</div></section>';
+    }
+    if (대표인가()) {
+      h += '<section class="카드"><h2>원장님 쪽 <button class="더" data-가="받은것">받은 것 전부</button></h2>';
+      h += '<div class="한줄">원장님이 하실 것 ' + 원장할일.length + ' · 재고 보청기 ' + ((재 && 재.합 && 재.합['보청기']) || 0) + '대</div>';
+      h += 받.length ? 받.map(function (x) { return '<div class="줄"><span class="칩">' + esc(x.갈래) + '</span><a href="' + esc(x.주소) + '" target="_blank" rel="noopener">' + esc(x.제목) + '</a><div class="때">' + 때글(x.시각) + '</div></div>'; }).join('') : '';
+      h += '</section>';
+    } else {
+      h += '<section class="카드"><h2>최근 받은 것 <button class="더" data-가="받은것">전부 보기</button></h2>';
+      h += 받.length ? 받.map(function (x) { return '<div class="줄"><span class="칩">' + esc(x.갈래) + '</span><a href="' + esc(x.주소) + '" target="_blank" rel="noopener">' + esc(x.제목) + '</a><div class="때">' + 때글(x.시각) + '</div></div>'; }).join('') : '<div class="빈">아직 없어요.</div>';
+      h += '</section>';
+    }
     if (안) h += '<section class="카드"><h2>안내</h2><div class="줄"><div class="제목">' + esc(안.제목) + '</div><div class="한줄">' + esc(안.글) + '</div><div class="때">' + 때글(안.시각) + '</div></div></section>';
     return h;
   }
   function 대화() {
     var 줄들 = [];
-    ((자료 && 자료.대화) || []).forEach(function (x) { 줄들.push({ 누가: '나', 시각: x.시각, 글: x.글, 종류: x.종류, 파일이름: x.파일이름, 상태: x.상태 }); });
+    ((자료 && 자료.대화) || []).forEach(function (x) { 줄들.push({ 누가: '나', id: x.id, 시각: x.시각, 글: x.글, 종류: x.종류, 파일이름: x.파일이름, 상태: x.상태 }); });
     ((자료 && 자료.피드.답) || []).forEach(function (x) { 줄들.push({ 누가: '우리', 시각: x.시각, 제목: x.제목, 글: x.글, 파일: x.파일 }); });
     (JSON.parse(저장.get('보낸것') || '[]')).forEach(function (x) { if (!줄들.some(function (y) { return y.누가 === '나' && y.시각 === x.시각; })) 줄들.push(x); });
     줄들.sort(function (a, b) { return a.시각 < b.시각 ? -1 : 1; });
@@ -194,7 +259,8 @@ a { color: var(--강조); }
     return '<div class="대화">' + 줄들.map(function (x) {
       if (x.누가 === '나') {
         var 몸 = x.종류 === '사진' ? '<div>사진 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '음성' ? '<div>음성 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '파일' ? '<div>파일 · ' + esc(x.파일이름 || '') + '</div>' : esc(x.글);
-        if (x.미리보기) 몸 = '<img src="' + x.미리보기 + '" alt="보낸 사진">';
+        if (x.미리보기) 몸 = '<img class="썸" src="' + x.미리보기 + '" alt="보낸 사진">';
+        else if (x.종류 === '사진' && x.id && 설정 && 설정.뒷단.indexOf('script.google') < 0) 몸 = '<img class="썸" loading="lazy" src="' + 뒷단주소('p=file&id=' + encodeURIComponent(x.id)) + '" alt="보낸 사진">';
         return '<div class="말 나">' + 몸 + '<div class="때">' + 때글(x.시각) + ' · ' + (x.상태 === '보내는중' ? '보내는 중' : '받았어요') + '</div></div>';
       }
       var 파일 = (x.파일 || []).map(function (f) { return '<div>파일 · ' + esc(f.이름) + '</div>'; }).join('');
@@ -204,15 +270,65 @@ a { color: var(--강조); }
   function 할일() {
     var 목록 = ((자료 && 자료.피드.할일) || []).slice().reverse();
     if (!목록.length) return '<div class="카드"><div class="빈">하실 것이 없어요. 새로 생기면 종이 켜져요.</div></div>';
-    var 열림 = 목록.filter(function (x) { return x.단계 !== '완료' && !끝난할일(x.id); });
-    var 끝 = 목록.filter(function (x) { return x.단계 === '완료' || 끝난할일(x.id); });
     function 한줄(x, 끝났나) {
-      return '<div class="줄"><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄) + '</div>' +
+      return '<div class="줄"><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄 || '') + (x.덧 ? ' · ' + esc(x.덧) : '') + '</div>' +
         '<div class="때">' + (x.기한 ? esc(x.기한) + ' 까지 · ' : '') + 때글(x.시각) + '</div>' +
         (끝났나 ? '<div style="margin-top:8px"><span class="칩 끝">끝냈어요</span></div>' : '<div style="margin-top:10px"><button class="단추 테" data-끝="' + esc(x.id) + '">끝냈어요</button></div>') + '</div>';
     }
-    return '<section class="카드"><h2>하실 것 ' + 열림.length + '</h2>' + (열림.length ? 열림.map(function (x) { return 한줄(x, false); }).join('') : '<div class="빈">다 하셨어요.</div>') + '</section>' +
-      (끝.length ? '<section class="카드"><h2>끝낸 것</h2>' + 끝.slice(0, 10).map(function (x) { return 한줄(x, true); }).join('') + '</section>' : '');
+    var 열림 = 목록.filter(function (x) { return x.단계 !== '완료' && !끝난할일(x.id); });
+    var 끝 = 목록.filter(function (x) { return x.단계 === '완료' || 끝난할일(x.id); });
+    var h = '';
+    if (대표인가()) {
+      var 결정 = 열림.filter(function (x) { return x.대상 === '유니스'; }), 원장것 = 열림.filter(function (x) { return x.대상 !== '유니스'; });
+      h += '<section class="카드"><h2>정하실 것 ' + 결정.length + '</h2>' + (결정.length ? 결정.map(function (x) { return 한줄(x, false); }).join('') : '<div class="빈">지금 정하실 것이 없어요.</div>') + '</section>';
+      h += '<section class="카드"><h2>원장님이 하실 것 ' + 원장것.length + '</h2>' + (원장것.length ? 원장것.map(function (x) { return 한줄(x, false); }).join('') : '<div class="빈">없어요.</div>') + '</section>';
+    } else {
+      h += '<section class="카드"><h2>하실 것 ' + 열림.length + '</h2>' + (열림.length ? 열림.map(function (x) { return 한줄(x, false); }).join('') : '<div class="빈">다 하셨어요.</div>') + '</section>';
+    }
+    if (끝.length) h += '<section class="카드"><h2>끝낸 것</h2>' + 끝.slice(0, 10).map(function (x) { return 한줄(x, true); }).join('') + '</section>';
+    return h;
+  }
+  function 재고() {
+    var 재 = 재고항목();
+    if (!재) return '<div class="카드"><div class="빈">아직 재고를 못 셌어요. 장부(판매현황·매입현황)가 들어오면 여기에 보여요.</div></div>';
+    var h = '<section class="카드"><h2>' + esc(재.제목) + '</h2><div class="한줄" style="color:var(--보조)">' + esc(재.한줄 || '') + ' · 센 때 ' + 때글(재.셈때) + '</div><div class="숫자셋" style="margin-top:12px">';
+    ['보청기', '데모', '판촉물'].forEach(function (k) { h += '<div><div class="큰수">' + ((재.합 && 재.합[k]) || 0) + '</div><div class="한줄">' + k + '</div></div>'; });
+    h += '</div></section>';
+    var 갈래들 = {};
+    (재.묶음 || []).forEach(function (r) { (갈래들[r.갈래] = 갈래들[r.갈래] || []).push(r); });
+    Object.keys(갈래들).forEach(function (g) {
+      h += '<section class="카드"><h2>' + esc(g) + ' ' + 갈래들[g].reduce(function (a, r) { return a + r.남음; }, 0) + '</h2><table class="표"><tr><th>브랜드</th><th>모델</th><th style="text-align:right">남음</th></tr>';
+      h += 갈래들[g].map(function (r) { return '<tr><td>' + esc(r.브랜드) + '</td><td>' + esc(r.모델) + '</td><td class="수">' + r.남음 + '</td></tr>'; }).join('');
+      h += '</table></section>';
+    });
+    if ((재.볼것 || []).length) {
+      h += '<section class="카드"><h2>확인할 것 ' + 재.볼것.length + '</h2><div class="한줄" style="color:var(--보조);margin-bottom:8px">장부만으로는 못 맞춘 모델이에요. 대화에 「모델 · 실제 개수」로 적어 주시면 맞춥니다.</div>';
+      h += 재.볼것.map(function (r) { return '<div class="줄"><div class="제목">' + esc(r.모델) + '</div><div class="한줄">' + esc(r.왜) + '</div></div>'; }).join('') + '</section>';
+    }
+    return h;
+  }
+  function 장부() {
+    var 장 = 장부항목();
+    if (!장) return '<div class="카드"><div class="빈">아직 장부가 안 왔어요.</div></div>';
+    var h = '<section class="카드"><h2>' + esc(장.연월) + ' ' + esc(장.제목) + '</h2><div class="한줄" style="color:var(--보조)">' + esc(장.한줄 || '') + '</div>';
+    h += '<table class="표" style="margin-top:12px"><tr><th></th><th style="text-align:right">건수</th><th style="text-align:right">금액</th></tr>';
+    h += '<tr><td>판매</td><td class="수">' + ((장.판매 && 장.판매.건수) || 0) + '</td><td class="수">' + 원(장.판매 && 장.판매.금액) + '</td></tr>';
+    h += '<tr><td>매입</td><td class="수">' + ((장.매입 && 장.매입.건수) || 0) + '</td><td class="수">' + 원(장.매입 && 장.매입.금액) + '</td></tr>';
+    if (대표인가()) {
+      h += '<tr><td>운영비</td><td></td><td class="수">' + 원(장.운영비) + '</td></tr><tr><td>고정비</td><td></td><td class="수">' + 원(장.고정비) + '</td></tr>';
+      h += '<tr><td><b>손익</b></td><td></td><td class="수"><b>' + 원(장.손익) + '</b></td></tr><tr><td>분기선(' + 만원(장.손익분기) + ')까지</td><td></td><td class="수">' + 원(장.분기선까지) + '</td></tr>';
+    }
+    h += '</table></section>';
+    if ((장.미지급 || []).length) {
+      h += '<section class="카드"><h2>거래처 미지급 ' + 장.미지급.length + '</h2><table class="표">' + 장.미지급.map(function (m) { return '<tr><td>' + esc(m.거래처 || m.이름 || '') + '</td><td class="수">' + 원(m.금액) + '</td></tr>'; }).join('') + '</table></section>';
+    }
+    if (대표인가()) {
+      h += '<section class="카드"><h2>누적</h2><div class="숫자셋"><div><div class="큰수">' + 만원(장.누적매출) + '</div><div class="한줄">누적 매출</div></div><div><div class="큰수">' + 만원(장.누적손익) + '</div><div class="한줄">누적 손익</div></div><div><div class="큰수">' + 만원(장.미수) + '</div><div class="한줄">미수</div></div></div></section>';
+      if ((장.최근 || []).length) {
+        h += '<section class="카드"><h2>최근 여섯 달</h2><table class="표"><tr><th>달</th><th style="text-align:right">매출</th><th style="text-align:right">손익</th></tr>' + 장.최근.map(function (m) { return '<tr><td>' + esc(m.연월) + '</td><td class="수">' + 만원(m.매출) + '</td><td class="수">' + 만원(m.손익) + '</td></tr>'; }).join('') + '</table></section>';
+      }
+    }
+    return h;
   }
   function 받은것() {
     var 목록 = ((자료 && 자료.피드.받은것) || []).slice().reverse();
@@ -224,9 +340,12 @@ a { color: var(--강조); }
   }
   function 그리기() {
     var 본 = $('본문');
-    본.innerHTML = { 홈: 홈, 대화: 대화, 할일: 할일, 받은것: 받은것 }[탭]();
+    var 화면 = { 홈: 홈, 대화: 대화, 할일: 할일, 재고: 재고, 장부: 장부, 받은것: 받은것 };
+    if (!화면[탭]) 탭 = '홈';
+    본.innerHTML = 화면[탭]();
+    탭그리기();
     $('입력줄').classList.toggle('보임', 탭 === '대화');
-    Array.prototype.forEach.call(document.querySelectorAll('nav.탭 button'), function (b) { b.classList.toggle('켬', b.getAttribute('data-탭') === 탭); });
+    document.body.classList.toggle('대화중', 탭 === '대화');
     배지그리기();
     if (탭 === '대화') window.scrollTo(0, document.body.scrollHeight);
   }
@@ -254,7 +373,7 @@ a { color: var(--강조); }
   }
   function 알림열기() {
     var 목 = 알림목록전부();
-    $('알림목록').innerHTML = 목.length ? 목.map(function (x) { return '<div class="줄" data-탭가="' + x.탭 + '">' + (새것인가(x.시각) ? '<span class="칩">새</span>' : '') + '<span class="칩 끝">' + esc(x.종류) + '</span>' + esc(x.제목) + '<div class="때">' + 때글(x.시각) + '</div></div>'; }).join('') : '<div class="빈">아직 온 것이 없어요. 답·할 일·안내가 오면 여기에 남아요.</div>';
+    $('알림목록').innerHTML = 목.length ? 목.map(function (x) { return '<div class="줄" data-탭가="' + x.탭 + '">' + (새것인가(x.시각) ? '<span class="점" title="새"></span>' : '') + '<span class="칩 끝">' + esc(x.종류) + '</span>' + esc(x.제목) + '<div class="때">' + 때글(x.시각) + '</div></div>'; }).join('') : '<div class="빈">아직 온 것이 없어요. 답·할 일·안내가 오면 여기에 남아요.</div>';
     $('알림시트').classList.add('보임');
     푸시상태그리기();
     var 지금 = new Date(); 지금.setMilliseconds(0);
