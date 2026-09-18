@@ -218,7 +218,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-19e';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-19f';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   (function () { var m = decodeURIComponent(location.search || '').match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고)
   var $ = function (id) { return document.getElementById(id); };
@@ -375,7 +375,7 @@ a { color: var(--강조); }
         '<div class="때">' + (상태 ? 상태 + ' · ' : '') + (x.기한 ? esc(x.기한) + ' 까지 · ' : '') + 며칠째(x.시각) + (며칠째(x.시각) ? ' · ' : '') + 때글(x.시각) + (x.배경 || x.할일전문 ? ' · <span style="color:var(--강조)">열어 보기 ›</span>' : '') + '</div>' +
         (끝났나 ? '<div style="margin-top:8px"><span class="칩 끝">끝냈어요</span></div>' : (x.대상 === '유니스' ? '' : '<div style="margin-top:10px"><button class="단추 테" data-끝="' + esc(x.id) + '">끝냈어요</button></div>')) + '</div>';
     }
-    if (열린할일id) { var 하나 = 목록.filter(function (y) { return y.id === 열린할일id; })[0]; if (하나) return 할일상세(하나); 열린할일id = ''; }
+    if (열린할일id) { var 하나 = 목록.filter(function (y) { return y.id === 열린할일id; })[0]; if (하나) return 할일상세(하나); if (자료) 열린할일id = ''; }
     var 열림 = 목록.filter(function (x) { return x.단계 !== '완료' && !끝난할일(x.id); });
     var 끝 = 목록.filter(function (x) { return x.단계 === '완료' || 끝난할일(x.id); });
     var h = '';
@@ -598,7 +598,7 @@ a { color: var(--강조); }
   }
   function 받은것() {
     var 목록 = ((자료 && 자료.피드.받은것) || []).slice().reverse();
-    if (열린블로그) { var x = 목록.filter(function (y) { return y.id === 열린블로그; })[0]; if (x) return x.갈래 === '문자' ? 문자상세(x) : 블로그상세(x); 열린블로그 = ''; }
+    if (열린블로그) { var x = 목록.filter(function (y) { return y.id === 열린블로그; })[0]; if (x) return x.갈래 === '문자' ? 문자상세(x) : 블로그상세(x); if (자료) 열린블로그 = ''; }
     var 갈래들 = (설정.받은것갈래 || []);
     var h = '<div class="갈래줄"><button class="' + (갈래 ? '' : '켬') + '" data-갈래="">전부</button>' + 갈래들.map(function (g) { return '<button class="' + (갈래 === g ? '켬' : '') + '" data-갈래="' + esc(g) + '">' + esc(g) + '</button>'; }).join('') + '</div>';
     var 골 = 갈래 ? 목록.filter(function (x) { return x.갈래 === 갈래; }) : 목록;
