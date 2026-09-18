@@ -1,6 +1,6 @@
 /* 한마음 데스크 — 서비스 워커 (2026-09-18 · 1단계: 껍데기만 캐시 · 2단계: 웹 푸시)
    껍데기(desk.html · 글씨체 · 아이콘)는 캐시해서 전파가 약해도 열리게 하고, 자료(뒷단·desk-org.json)는 늘 새로 받는다. */
-var 이름 = 'desk-v8';   // desk.html 을 고쳐 올릴 때마다 숫자를 올린다 — 안 올리면 폰은 옛 화면을 계속 연다(09-18)
+var 이름 = 'desk-v9';   // desk.html 을 고쳐 올릴 때마다 숫자를 올린다 — 안 올리면 폰은 옛 화면을 계속 연다(09-18)
 var 껍데기 = ['./desk.html', './desk.webmanifest', './desk-icon.svg', './undongjang.woff2'];
 self.addEventListener('install', function (e) { e.waitUntil(caches.open(이름).then(function (c) { return c.addAll(껍데기); }).then(function () { return self.skipWaiting(); })); });
 self.addEventListener('activate', function (e) { e.waitUntil(caches.keys().then(function (ks) { return Promise.all(ks.filter(function (k) { return k !== 이름; }).map(function (k) { return caches.delete(k); })); }).then(function () { return self.clients.claim(); })); });
@@ -33,7 +33,7 @@ self.addEventListener('notificationclick', function (e) {
   e.notification.close();
   // 09-18 유니스 「알림 눌렀는데 데스크 화면이 안 나왔어」 두 번 — 어디서 막히는지 단계마다 뒷단에 남긴다.
   // 데스크 창이 있으면 앞으로(앞으로 와서 보이는지까지 확인), 없거나 안 보이면 새로 연다.
-  var 주소 = new URL('./desk.html?열림=알림', self.registration.scope).href;   // 앱이 「알림으로 열렸다」를 기록에 남기게 — 손으로 연 것과 구별(09-18 15:0x)
+  var 주소 = new URL('./desk.html?열림=알림&탭=' + encodeURIComponent(d.탭 || '홈'), self.registration.scope).href;   // 앱이 「알림으로 열렸다」를 기록에 남기게 — 손으로 연 것과 구별(09-18 15:0x)
   var 열기 = function (왜) { return self.clients.openWindow(주소).then(function (w) { return 기록(d, '알림눌림', '새로 엶(' + 왜 + ') → ' + (w ? 'ok' : 'null')); }, function (err) { return 기록(d, '알림눌림', '새로 열기 실패(' + 왜 + '): ' + String(err && err.message || err).slice(0, 80)); }); };
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (cs) {
     var 데스크 = cs.filter(function (c) { return (c.url || '').indexOf('desk.html') >= 0; });
