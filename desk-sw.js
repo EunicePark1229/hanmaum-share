@@ -1,6 +1,6 @@
 /* 한마음 데스크 — 서비스 워커 (2026-09-18 · 1단계: 껍데기만 캐시 · 2단계: 웹 푸시)
    껍데기(desk.html · 글씨체 · 아이콘)는 캐시해서 전파가 약해도 열리게 하고, 자료(뒷단·desk-org.json)는 늘 새로 받는다. */
-var 이름 = 'desk-v6';   // desk.html 을 고쳐 올릴 때마다 숫자를 올린다 — 안 올리면 폰은 옛 화면을 계속 연다(09-18)
+var 이름 = 'desk-v7';   // desk.html 을 고쳐 올릴 때마다 숫자를 올린다 — 안 올리면 폰은 옛 화면을 계속 연다(09-18)
 var 껍데기 = ['./desk.html', './desk.webmanifest', './desk-icon.svg', './undongjang.woff2'];
 self.addEventListener('install', function (e) { e.waitUntil(caches.open(이름).then(function (c) { return c.addAll(껍데기); }).then(function () { return self.skipWaiting(); })); });
 self.addEventListener('activate', function (e) { e.waitUntil(caches.keys().then(function (ks) { return Promise.all(ks.filter(function (k) { return k !== 이름; }).map(function (k) { return caches.delete(k); })); }).then(function () { return self.clients.claim(); })); });
@@ -37,16 +37,10 @@ self.addEventListener('notificationclick', function (e) {
   var 열기 = function (왜) { return self.clients.openWindow(주소).then(function (w) { return 기록(d, '알림눌림', '새로 엶(' + 왜 + ') → ' + (w ? 'ok' : 'null')); }, function (err) { return 기록(d, '알림눌림', '새로 열기 실패(' + 왜 + '): ' + String(err && err.message || err).slice(0, 80)); }); };
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (cs) {
     var 데스크 = cs.filter(function (c) { return (c.url || '').indexOf('desk.html') >= 0; });
-    if (!데스크.length) return 열기('창 없음 · 같은 사이트 창 ' + cs.length);
-    if (!('focus' in 데스크[0])) return 열기('focus 없음');
-    // 09-18 14:22 실측(삼성 인터넷) — focus() 가 「됐다」고 답하는데 창은 hidden 그대로였다(브라우저 자체가 앞으로 안 옴).
-    // 「됐다」를 안 믿고, 잠깐 뒤 실제로 보이는지 다시 재서 안 보이면 새로 연다
-    return 데스크[0].focus().then(function () {
-      return new Promise(function (ok) { setTimeout(ok, 400); }).then(function () { return self.clients.matchAll({ type: 'window', includeUncontrolled: true }); }).then(function (다시) {
-        var 보임 = 다시.some(function (c) { return (c.url || '').indexOf('desk.html') >= 0 && c.visibilityState === 'visible'; });
-        if (보임) return 기록(d, '알림눌림', '있던 창 앞으로 · 보임');
-        return 열기('앞으로 했는데 안 보임');
-      });
-    }, function (err) { return 열기('앞으로 실패: ' + String(err && err.message || err).slice(0, 60)); });
+    var 보이는 = 데스크.filter(function (c) { return c.visibilityState === 'visible'; });
+    // 09-18 14:35 실측 — focus() 뒤 0.4초 기다렸다가 openWindow 를 부르니 「Not allowed to open a window」. 누른 순간의 허용은 짧다.
+    // 그래서 보이는 창이 있을 때만 앞으로 가져오고, 아니면(창이 뒤에 숨어 있어도) 기다리지 않고 바로 새로 연다.
+    if (보이는.length && 'focus' in 보이는[0]) return 보이는[0].focus().then(function () { return 기록(d, '알림눌림', '보이는 창 앞으로'); }, function (err) { return 열기('앞으로 실패: ' + String(err && err.message || err).slice(0, 60)); });
+    return 열기(데스크.length ? '창은 있으나 숨어 있음 ' + 데스크.length : '창 없음 · 같은 사이트 창 ' + cs.length);
   }).catch(function (err) { return 열기('matchAll 실패: ' + String(err && err.message || err).slice(0, 60)); }));
 });
