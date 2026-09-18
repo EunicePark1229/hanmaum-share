@@ -119,6 +119,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
+  var 판 = '2026-09-18f';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var $ = function (id) { return document.getElementById(id); };
   var 저장 = { get: function (k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } },
@@ -369,6 +370,7 @@ a { color: var(--강조); }
     그리기();
     if (!열쇠) { $('본문').innerHTML = '<div class="카드"><div class="제목">대표님께 받은 링크로 열어 주세요.</div><div class="한줄" style="color:var(--보조)">링크에 열쇠가 들어 있어요. 한 번 열면 이 폰에 남아요.</div></div>'; return; }
     받아오기();
+    try { 보내기짐({ 종류: '기록', 무엇: '열림', 상세: '판 ' + 판 + ' · sw ' + ((navigator.serviceWorker && navigator.serviceWorker.controller) ? '있음' : '없음') + ' · ' + (navigator.userAgent || '').slice(0, 80) }).catch(function () {}); } catch (e) {}
     setInterval(function () { if (!document.hidden) 받아오기(); }, 30000);
     document.addEventListener('visibilitychange', function () { if (!document.hidden) 받아오기(); });
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('desk-sw.js').catch(function () {});
