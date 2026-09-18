@@ -81,7 +81,20 @@ tr.상세 .안 div span:last-child { white-space: nowrap; color: var(--글); }
 .막대 > i { display: block; height: 100%; background: var(--강조); border-radius: 999px; }
 .막대글 { display: flex; justify-content: space-between; font-size: 14px; color: var(--보조); }
 .줄 .때 .며칠 { color: var(--살핌); }
-.홈격자 [data-가], .숫자셋 [data-가], .줄[data-가], span[data-가] { cursor: pointer; }
+.홈격자 [data-가], .숫자셋 [data-가], .줄[data-가], span[data-가], .블로그줄 { cursor: pointer; }
+.블로그줄 { display: flex; gap: 12px; align-items: flex-start; }
+.썸작 { width: 72px; height: 72px; object-fit: cover; border-radius: 10px; flex: 0 0 72px; background: var(--강조연); }
+.단추줄 { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.단추줄 .단추 { height: 44px; padding: 0 14px; }
+.본문글 { font-size: 17px; line-height: 1.7; }
+.본문글 h3 { font-size: 18px; margin: 20px 0 8px; color: var(--강조); }
+.본문글 p { margin: 0 0 12px; }
+.본문글 blockquote { margin: 0 0 12px; padding: 8px 14px; border-left: 3px solid var(--강조연); color: var(--보조); }
+.본문글 figure { margin: 12px 0; } .본문글 figure img { max-width: 100%; border-radius: 12px; display: block; } .본문글 figcaption { font-size: 13px; color: var(--흐림); margin-top: 4px; }
+.본문글 .사진자리 { padding: 10px 14px; border: 1px dashed var(--선); border-radius: 12px; color: var(--흐림); margin: 12px 0; }
+.본문글 .확인말 { padding: 8px 12px; background: #FBF1E3; color: var(--살핌); border-radius: 10px; margin: 8px 0 12px; font-size: 15px; }
+.본문글 pre { white-space: pre-wrap; font: inherit; background: var(--바탕); padding: 12px; border-radius: 12px; }
+.블로그상세 { max-width: 760px; }
 @media (hover: hover) { span[data-가]:hover .신호 { filter: brightness(.92); text-decoration: underline; } }
 .입력줄들 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .입력줄들 label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--보조); }
@@ -203,7 +216,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-18t';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-19a';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   (function () { var m = decodeURIComponent(location.search || '').match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고)
   var $ = function (id) { return document.getElementById(id); };
@@ -323,11 +336,11 @@ a { color: var(--강조); }
     if (대표인가()) {
       h += '<section class="카드"><h2>원장님 쪽 <button class="더" data-가="받은것">받은 것 전부</button></h2>';
       h += '<div class="한줄"><span data-가="할일" data-스크롤="원장님">원장님이 하실 것 ' + 원장할일.length + '</span> · <span data-가="재고">재고 보청기 ' + ((재 && 재.합 && 재.합['보청기']) || 0) + '대</span></div>';
-      h += 받.length ? 받.map(function (x) { return '<div class="줄"><span class="칩">' + esc(x.갈래) + '</span><a href="' + esc(x.주소) + '" target="_blank" rel="noopener">' + esc(x.제목) + '</a><div class="때">' + 때글(x.시각) + '</div></div>'; }).join('') : '';
+      h += 받.length ? 받.map(function (x) { return x.갈래 === '블로그' ? '<div class="줄" data-가="받은것" data-블로그열기="' + esc(x.id) + '"><span class="칩">' + esc(x.갈래) + '</span>' + esc(x.제목) + '<div class="때">' + (x.단계 && x.단계 !== '초안' ? esc(x.단계) + ' · ' : '') + 때글(x.시각) + '</div></div>' : '<div class="줄"><span class="칩">' + esc(x.갈래) + '</span><a href="' + esc(x.주소) + '" target="_blank" rel="noopener">' + esc(x.제목) + '</a><div class="때">' + 때글(x.시각) + '</div></div>'; }).join('') : '';
       h += '</section>';
     } else {
       h += '<section class="카드"><h2>최근 받은 것 <button class="더" data-가="받은것">전부 보기</button></h2>';
-      h += 받.length ? 받.map(function (x) { return '<div class="줄"><span class="칩">' + esc(x.갈래) + '</span><a href="' + esc(x.주소) + '" target="_blank" rel="noopener">' + esc(x.제목) + '</a><div class="때">' + 때글(x.시각) + '</div></div>'; }).join('') : '<div class="빈">아직 없어요.</div>';
+      h += 받.length ? 받.map(function (x) { return x.갈래 === '블로그' ? '<div class="줄" data-가="받은것" data-블로그열기="' + esc(x.id) + '"><span class="칩">' + esc(x.갈래) + '</span>' + esc(x.제목) + '<div class="때">' + (x.단계 && x.단계 !== '초안' ? esc(x.단계) + ' · ' : '') + 때글(x.시각) + '</div></div>' : '<div class="줄"><span class="칩">' + esc(x.갈래) + '</span><a href="' + esc(x.주소) + '" target="_blank" rel="noopener">' + esc(x.제목) + '</a><div class="때">' + 때글(x.시각) + '</div></div>'; }).join('') : '<div class="빈">아직 없어요.</div>';
       h += '</section>';
     }
     if (안) h += '<section class="카드"><h2>안내 <button class="더" data-가="알림">전부 보기</button></h2><div class="줄" data-가="알림"><div class="제목">' + esc(안.제목) + '</div><div class="한줄">' + esc(안.글) + '</div><div class="때">' + 때글(안.시각) + '</div></div></section>';
@@ -500,12 +513,64 @@ a { color: var(--강조); }
     }
     return h;
   }
+  var 열린블로그 = '';
+  (function () { var m = decodeURIComponent(location.search || '').match(/[?&]블로그=([^&]+)/); if (m) { 열린블로그 = m[1]; 탭 = '받은것'; } })();   // 알림·링크로 초안 하나를 바로 열 때
+  function 마크다운(글) {
+    // 아주 작은 변환 — 제목(##) · 굵게 · 인용(>) · 목록(- · 1.) · 그림 · 문단. 원장님이 읽고 복사하는 용도라 이 정도면 된다
+    var 줄들 = String(글 || '').split('\n'), h = '', 목록 = null;
+    function 인라인(t) { return esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>'); }
+    function 목록닫기() { if (목록) { h += '</' + 목록 + '>'; 목록 = null; } }
+    줄들.forEach(function (l) {
+      var m;
+      if ((m = l.match(/^!\[(.*?)\]\((.+?)\)/))) { 목록닫기(); h += '<figure><img src="' + esc(m[2]) + '" loading="lazy" alt="' + esc(m[1]) + '"><figcaption>' + esc(m[1]) + '</figcaption></figure>'; return; }
+      if ((m = l.match(/^\[사진 — (.+?)\]/))) { 목록닫기(); h += '<div class="사진자리">사진 · ' + esc(m[1]) + '</div>'; return; }
+      if ((m = l.match(/^\[(원장님 확인.*?)\]$/))) { 목록닫기(); h += '<div class="확인말">' + esc(m[1]) + '</div>'; return; }
+      if ((m = l.match(/^##\s+(.+)/))) { 목록닫기(); h += '<h3>' + 인라인(m[1]) + '</h3>'; return; }
+      if (l.trim() === '---') { 목록닫기(); return; }
+      if ((m = l.match(/^>\s?(.*)/))) { 목록닫기(); h += '<blockquote>' + 인라인(m[1]) + '</blockquote>'; return; }
+      if ((m = l.match(/^-\s+(.+)/))) { if (목록 !== 'ul') { 목록닫기(); h += '<ul>'; 목록 = 'ul'; } h += '<li>' + 인라인(m[1]) + '</li>'; return; }
+      if ((m = l.match(/^\d+\.\s+(.+)/))) { if (목록 !== 'ol') { 목록닫기(); h += '<ol>'; 목록 = 'ol'; } h += '<li>' + 인라인(m[1]) + '</li>'; return; }
+      if (!l.trim()) { 목록닫기(); return; }
+      목록닫기(); h += '<p>' + 인라인(l) + '</p>';
+    });
+    목록닫기();
+    return h;
+  }
+  function 복사용글(x) {
+    // 네이버 블로그에 붙여 넣는 용 — 그림 표시·확인 표시는 빼고 글만
+    return String(x.본문 || '').split('\n').filter(function (l) { return !/^\[(원장님 확인|사진 — )/.test(l) && !/^!\[/.test(l) && l.trim() !== '---'; })
+      .map(function (l) { return l.replace(/^##\s+/, '').replace(/\*\*(.+?)\*\*/g, '$1').replace(/^>\s?/, ''); }).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  }
+  function 블로그카드(x) {
+    var 급 = x.단계 === '썼어요' ? 신호('좋음', '썼어요') : x.단계 === '보류' ? 신호('모름', '안 쓸래요') : 신호('살핌', '초안');
+    var 썸 = (x.사진 && x.사진[0]) ? '<img class="썸작" src="' + esc(x.사진[0].주소) + '" loading="lazy" alt="">' : '';
+    return '<div class="줄 블로그줄" data-블로그="' + esc(x.id) + '">' + 썸 + '<div><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄 || '') + '</div><div class="때">' + 급 + ' · ' + 때글(x.시각) + (x.사유 ? ' · ' + esc(x.사유) : '') + '</div></div></div>';
+  }
+  function 블로그상세(x) {
+    var h = '<section class="카드 블로그상세"><button class="더" data-블로그닫기="1">‹ 목록으로</button><h2 style="margin-top:8px">' + esc(x.제목) + '</h2>';
+    if ((x.제목후보 || []).length > 1) h += '<div class="한줄" style="margin-bottom:8px">제목 후보 · ' + x.제목후보.slice(1).map(esc).join(' / ') + '</div>';
+    h += '<div style="margin:8px 0 12px">' + (x.단계 === '썼어요' ? 신호('좋음', '썼어요' + (x.단계때 ? ' · ' + 때글(x.단계때) : '')) : x.단계 === '보류' ? 신호('모름', '안 쓸래요' + (x.사유 ? ' · ' + esc(x.사유) : '')) : 신호('살핌', '초안')) + '</div>';
+    h += '<div class="단추줄"><button class="단추" data-복사="' + esc(x.id) + '">본문 복사</button>' + (x.단계 !== '썼어요' ? '<button class="단추 테" data-단계="썼어요" data-id="' + esc(x.id) + '">썼어요</button>' : '') + (x.단계 === '초안' ? '<button class="단추 테" data-단계="보류" data-id="' + esc(x.id) + '">안 쓸래요</button>' : '') + (x.단계 !== '초안' ? '<button class="단추 테" data-단계="초안" data-id="' + esc(x.id) + '">다시 초안으로</button>' : '') + '</div>';
+    h += '<div class="본문글">' + 마크다운(x.본문) + '</div>';
+    if ((x.태그 || []).length) h += '<div class="한줄" style="margin-top:12px">' + x.태그.map(esc).join(' ') + '</div>';
+    if (x.그림) h += '<h3>새로 만드실 그림(견본 + 프롬프트)</h3><div class="본문글"><pre>' + esc(x.그림) + '</pre></div>';
+    if (x.확인) h += '<h3>확인해 주실 것</h3><div class="본문글">' + 마크다운(x.확인) + '</div>';
+    return h + '</section>';
+  }
   function 받은것() {
     var 목록 = ((자료 && 자료.피드.받은것) || []).slice().reverse();
+    if (열린블로그) { var x = 목록.filter(function (y) { return y.id === 열린블로그; })[0]; if (x) return 블로그상세(x); 열린블로그 = ''; }
     var 갈래들 = (설정.받은것갈래 || []);
     var h = '<div class="갈래줄"><button class="' + (갈래 ? '' : '켬') + '" data-갈래="">전부</button>' + 갈래들.map(function (g) { return '<button class="' + (갈래 === g ? '켬' : '') + '" data-갈래="' + esc(g) + '">' + esc(g) + '</button>'; }).join('') + '</div>';
     var 골 = 갈래 ? 목록.filter(function (x) { return x.갈래 === 갈래; }) : 목록;
-    h += '<section class="카드">' + (골.length ? 골.map(function (x) { return '<div class="줄"><span class="칩">' + esc(x.갈래) + '</span><a href="' + esc(x.주소) + '" target="_blank" rel="noopener">' + esc(x.제목) + '</a><div class="때">' + 때글(x.시각) + '</div></div>'; }).join('') : '<div class="빈">아직 없어요. 블로그 초안·문자 문안·명단·자료가 오면 여기에 모여요.</div>') + '</section>';
+    var 블로그 = 골.filter(function (x) { return x.갈래 === '블로그'; }), 나머지 = 골.filter(function (x) { return x.갈래 !== '블로그'; });
+    if (블로그.length) {
+      var 초안 = 블로그.filter(function (x) { return (x.단계 || '초안') === '초안'; }), 쓴 = 블로그.filter(function (x) { return x.단계 === '썼어요'; }), 보류 = 블로그.filter(function (x) { return x.단계 === '보류'; });
+      h += '<section class="카드"><h2>블로그 초안 ' + 초안.length + '</h2><div class="한줄" style="color:var(--보조);margin-bottom:8px">골라 쓰시고, 올리신 뒤 「썼어요」를 눌러 주세요. 그러면 저희가 다음 글을 채워 둡니다.</div>' + (초안.length ? 초안.map(블로그카드).join('') : '<div class="빈">새 초안을 만드는 중이에요.</div>') + '</section>';
+      if (보류.length) h += '<section class="카드"><h2>안 쓰기로 한 글 ' + 보류.length + '</h2>' + 보류.map(블로그카드).join('') + '</section>';
+      if (쓴.length) h += '<section class="카드"><h2>쓴 글 ' + 쓴.length + '</h2>' + 쓴.map(블로그카드).join('') + '</section>';
+    }
+    if (나머지.length || !블로그.length) h += '<section class="카드">' + (나머지.length ? 나머지.map(function (x) { return '<div class="줄"><span class="칩">' + esc(x.갈래) + '</span><a href="' + esc(x.주소) + '" target="_blank" rel="noopener">' + esc(x.제목) + '</a><div class="때">' + 때글(x.시각) + '</div></div>'; }).join('') : '<div class="빈">아직 없어요. 블로그 초안·문자 문안·명단·자료가 오면 여기에 모여요.</div>') + '</section>';
     return h;
   }
   function 그리기() {
@@ -527,7 +592,11 @@ a { color: var(--강조); }
   // ── 누르기 ──
   $('탭').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; 탭 = b.getAttribute('data-탭'); 그리기(); });
   $('본문').addEventListener('click', function (e) {
-    var 더 = e.target.closest('[data-가]'); if (더) { 가기(더.getAttribute('data-가'), 더.getAttribute('data-초점'), 더.getAttribute('data-펼침열기'), 더.getAttribute('data-스크롤')); return; }
+    var 블 = e.target.closest('[data-블로그]'); if (블) { 열린블로그 = 블.getAttribute('data-블로그'); 탭 = '받은것'; 그리기(); window.scrollTo(0, 0); return; }
+    if (e.target.closest('[data-블로그닫기]')) { 열린블로그 = ''; 그리기(); return; }
+    var 복 = e.target.closest('[data-복사]'); if (복) { var id = 복.getAttribute('data-복사'), x = ((자료 && 자료.피드.받은것) || []).filter(function (y) { return y.id === id; })[0]; if (x) { var t = 복사용글(x); (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { 토스트('본문을 복사했어요. 블로그 글쓰기에 붙여 넣으세요.'); }, function () { 토스트('복사가 안 돼요. 글을 길게 눌러 복사해 주세요.'); }); } return; }
+    var 단 = e.target.closest('[data-단계]'); if (단) { var 단계 = 단.getAttribute('data-단계'), 사유 = ''; if (단계 === '보류') { 사유 = window.prompt('안 쓰시는 이유를 한 줄 적어 주시면 다음 글에 반영해요(안 적어도 돼요)', '') || ''; } 단.disabled = true; 보내기짐({ 종류: '단계', id: 단.getAttribute('data-id'), 단계: 단계, 사유: 사유 }).then(function (j) { if (!j || !j.됨) throw new Error(); 토스트(단계 === '썼어요' ? '고마워요. 다음 글을 채워 둘게요.' : 단계 === '보류' ? '적어 두었어요.' : '다시 초안으로 두었어요.'); 받아오기(); }).catch(function () { 단.disabled = false; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); }); return; }
+    var 더 = e.target.closest('[data-가]'); if (더) { if (더.getAttribute('data-블로그열기')) 열린블로그 = 더.getAttribute('data-블로그열기'); 가기(더.getAttribute('data-가'), 더.getAttribute('data-초점'), 더.getAttribute('data-펼침열기'), 더.getAttribute('data-스크롤')); return; }
     var g = e.target.closest('[data-갈래]'); if (g) { 갈래 = g.getAttribute('data-갈래'); 그리기(); return; }
     var 끝 = e.target.closest('[data-끝]'); if (끝) { 끝내기(끝.getAttribute('data-끝'), 끝); return; }
     var 정 = e.target.closest('[data-정렬]'); if (정) { var k = 정.getAttribute('data-정렬'); if (재고정렬.키 === k) 재고정렬.방향 = -재고정렬.방향; else { 재고정렬.키 = k; 재고정렬.방향 = k === '남음' ? -1 : 1; } 그리기(); return; }
