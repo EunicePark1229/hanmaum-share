@@ -119,7 +119,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-18h';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-18i';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var $ = function (id) { return document.getElementById(id); };
   var 저장 = { get: function (k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } },
@@ -127,11 +127,10 @@ a { color: var(--강조); }
 
   // 열쇠 — 링크의 #k=… 을 이 폰에만 저장한다. 주소창에는 안 남긴다
   var m = (location.hash || '').match(/k=([A-Za-z0-9_\-]+)/);
-  // 누구인가 — 링크의 &u=이름. 읽은때·배지가 사람마다 따로 간다(09-18 유니스: 「내가 확인해도 원장님께는 확인 안 한 걸로 남아야」)
-  var mu = decodeURIComponent(location.hash || '').match(/[&#]u=([^&]+)/);
-  if (m) { 저장.set('데스크열쇠', m[1]); if (mu) 저장.set('데스크누구', mu[1]); history.replaceState(null, '', location.pathname); }
+  // 누구인가 — 열쇠가 곧 사람(뒷단이 열쇠로 이름을 정한다 · 09-18). 링크의 이름표는 안 쓴다
+  if (m) { 저장.set('데스크열쇠', m[1]); history.replaceState(null, '', location.pathname); }
   열쇠 = 저장.get('데스크열쇠');
-  var 누구 = 저장.get('데스크누구') || '구성원';
+  var 누구 = 저장.get('데스크누구') || '';
 
   function 토스트(말) { var t = $('토스트'); t.textContent = 말; t.classList.add('보임'); setTimeout(function () { t.classList.remove('보임'); }, 2600); }
   function 때글(iso) { if (!iso) return ''; var d = new Date(iso); if (isNaN(d)) return iso; var 오늘 = new Date();
@@ -142,16 +141,16 @@ a { color: var(--강조); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
   // ── 뒷단 ──
-  function 뒷단주소(q) { return 설정.뒷단 + (설정.뒷단.indexOf('?') < 0 ? '?' : '&') + q + '&k=' + encodeURIComponent(열쇠) + '&u=' + encodeURIComponent(누구); }
+  function 뒷단주소(q) { return 설정.뒷단 + (설정.뒷단.indexOf('?') < 0 ? '?' : '&') + q + '&k=' + encodeURIComponent(열쇠); }
   function 받아오기() {
     if (!설정 || !열쇠) return Promise.resolve();
     return fetch(뒷단주소('p=desk'), { redirect: 'follow' }).then(function (r) { return r.json(); }).then(function (j) {
       if (!j || !j.됨) { if (j && j.왜 === '열쇠') 토스트('링크가 맞지 않아요. 대표님께 다시 받아 주세요.'); return; }
-      자료 = j; 저장.set('자료', JSON.stringify(j)); 그리기();
+      자료 = j; 저장.set('자료', JSON.stringify(j)); if (j.누구) { 누구 = j.누구; 저장.set('데스크누구', j.누구); } 그리기();
     }).catch(function () { /* 조용히 — 다음 30초에 다시 */ });
   }
   function 보내기짐(짐) {
-    짐.k = 열쇠; 짐.누구 = 누구;
+    짐.k = 열쇠;
     return fetch(설정.뒷단, { method: 'POST', body: JSON.stringify(짐), headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow' })
       .then(function (r) { return r.json(); });
   }
