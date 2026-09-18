@@ -85,7 +85,8 @@ tr.상세 .안 div span:last-child { white-space: nowrap; color: var(--글); }
 @media (hover: hover) { span[data-가]:hover .신호 { filter: brightness(.92); text-decoration: underline; } }
 .입력줄들 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .입력줄들 label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--보조); }
-.입력줄들 input { height: 44px; padding: 0 12px; border: 1px solid var(--선); border-radius: 10px; background: var(--바탕); font-size: 16px; color: var(--글); }
+.입력줄들 input { height: 44px; padding: 0 12px; border: 1px solid var(--선); border-radius: 10px; background: var(--바탕); font-size: 16px; color: var(--글); width: 100%; min-width: 0; }
+.입력줄들 label { min-width: 0; }
 .입력줄들 label:nth-child(3) { grid-column: 1 / -1; }
 @media (min-width: 900px) { .입력줄들 { grid-template-columns: 1fr 1fr 2fr 1fr 1fr; } .입력줄들 label:nth-child(3) { grid-column: auto; } }
 @media (hover: hover) { .숫자셋 [data-가]:hover .큰수, .한줄 span[data-가]:hover { color: var(--강조); text-decoration: underline; } }
@@ -168,14 +169,7 @@ nav.탭 svg { width: 24px; height: 24px; fill: none; stroke: currentColor; strok
 .갈래줄 button.켬 { background: var(--강조연); border-color: var(--강조연); color: var(--강조); }
 a { color: var(--강조); }
 .숨김 { display: none !important; }
-@media (min-width: 900px) {
-  body { display: grid; grid-template-columns: 220px 1fr; }
-  .위 { grid-column: 1 / -1; }
-  nav.탭 { position: sticky; top: 73px; align-self: start; flex-direction: column; border-top: 0; border-right: 1px solid var(--선); height: calc(100vh - 73px); padding: 12px 0; }
-  nav.탭 button { flex: 0 0 auto; height: 52px; grid-template-columns: 24px 1fr; justify-items: start; padding: 0 20px; gap: 12px; font-size: 16px; }
-  main { padding: 24px; max-width: 960px; }
-  .입력줄 { left: 220px; bottom: 0; }
-}
+/* (옛 PC 틀은 2026-09-18 위의 @media 900px 블록으로 합쳤다 — 둘이 겹쳐 메뉴가 머리 밑으로 밀리고 조직 이름이 홈 단추 위에 겹쳤다) */
 </style>
 </head>
 <body>
@@ -208,7 +202,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-18q';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-18s';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   (function () { var m = decodeURIComponent(location.search || '').match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고)
   var $ = function (id) { return document.getElementById(id); };
@@ -485,6 +479,7 @@ a { color: var(--강조); }
     if (!화면[탭]) 탭 = '홈';
     본.innerHTML = 화면[탭]();
     본.classList.toggle('홈격자', 탭 === '홈');
+    $('이름').textContent = (window.innerWidth >= 900) ? ((탭이름[탭] || 탭) + (자료 && 자료.누구 ? ' · ' + 자료.누구 + (자료.역할 ? '(' + 자료.역할 + ')' : '') : '')) : ((설정 && (설정.짧은이름 || '한마음')) + ' 데스크');
     document.body.setAttribute('data-탭', 탭);
     $('탭').setAttribute('data-조직', (설정 && (설정.짧은이름 || 설정.이름)) ? (설정.짧은이름 || 설정.이름) + ' 데스크' : '데스크');
     탭그리기();
