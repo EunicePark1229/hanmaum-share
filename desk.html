@@ -8,9 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="manifest" href="desk.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600&family=Noto+Sans+KR:wght@400;600&display=swap">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/sunn-us/SUIT@2/fonts/static/woff2/SUIT.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600&display=swap">
 <title>한마음 데스크</title>
 <!--
   한마음 데스크 — 원장님용 웹앱 (2026-09-18)
@@ -24,13 +22,7 @@
 @font-face { font-family: '운동장'; src: url('undongjang.woff2') format('woff2'); font-display: swap; }
 @font-face { font-family: 'Paperlogy'; src: url('paperlogy-4.woff2') format('woff2'); font-weight: 400; font-display: swap; }
 @font-face { font-family: 'Paperlogy'; src: url('paperlogy-7.woff2') format('woff2'); font-weight: 700; font-display: swap; }
-/* 글씨체 시안 — 탭마다 다른 후보(2026-09-18 유니스 「페이지마다 다른 글씨체 · 그 중 내가 고른다」). 고르면 하나로 합친다 */
-body[data-탭="홈"] { font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
-body[data-탭="대화"] { font-family: '운동장', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
-body[data-탭="할일"] { font-family: 'Paperlogy', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
-body[data-탭="재고"] { font-family: 'SUIT', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
-body[data-탭="장부"] { font-family: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
-body[data-탭="받은것"] { font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
+/* 글씨체 — 2026-09-18 유니스가 시안 다섯 중 IBM Plex Sans KR(장부 탭 것)을 골랐다. 전부 그것으로 */
 /* 색감 시안 — 탭마다 강조색 하나(한 화면엔 하나). 홈 초록 · 대화 초록 · 할 일 보라 · 재고 파랑 · 장부 황토 */
 body[data-탭="할일"] { --강조: #6B4E9B; --강조연: #EFEAF6; }
 body[data-탭="재고"] { --강조: #1F5F8C; --강조연: #E6EFF6; }
@@ -41,7 +33,7 @@ body[data-탭="받은것"] { --강조: #5B6672; --강조연: #EEF0F2; }
   --강조: #1F6F5F; --강조연: #E6F1EE; --선: #E5E7EB; --좋음: #2E7D32; --살핌: #B26A00; --막힘: #C62828;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; background: var(--바탕); color: var(--글); font-family: '운동장', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; font-size: 16px; line-height: 1.5; -webkit-text-size-adjust: 100%; }
+html, body { margin: 0; background: var(--바탕); color: var(--글); font-family: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; font-size: 16px; line-height: 1.5; -webkit-text-size-adjust: 100%; }
 button, input, textarea { font: inherit; }
 .위 { position: sticky; top: 0; z-index: 5; background: var(--카드); border-bottom: 1px solid var(--선); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
 .위 h1 { margin: 0; font-size: 20px; font-weight: 400; }
@@ -74,6 +66,9 @@ tr.상세 td { background: #FAFBFC; font-size: 15px; color: var(--보조); paddi
 tr.상세 .안 { padding: 6px 4px 10px 20px; }
 tr.상세 .안 div { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0; border-bottom: 1px dashed var(--선); }
 tr.상세 .안 div span:last-child { white-space: nowrap; color: var(--글); }
+.안표 { margin: 4px 0; } .안표 tr:nth-child(even) td { background: transparent; } .안표 td, .안표 th { padding: 6px 6px; font-size: 14px; }
+.안표 tr.소계 td { background: var(--강조연) !important; color: var(--글); }
+[data-상세정렬] { cursor: pointer; } .표 th[data-상세정렬]::after { content: ' ↕'; color: var(--흐림); font-size: 12px; } .표 th[data-상세정렬].오름::after { content: ' ↑'; color: var(--강조); } .표 th[data-상세정렬].내림::after { content: ' ↓'; color: var(--강조); }
 .표 th[data-정렬]::after { content: ' ↕'; color: var(--흐림); font-size: 12px; }
 .표 th[data-정렬].오름::after { content: ' ↑'; color: var(--강조); }
 .표 th[data-정렬].내림::after { content: ' ↓'; color: var(--강조); }
@@ -136,6 +131,29 @@ nav.탭 svg { width: 24px; height: 24px; fill: none; stroke: currentColor; strok
 .토스트 { position: fixed; left: 16px; right: 16px; bottom: 130px; background: var(--글); color: #fff; padding: 12px 16px; border-radius: 12px; font-size: 15px; display: none; z-index: 10; }
 .토스트.보임 { display: block; }
 .갈래줄 { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 8px; }
+/* ── 노트북·PC 틀 (2026-09-18 유니스 「폰과 노트북 프레임이 달라지게 · 제대로 된 앱·ERP 느낌」) ──
+   왼쪽 고정 메뉴 220px(UI 기준 3절) · 머리 · 본문은 넓게, 홈은 카드 2열, 표는 꽉 차게, 대화 입력줄은 본문 안에 */
+@media (min-width: 900px) {
+  body { padding-left: 220px; }
+  nav.탭 { top: 0; bottom: 0; right: auto; width: 220px; flex-direction: column; border-top: 0; border-right: 1px solid var(--선); padding: 88px 12px 16px; gap: 4px; }
+  nav.탭 button { flex: 0 0 auto; height: 48px; display: flex; align-items: center; justify-content: flex-start; gap: 12px; padding: 0 14px; border-radius: 12px; font-size: 16px; color: var(--보조); }
+  nav.탭 button.켬 { background: var(--강조연); color: var(--강조); }
+  nav.탭::before { content: attr(data-조직); position: absolute; top: 24px; left: 26px; font-size: 18px; color: var(--글); font-weight: 600; }
+  .위 { padding: 16px 32px; }
+  .위 h1 { font-size: 22px; }
+  main { max-width: 1200px; padding: 24px 32px 120px; }
+  main.홈격자 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  main.홈격자 > section { margin-bottom: 0; }
+  main.홈격자 > section.넓게 { grid-column: 1 / -1; }
+  .입력줄 { left: 220px; padding: 12px 32px; bottom: 0; }
+  .힌트 { left: 220px; bottom: 76px; }
+  .토스트 { left: 260px; right: auto; max-width: 480px; bottom: 100px; }
+  .시트 .판 { left: auto; right: 24px; top: 72px; bottom: auto; width: 420px; border-radius: 16px; max-height: calc(100vh - 96px); }
+  .대화 { max-width: 760px; }
+  .큰수 { font-size: 34px; }
+  .표 { font-size: 15px; }
+  .표 td, .표 th { padding: 10px 8px; }
+}
 .갈래줄 button { flex: 0 0 auto; height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--선); background: var(--카드); color: var(--보조); }
 .갈래줄 button.켬 { background: var(--강조연); border-color: var(--강조연); color: var(--강조); }
 a { color: var(--강조); }
@@ -180,7 +198,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-18l';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-18n';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   (function () { var m = decodeURIComponent(location.search || '').match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고)
   var $ = function (id) { return document.getElementById(id); };
@@ -190,7 +208,7 @@ a { color: var(--강조); }
   // 열쇠 — 링크의 #k=… 을 이 폰에만 저장한다. 주소창에는 안 남긴다
   var m = (location.hash || '').match(/k=([A-Za-z0-9_\-]+)/);
   // 누구인가 — 열쇠가 곧 사람(뒷단이 열쇠로 이름을 정한다 · 09-18). 링크의 이름표는 안 쓴다
-  if (m) { 저장.set('데스크열쇠', m[1]); history.replaceState(null, '', location.pathname); }
+  if (m) { 저장.set('데스크열쇠', m[1]); history.replaceState(null, '', location.pathname + location.search); }   // 열쇠(#k=)만 지우고 ?탭= 같은 것은 남긴다
   열쇠 = 저장.get('데스크열쇠');
   var 누구 = 저장.get('데스크누구') || '';
 
@@ -254,7 +272,7 @@ a { color: var(--강조); }
     return '<div class="줄"><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄 || '') + (덧있나 && x.덧 ? ' · ' + esc(x.덧) : '') + '</div><div class="때">' + (x.기한 ? esc(x.기한) + ' 까지 · ' : '') + (며 ? 며 + ' · ' : '') + 때글(x.시각) + '</div></div>';
   }
   function 신호(급, 말) { return '<span class="신호 ' + 급 + '">' + esc(말) + '</span>'; }
-  function 글씨체표() { var f = { 홈: 'Pretendard', 대화: '학교안심 운동장 L', 할일: 'Paperlogy', 재고: 'SUIT', 장부: 'IBM Plex Sans KR', 받은것: 'Noto Sans KR' }[탭]; return f ? '<div class="글씨체표">글씨체 시안 · ' + f + '</div>' : ''; }
+  function 글씨체표() { return ''; }   // 글씨체는 IBM Plex Sans KR 로 정해짐(09-18) — 시안 표는 뗐다
   function 장부항목() { var f = (자료 && 자료.피드.장부) || []; var id = 대표인가() ? 'l-대표' : 'l-원장'; return f.filter(function (x) { return x.id === id; })[0] || f[0]; }
   function 재고항목() { return ((자료 && 자료.피드.재고) || [])[0]; }
 
@@ -269,7 +287,7 @@ a { color: var(--강조); }
     var h = '';
     if (대표인가()) {
       var 오래 = 결정.filter(function (x) { return (Date.now() - new Date(x.시각).getTime()) / 86400000 >= 7; }).length;
-      h += '<section class="카드"><h2>정하실 것 <button class="더" data-가="할일">전부 보기</button></h2>';
+      h += '<section class="카드 넓게"><h2>정하실 것 <button class="더" data-가="할일">전부 보기</button></h2>';
       h += (결정.length ? 신호(오래 ? '막힘' : (결정.length > 5 ? '살핌' : '좋음'), 오래 ? '7일 넘은 것 ' + 오래 : (결정.length > 5 ? '쌓이는 중' : '정상')) : 신호('좋음', '비어 있음'));
       h += 결정.length ? '<div class="큰수">' + 결정.length + '</div>' + 결정.slice(0, 3).map(function (x) { return 할일줄(x, true); }).join('') : '<div class="빈">지금 정하실 것이 없어요.</div>';
       h += '</section>';
@@ -372,7 +390,29 @@ a { color: var(--강조); }
     }
     return h;
   }
-  var 펼침 = {};
+  var 펼침 = {}, 상세정렬 = {};
+  (function () { var m = decodeURIComponent(location.search || '').match(/[?&]펼침=([^&]+)/); if (m) 펼침[m[1]] = true; })();   // 링크로 특정 총액을 펼친 채 열기(?탭=장부&펼침=운영비)
+  function 상세표(키, rows) {
+    // 운영비·고정비는 과목(하위분류)으로 묶어 소계를 보이고, 표 머리를 누르면 정렬(09-18 유니스)
+    var 정 = 상세정렬[키] || { 키: '일자', 방향: 1 };
+    var 묶나 = rows.some(function (r) { return r.과목; }) && (키 === '운영비' || 키 === '고정비');
+    function 머리(k, 글, 오른쪽) { var c = 정.키 === k ? (정.방향 > 0 ? ' class="오름"' : ' class="내림"') : ''; return '<th data-상세정렬="' + 키 + '|' + k + '"' + c + (오른쪽 ? ' style="text-align:right"' : '') + '>' + 글 + '</th>'; }
+    function 정렬(rs) { return rs.slice().sort(function (a, b) { var x = a[정.키], y = b[정.키]; if (typeof x === 'number') return (x - y) * 정.방향; return String(x || '').localeCompare(String(y || ''), 'ko') * 정.방향; }); }
+    var h = '<table class="표 안표"><tr>' + (묶나 ? 머리('과목', '과목') : '') + 머리('일자', '일자') + 머리('상대', '상대·내용') + 머리('금액', '금액', true) + '</tr>';
+    if (묶나) {
+      var 과목들 = {};
+      rows.forEach(function (r) { (과목들[r.과목 || '(과목 없음)'] = 과목들[r.과목 || '(과목 없음)'] || []).push(r); });
+      var 이름들 = Object.keys(과목들).sort(function (a, b) { var sa = 과목들[a].reduce(function (t, r) { return t + r.금액; }, 0), sb = 과목들[b].reduce(function (t, r) { return t + r.금액; }, 0); return 정.키 === '과목' ? a.localeCompare(b, 'ko') * 정.방향 : sb - sa; });
+      이름들.forEach(function (g) {
+        var 소계 = 과목들[g].reduce(function (t, r) { return t + r.금액; }, 0);
+        h += '<tr class="소계"><td colspan="3"><b>' + esc(g) + '</b> <span style="color:var(--흐림)">' + 과목들[g].length + '건</span></td><td class="수"><b>' + 원(소계) + '</b></td></tr>';
+        h += 정렬(과목들[g]).map(function (r) { return '<tr><td></td><td>' + esc((r.일자 || '').slice(5)) + '</td><td>' + esc(r.상대 || '') + (r.내용 ? ' · ' + esc(r.내용) : '') + '</td><td class="수">' + 원(r.금액) + '</td></tr>'; }).join('');
+      });
+    } else {
+      h += 정렬(rows).map(function (r) { return '<tr><td>' + esc((r.일자 || '').slice(5)) + '</td><td>' + esc(r.상대 || '') + (r.내용 ? ' · ' + esc(r.내용) : '') + '</td><td class="수">' + 원(r.금액) + '</td></tr>'; }).join('');
+    }
+    return h + '</table>';
+  }
   function 장부() {
     var 장 = 장부항목();
     if (!장) return 글씨체표() + '<div class="카드"><div class="빈">아직 장부가 안 왔어요.</div></div>';
@@ -380,7 +420,7 @@ a { color: var(--강조); }
     function 줄(키, 이름, 건수, 금액, 굵게) {
       var 있음 = (상세[키] || []).length > 0, 열 = 펼침[키] ? ' 열림' : '';
       var h = '<tr' + (있음 ? ' data-펼침="' + 키 + '" class="펼침가능' + 열 + '"' : '') + '><td>' + (있음 ? '' : '<span style="display:inline-block;width:16px"></span>') + (굵게 ? '<b>' : '') + 이름 + (굵게 ? '</b>' : '') + '</td><td class="수">' + (건수 === null ? '' : 건수) + '</td><td class="수">' + (굵게 ? '<b>' : '') + 원(금액) + (굵게 ? '</b>' : '') + '</td></tr>';
-      if (있음 && 펼침[키]) h += '<tr class="상세"><td colspan="3"><div class="안">' + 상세[키].map(function (r) { return '<div><span>' + esc((r.일자 || '').slice(5)) + ' · ' + esc(r.상대 || '') + (r.내용 ? ' · ' + esc(r.내용) : '') + '</span><span>' + 원(r.금액) + '</span></div>'; }).join('') + '</div></td></tr>';
+      if (있음 && 펼침[키]) h += '<tr class="상세"><td colspan="3"><div class="안">' + 상세표(키, 상세[키]) + '</div></td></tr>';
       return h;
     }
     var 급 = 대표인가() ? ((장.손익 || 0) >= 0 ? 신호('좋음', '이번 달 남음') : 신호('살핌', '이번 달 모자람')) : ((장.미지급 || []).length ? 신호('살핌', '미지급 ' + 장.미지급.length + '곳') : 신호('좋음', '미지급 없음'));
@@ -419,8 +459,10 @@ a { color: var(--강조); }
     var 본 = $('본문');
     var 화면 = { 홈: 홈, 대화: 대화, 할일: 할일, 재고: 재고, 장부: 장부, 받은것: 받은것 };
     if (!화면[탭]) 탭 = '홈';
-    본.innerHTML = (탭 === '재고' || 탭 === '장부' ? '' : 글씨체표()) + 화면[탭]();
+    본.innerHTML = 화면[탭]();
+    본.classList.toggle('홈격자', 탭 === '홈');
     document.body.setAttribute('data-탭', 탭);
+    $('탭').setAttribute('data-조직', (설정 && (설정.짧은이름 || 설정.이름)) ? (설정.짧은이름 || 설정.이름) + ' 데스크' : '데스크');
     탭그리기();
     $('입력줄').classList.toggle('보임', 탭 === '대화');
     document.body.classList.toggle('대화중', 탭 === '대화');
@@ -435,6 +477,7 @@ a { color: var(--강조); }
     var g = e.target.closest('[data-갈래]'); if (g) { 갈래 = g.getAttribute('data-갈래'); 그리기(); return; }
     var 끝 = e.target.closest('[data-끝]'); if (끝) { 끝내기(끝.getAttribute('data-끝'), 끝); return; }
     var 정 = e.target.closest('[data-정렬]'); if (정) { var k = 정.getAttribute('data-정렬'); if (재고정렬.키 === k) 재고정렬.방향 = -재고정렬.방향; else { 재고정렬.키 = k; 재고정렬.방향 = k === '남음' ? -1 : 1; } 그리기(); return; }
+    var 상정 = e.target.closest('[data-상세정렬]'); if (상정) { var pr = 상정.getAttribute('data-상세정렬').split('|'), 정 = 상세정렬[pr[0]] || { 키: '일자', 방향: 1 }; if (정.키 === pr[1]) 정.방향 = -정.방향; else { 정.키 = pr[1]; 정.방향 = pr[1] === '금액' ? -1 : 1; } 상세정렬[pr[0]] = 정; 그리기(); return; }
     var 펼 = e.target.closest('[data-펼침]'); if (펼) { var kk = 펼.getAttribute('data-펼침'); 펼침[kk] = !펼침[kk]; 그리기(); return; }
   });
   function 끝내기(id, b) {
