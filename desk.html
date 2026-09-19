@@ -102,8 +102,8 @@ details { margin: 10px 0; } details summary { cursor: pointer; color: var(--강�
 .본문글 pre { white-space: pre-wrap; font: inherit; background: var(--바탕); padding: 12px; border-radius: 12px; }
 .블로그상세 { max-width: 760px; }
 @media (hover: hover) { span[data-가]:hover .신호 { filter: brightness(.92); text-decoration: underline; } }
-.입력줄들 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.입력줄들 label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--보조); }
+.입력줄들 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }   /* 1fr 은 minmax(auto,1fr) 라 날짜 칸의 고유 폭(약 200px)이 열을 밀어 폰(390)에서 카드가 오른쪽으로 넘쳤다 (2026-09-19) */
+.입력줄들 label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--보조); min-width: 0; }
 .입력줄들 select { height: 44px; padding: 0 10px; border: 1px solid var(--선); border-radius: 10px; background: var(--바탕); font-size: 16px; color: var(--글); width: 100%; min-width: 0; }
 .입력줄들 input { height: 44px; padding: 0 12px; border: 1px solid var(--선); border-radius: 10px; background: var(--바탕); font-size: 16px; color: var(--글); width: 100%; min-width: 0; }
 .입력줄들 label { min-width: 0; }
@@ -224,7 +224,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-19h';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-19i';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   (function () { var m = decodeURIComponent(location.search || '').match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고)
   var $ = function (id) { return document.getElementById(id); };
