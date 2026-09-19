@@ -146,6 +146,8 @@ nav.탭 svg { width: 24px; height: 24px; fill: none; stroke: currentColor; strok
 .말 { max-width: 86%; padding: 12px 14px; border-radius: 16px; white-space: pre-wrap; word-break: break-word; }
 .말.나 { align-self: flex-end; background: var(--강조연); border-bottom-right-radius: 4px; }
 .말.우리 { align-self: flex-start; background: var(--카드); border-bottom-left-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+.말.남 { align-self: flex-start; background: #F3F1EC; border-bottom-left-radius: 4px; }   /* 대표 화면에서 다른 사람이 보낸 것 */
+.말 .이름 { font-size: 12px; color: var(--보조); margin-bottom: 4px; }
 .말 .때 { font-size: 13px; color: var(--흐림); margin-top: 6px; }
 .말 .제목 { font-size: 17px; margin-bottom: 4px; }
 .말 img { max-width: 100%; border-radius: 12px; display: block; }
@@ -222,7 +224,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-19g';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-19h';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   (function () { var m = decodeURIComponent(location.search || '').match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고)
   var $ = function (id) { return document.getElementById(id); };
@@ -354,20 +356,23 @@ a { color: var(--강조); }
   }
   function 대화() {
     var 줄들 = [];
-    ((자료 && 자료.대화) || []).forEach(function (x) { 줄들.push({ 누가: '나', id: x.id, 시각: x.시각, 글: x.글, 종류: x.종류, 파일이름: x.파일이름, 상태: x.상태 }); });
-    ((자료 && 자료.피드.답) || []).forEach(function (x) { 줄들.push({ 누가: '우리', id: x.id, 시각: x.시각, 제목: x.제목, 글: x.글, 파일: x.파일 }); });
+    var 나 = (자료 && 자료.누구) || '';
+    ((자료 && 자료.대화) || []).forEach(function (x) { 줄들.push({ 누가: (x.who && 나 && x.who !== 나) ? '남' : '나', 이름: x.who || '', id: x.id, 시각: x.시각, 글: x.글, 종류: x.종류, 파일이름: x.파일이름, 상태: x.상태 }); });
+    ((자료 && 자료.피드.답) || []).forEach(function (x) { 줄들.push({ 누가: '우리', 받는이: (x.대상 && x.대상 !== '모두' && x.대상 !== 나) ? x.대상 : '', id: x.id, 시각: x.시각, 제목: x.제목, 글: x.글, 파일: x.파일 }); });
     (JSON.parse(저장.get('보낸것') || '[]')).forEach(function (x) { if (!줄들.some(function (y) { return y.누가 === '나' && y.시각 === x.시각; })) 줄들.push(x); });
     줄들.sort(function (a, b) { return a.시각 < b.시각 ? -1 : 1; });
     if (!줄들.length) return '<div class="카드"><div class="빈">아래에 적어 보내시면 됩니다. 사진과 음성도 돼요.</div></div>';
     return '<div class="대화">' + 줄들.map(function (x) {
-      if (x.누가 === '나') {
+      if (x.누가 === '나' || x.누가 === '남') {
         var 몸 = x.종류 === '사진' ? '<div>사진 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '음성' ? '<div>음성 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '파일' ? '<div>파일 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '장부입력' ? 장부한줄(x.글) : esc(x.글);
         if (x.미리보기) 몸 = '<img class="썸" src="' + x.미리보기 + '" alt="보낸 사진">';
         else if (x.종류 === '사진' && x.id && 설정 && 설정.뒷단.indexOf('script.google') < 0) 몸 = '<img class="썸" loading="lazy" src="' + 뒷단주소('p=file&id=' + encodeURIComponent(x.id)) + '" alt="보낸 사진">';
-        return '<div class="말 나">' + 몸 + '<div class="때">' + 때글(x.시각) + ' · ' + (x.상태 === '보내는중' ? '보내는 중' : '받았어요') + '</div></div>';
+        if ((x.종류 === '사진' || x.종류 === '파일') && (x.글 || '').indexOf('[영수증') === 0) 몸 = '<div><span class="칩">영수증</span> ' + esc((x.글 || '').replace('[영수증]', '').trim()) + '</div>' + 몸;
+        var 이름줄 = x.누가 === '남' ? '<div class="이름">' + esc(x.이름) + '</div>' : '';
+        return '<div class="말 ' + x.누가 + '">' + 이름줄 + 몸 + '<div class="때">' + 때글(x.시각) + (x.누가 === '나' ? ' · ' + (x.상태 === '보내는중' ? '보내는 중' : '받았어요') : '') + '</div></div>';
       }
       var 파일 = (x.파일 || []).map(function (f) { return '<div>파일 · ' + esc(f.이름) + '</div>'; }).join('');
-      return '<div class="말 우리" data-id="' + esc(x.id || '') + '">' + (x.제목 ? '<div class="제목">' + esc(x.제목) + '</div>' : '') + esc(x.글) + 파일 + '<div class="때">' + 때글(x.시각) + '</div></div>';
+      return '<div class="말 우리" data-id="' + esc(x.id || '') + '">' + (x.받는이 ? '<div class="이름">우리 → ' + esc(x.받는이) + '</div>' : '') + (x.제목 ? '<div class="제목">' + esc(x.제목) + '</div>' : '') + esc(x.글) + 파일 + '<div class="때">' + 때글(x.시각) + '</div></div>';
     }).join('') + '</div>';
   }
   function 할일() {
@@ -424,7 +429,7 @@ a { color: var(--강조); }
     var L = (설정 && 설정.장부입력) || {};
     var 오늘 = 지금iso().slice(0, 10), h = '';
     h += '<section class="카드 입력카드"><h2>오늘 입력 <button class="더" id="입_자세히">' + (자세히 ? '간단히' : '자세히') + '</button></h2>';
-    h += '<div class="한줄" style="color:var(--보조);margin-bottom:10px">여기 적으신 것이 그대로 장부가 돼요(엑셀에 따로 안 적으셔도 됩니다). 영수증·거래명세서는 사진으로 올리셔도 돼요.</div>';
+    h += '<div class="한줄" style="color:var(--보조);margin-bottom:10px">여기 적으신 것이 그대로 장부가 돼요(엑셀에 따로 안 적으셔도 됩니다). 영수증·명세서는 「영수증 사진」으로 찍어 올리시면 저희가 읽어서 넣어요.</div>';
     h += '<div class="갈래줄">' + ['판매', '매입', '비용'].map(function (g) { return '<button class="' + (입력구분 === g ? '켬' : '') + '" data-입력구분="' + g + '">' + (g === '비용' ? '비용(운영비)' : g) + '</button>'; }).join('') + '</div>';
     h += '<div class="입력줄들">';
     h += '<label>날짜<input id="입_날짜" type="date" value="' + 오늘 + '"></label>';
@@ -459,7 +464,8 @@ a { color: var(--강조); }
       h += '<label>결제' + 고르기('입_수단', L.결제) + '</label>';
       if (자세히) h += 칸('입_메모', '메모', '');
     }
-    h += '</div><div style="display:flex;gap:8px;margin-top:10px"><button class="단추" id="입_보내기" style="flex:1">장부에 넣기</button><button class="단추 테" id="입_사진">사진 올리기</button></div></section>';
+    h += '</div><div style="display:flex;gap:8px;margin-top:10px"><button class="단추" id="입_보내기" style="flex:1">장부에 넣기</button><button class="단추 테" id="입_영수증">영수증 사진</button></div>';
+    h += '<input type="file" id="영수증파일" accept="image/*" capture="environment" multiple hidden></section>';
     return h;
   }
   function 값(id) { var el = $(id); return el ? String(el.value || '').trim() : ''; }
@@ -666,7 +672,7 @@ a { color: var(--강조); }
     var 정 = e.target.closest('[data-정렬]'); if (정) { var k = 정.getAttribute('data-정렬'); if (재고정렬.키 === k) 재고정렬.방향 = -재고정렬.방향; else { 재고정렬.키 = k; 재고정렬.방향 = k === '남음' ? -1 : 1; } 그리기(); return; }
     var 입구 = e.target.closest('[data-입력구분]'); if (입구) { 입력구분 = 입구.getAttribute('data-입력구분'); 그리기(); return; }
     if (e.target.id === '입_자세히') { 자세히 = !자세히; 그리기(); return; }
-    if (e.target.id === '입_사진') { $('사진파일').click(); return; }
+    if (e.target.id === '입_영수증') { var 영 = $('영수증파일'); if (영) 영.click(); return; }
     if (e.target.id === '입_보내기') {
       var 항목 = { 구분: 입력구분, 날짜: 값('입_날짜') || 지금iso().slice(0, 10), 상대: 값('입_상대') || 값('입_브랜드'), 내용: 값('입_내용'), 금액: Number(값('입_금액').replace(/[^0-9]/g, '') || 0),
                   수단: 값('입_수단'), 과목: 값('입_과목'), 브랜드: 값('입_브랜드'), 모델: 값('입_모델'), 시리얼: 값('입_시리얼'), 수량: Number(값('입_수량') || 1), 경로: 값('입_경로'), 메모: 값('입_메모') };
@@ -775,6 +781,20 @@ a { color: var(--강조); }
   });
   $('글').addEventListener('input', function () { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 140) + 'px'; });
   $('사진단추').addEventListener('click', function () { $('사진파일').click(); });
+  // 영수증 사진 — 「[영수증] 구분」 을 글로 붙여 보내면 노트북이 읽어 장부에 넣고 대화로 답한다 (2026-09-19 유니스 「영수증 사진 찍어 올리면 네가 읽고 반영」)
+  document.addEventListener('change', function (e) {
+    if (!e.target || e.target.id !== '영수증파일') return;
+    var fs = Array.prototype.slice.call(e.target.files || [], 0, 5); e.target.value = '';
+    if (!fs.length) return;
+    var 구분 = 입력구분;
+    fs.forEach(function (f, i) {
+      줄이기(f).then(function (r) {
+        var 이름 = '영수증_' + 지금iso().replace(/[-:T]/g, '').slice(0, 14) + (fs.length > 1 ? '_' + (i + 1) : '') + '.jpg';
+        보내기({ 종류: '사진', 글: '[영수증] ' + 구분, 파일이름: 이름, 파일형식: 'image/jpeg', 파일: r.base64 }, { 누가: '나', 종류: '사진', 글: '[영수증] ' + 구분, 파일이름: 이름, 미리보기: r.dataUrl, 시각: 지금iso(), 임시: Date.now() + i });
+      });
+    });
+    토스트('영수증을 보냈어요. 읽어서 장부에 넣고 「대화」에 답을 드려요.');
+  });
   $('사진파일').addEventListener('change', function () {
     var f = this.files && this.files[0]; if (!f) return; this.value = '';
     줄이기(f).then(function (r) {
