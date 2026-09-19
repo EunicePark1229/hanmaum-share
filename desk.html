@@ -121,6 +121,14 @@ details { margin: 10px 0; } details summary { cursor: pointer; color: var(--강�
 .막대그래프 div span { position: absolute; top: 100%; left: 0; right: 0; text-align: center; font-size: 12px; color: var(--흐림); margin-top: 4px; }
 .줄 .때 { font-size: 14px; color: var(--흐림); margin-top: 4px; }
 .빈 { color: var(--흐림); font-size: 16px; padding: 8px 0; }
+/* 늘 쓰는 것(고정) — 2026-09-19 유니스 「원장님이 보고 '이렇게 하면 맨 위에 고정되는구나'를 직관적으로 알게」. 글자 단추(아이콘만 X) · 누르면 그 자리에서 위로 올라간다 */
+.줄 { position: relative; }
+.고정단추 { position: absolute; right: 0; top: 10px; height: 32px; padding: 0 10px; border-radius: 16px; border: 1px solid var(--강조); background: #fff; color: var(--강조); font-size: 13px; font-weight: 600; line-height: 30px; }
+.고정단추.켬 { background: var(--강조); color: #fff; }
+.줄.고정있음 { padding-right: 86px; }
+.늘쓰는것 { border: 2px solid var(--강조); }
+.늘쓰는것 h2 { color: var(--강조); }
+.고정힌트 { font-size: 15px; color: var(--보조); background: var(--강조연); border-radius: 10px; padding: 10px 12px; margin-top: 6px; line-height: 1.5; }
 .단추 { height: 48px; padding: 0 18px; border-radius: 12px; border: 1px solid var(--강조); background: var(--강조); color: #fff; font-size: 16px; }
 .단추.테 { background: var(--카드); color: var(--강조); }
 .단추:disabled { opacity: .5; }
@@ -298,6 +306,23 @@ a { color: var(--강조); }
     return '<div class="줄" data-가="할일" data-초점="' + esc(x.id) + '" data-할일열기="' + esc(x.id) + '"><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄 || '') + (덧있나 && x.덧 ? ' · ' + esc(x.덧) : '') + '</div><div class="때">' + (x.기한 ? esc(x.기한) + ' 까지 · ' : '') + (며 ? 며 + ' · ' : '') + 때글(x.시각) + '</div></div>';
   }
   function 신호(급, 말) { return '<span class="신호 ' + 급 + '">' + esc(말) + '</span>'; }
+  // ── 늘 쓰는 것(고정) — 사람마다. 워커가 준 자료.고정(id 목록)을 본다 ──
+  function 고정됐나(id) { return !!(자료 && (자료.고정 || []).indexOf(id) >= 0); }
+  function 고정단추(id) { var 켬 = 고정됐나(id); return '<button class="고정단추' + (켬 ? ' 켬' : '') + '" data-고정="' + esc(id) + '" data-켬="' + (켬 ? '1' : '0') + '" title="' + (켬 ? '맨 위 “늘 쓰는 것”에서 내려요' : '맨 위 “늘 쓰는 것”에 두어요') + '">' + (켬 ? '고정됨' : '고정') + '</button>'; }
+  function 고정된것() { var ids = (자료 && 자료.고정) || [], 전부 = (자료 && 자료.피드.받은것) || []; return ids.map(function (id) { return 전부.filter(function (x) { return x.id === id; })[0]; }).filter(Boolean); }
+  function 받은것줄(x, 고정칸) {
+    var 몸 = x.갈래 === '블로그' ? '<div class="줄 고정있음" data-가="받은것" data-블로그열기="' + esc(x.id) + '"><span class="칩">' + esc(x.갈래) + '</span>' + esc(x.제목) + '<div class="때">' + (x.단계 && x.단계 !== '초안' ? esc(x.단계) + ' · ' : '') + 때글(x.시각) + '</div>'
+      : x.갈래 === '문자' ? '<div class="줄 고정있음" data-가="받은것" data-블로그열기="' + esc(x.id) + '"><span class="칩">' + esc(x.갈래) + '</span>' + esc(x.제목) + '<div class="때">' + 때글(x.시각) + '</div>'
+      : '<div class="줄 고정있음"><span class="칩">' + esc(x.갈래) + '</span><a href="' + esc(x.주소) + '" target="_blank" rel="noopener">' + esc(x.제목) + '</a>' + (x.한줄 ? '<div class="한줄">' + esc(x.한줄) + '</div>' : '') + '<div class="때">' + 때글(x.시각) + '</div>';
+    return 몸 + (고정칸 === false ? '' : 고정단추(x.id)) + '</div>';
+  }
+  function 늘쓰는것카드(어디) {
+    var 것 = 고정된것();
+    var h = '<section class="카드 늘쓰는것"><h2>늘 쓰는 것' + (어디 === '홈' && 것.length > 4 ? ' <button class="더" data-가="받은것">전부 보기</button>' : '') + '</h2>';
+    if (것.length) h += (어디 === '홈' ? 것.slice(0, 4) : 것).map(function (x) { return 받은것줄(x); }).join('') + (어디 === '홈' ? '' : '<div class="고정힌트">“고정됨”을 다시 누르면 아래 목록으로 내려가요.</div>');
+    else h += '<div class="고정힌트">자주 여는 링크를 여기에 모아 둘 수 있어요. ' + (어디 === '홈' ? '「받은 것」에서' : '아래 목록에서') + ' <b>“고정”</b>을 누르면 맨 위 여기에 늘 보여요.' + (어디 === '홈' ? ' <button class="더" data-가="받은것">받은 것 열기</button>' : '') + '</div>';
+    return h + '</section>';
+  }
   function 글씨체표() { return ''; }   // 글씨체는 IBM Plex Sans KR 로 정해짐(09-18) — 시안 표는 뗐다
   function 장부항목() { var f = (자료 && 자료.피드.장부) || []; var id = 대표인가() ? 'l-대표' : 'l-원장'; return f.filter(function (x) { return x.id === id; })[0] || f[0]; }
   function 재고항목() { return ((자료 && 자료.피드.재고) || [])[0]; }
@@ -326,6 +351,7 @@ a { color: var(--강조); }
       h += 내것.length ? 내것.slice(0, 3).map(function (x) { return 할일줄(x, false); }).join('') : '<div class="빈">하실 것이 없어요.</div>';
       h += '</section>';
     }
+    h += 늘쓰는것카드('홈');   // 늘 쓰는 것 — 첫 카드(정하실 것 · 새로 온 것)는 그대로 두고 그 다음(2026-09-19)
     if (장) {
       h += '<section class="카드"><h2>' + (대표인가() ? '이번 달 장부' : '이번 달 판매·매입') + ' <button class="더" data-가="장부">자세히</button></h2><div class="숫자셋">';
       if (대표인가()) {
@@ -583,7 +609,7 @@ a { color: var(--강조); }
   function 블로그카드(x) {
     var 급 = x.단계 === '썼어요' ? 신호('좋음', '썼어요') : x.단계 === '보류' ? 신호('모름', '안 쓸래요') : 신호('살핌', '초안');
     var 썸 = (x.사진 && x.사진[0]) ? '<img class="썸작" src="' + esc(x.사진[0].주소) + '" loading="lazy" alt="">' : '';
-    return '<div class="줄 블로그줄" data-블로그="' + esc(x.id) + '">' + 썸 + '<div><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄 || '') + '</div><div class="때">' + 급 + ' · ' + 때글(x.시각) + (x.사유 ? ' · ' + esc(x.사유) : '') + '</div></div></div>';
+    return '<div class="줄 블로그줄 고정있음" data-블로그="' + esc(x.id) + '">' + 썸 + '<div><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄 || '') + '</div><div class="때">' + 급 + ' · ' + 때글(x.시각) + (x.사유 ? ' · ' + esc(x.사유) : '') + '</div></div>' + 고정단추(x.id) + '</div>';
   }
   function 블로그상세(x) {
     var h = '<section class="카드 블로그상세"><button class="더" data-블로그닫기="1">‹ 목록으로</button><h2 style="margin-top:8px">' + esc(x.제목) + '</h2>';
@@ -610,7 +636,8 @@ a { color: var(--강조); }
     var 목록 = ((자료 && 자료.피드.받은것) || []).slice().reverse();
     if (열린블로그) { var x = 목록.filter(function (y) { return y.id === 열린블로그; })[0]; if (x) return x.갈래 === '문자' ? 문자상세(x) : 블로그상세(x); if (자료) 열린블로그 = ''; }
     var 갈래들 = (설정.받은것갈래 || []);
-    var h = '<div class="갈래줄"><button class="' + (갈래 ? '' : '켬') + '" data-갈래="">전부</button>' + 갈래들.map(function (g) { return '<button class="' + (갈래 === g ? '켬' : '') + '" data-갈래="' + esc(g) + '">' + esc(g) + '</button>'; }).join('') + '</div>';
+    var h = 늘쓰는것카드('받은것');
+    h += '<div class="갈래줄"><button class="' + (갈래 ? '' : '켬') + '" data-갈래="">전부</button>' + 갈래들.map(function (g) { return '<button class="' + (갈래 === g ? '켬' : '') + '" data-갈래="' + esc(g) + '">' + esc(g) + '</button>'; }).join('') + '</div>';
     var 골 = 갈래 ? 목록.filter(function (x) { return x.갈래 === 갈래; }) : 목록;
     var 문자 = 골.filter(function (x) { return x.갈래 === '문자'; });
     if (문자.length) {
@@ -626,7 +653,7 @@ a { color: var(--강조); }
       if (보류.length) h += '<section class="카드"><h2>안 쓰기로 한 글 ' + 보류.length + '</h2>' + 보류.map(블로그카드).join('') + '</section>';
       if (쓴.length) h += '<section class="카드"><h2>쓴 글 ' + 쓴.length + '</h2>' + 쓴.map(블로그카드).join('') + '</section>';
     }
-    if (나머지.length || !블로그.length) h += '<section class="카드">' + (나머지.length ? 나머지.map(function (x) { return '<div class="줄"><span class="칩">' + esc(x.갈래) + '</span><a href="' + esc(x.주소) + '" target="_blank" rel="noopener">' + esc(x.제목) + '</a><div class="때">' + 때글(x.시각) + '</div></div>'; }).join('') : '<div class="빈">아직 없어요. 블로그 초안·문자 문안·명단·자료가 오면 여기에 모여요.</div>') + '</section>';
+    if (나머지.length || !블로그.length) h += '<section class="카드">' + (나머지.length ? 나머지.map(function (x) { return 받은것줄(x); }).join('') : '<div class="빈">아직 없어요. 블로그 초안·문자 문안·명단·자료가 오면 여기에 모여요.</div>') + '</section>';
     return h;
   }
   function 그리기() {
@@ -658,6 +685,19 @@ a { color: var(--강조); }
         if (단계 === '얘기중' && x) { var 글 = '[정하실 것 · ' + x.제목 + '] ' + 사유; 보내기({ 종류: '글', 글: 글 }, { 누가: '나', 종류: '글', 글: 글, 시각: 지금iso(), 임시: Date.now() }); 열린할일id = ''; return; }
         토스트(단계 === '결정' ? (사유.indexOf('보내도 됩니다') >= 0 ? '고마워요. 정하신 시각에 나갑니다.' : '정하신 대로 처리할게요.') : 단계 === '보류' ? '나중에 다시 올릴게요.' : '끝낸 것으로 적었어요.'); 열린할일id = ''; 열린블로그 = ''; 받아오기();
       }).catch(function () { 결.disabled = false; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); });
+      return;
+    }
+    var 고 = e.target.closest('[data-고정]'); if (고) {
+      e.preventDefault(); e.stopPropagation();
+      var gid = 고.getAttribute('data-고정'), 켤 = 고.getAttribute('data-켬') !== '1';
+      고.disabled = true;
+      보내기짐({ 종류: '고정', id: gid, 켬: 켤 }).then(function (j) {
+        if (!j || !j.됨) throw new Error('안 됨');
+        if (자료) 자료.고정 = j.고정 || [];
+        그리기();
+        토스트(켤 ? '맨 위 “늘 쓰는 것”에 두었어요.' : '“늘 쓰는 것”에서 내렸어요.');
+        if (켤) window.scrollTo({ top: 0, behavior: 'smooth' });
+      }).catch(function () { 고.disabled = false; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); });
       return;
     }
     if (e.target.closest('[data-할일닫기]')) { 열린할일id = ''; 그리기(); return; }
