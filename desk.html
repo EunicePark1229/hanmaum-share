@@ -43,7 +43,11 @@ button, input, textarea { font: inherit; }
 .배지:empty, .배지[data-n="0"] { display: none; }
 main { padding: 16px 16px 96px; max-width: 720px; margin: 0 auto; }
 .카드 { background: var(--카드); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
-.카드 h2 { margin: 0 0 12px; font-size: 17px; font-weight: 400; display: flex; justify-content: space-between; align-items: center; }
+/* 카드 제목 — 본문과 확실히 갈리게: 굵게 · 조금 크게 · 왼쪽 강조 띠 · 밑선 (2026-09-19 유니스 「항목 제목이 눈에 안 띈다」) */
+.카드 h2 { margin: 0 0 14px; padding: 2px 0 8px 12px; font-size: 19px; font-weight: 700; letter-spacing: -0.2px; color: var(--글); border-left: 5px solid var(--강조); border-bottom: 1px solid var(--선); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.카드 h2 .더 { font-weight: 400; letter-spacing: 0; }
+.시트 .판 h2 { border-left: 5px solid var(--강조); padding-left: 12px; font-weight: 700; }
+.본문글 h3, .블로그상세 h3 { font-weight: 700; }
 .카드 h2 .더 { font-size: 14px; color: var(--강조); background: none; border: 0; padding: 0; }
 .큰수 { font-size: 30px; line-height: 1.2; }
 .줄 { padding: 12px 0; border-top: 1px solid var(--선); }
@@ -218,7 +222,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-19f';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-19g';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   (function () { var m = decodeURIComponent(location.search || '').match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고)
   var $ = function (id) { return document.getElementById(id); };
