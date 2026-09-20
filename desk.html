@@ -156,6 +156,12 @@ nav.탭 svg { width: 24px; height: 24px; fill: none; stroke: currentColor; strok
 .말.우리 { align-self: flex-start; background: var(--카드); border-bottom-left-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
 .말.남 { align-self: flex-start; background: #F3F1EC; border-bottom-left-radius: 4px; }   /* 대표 화면에서 다른 사람이 보낸 것 */
 .말 .이름 { font-size: 12px; color: var(--보조); margin-bottom: 4px; }
+/* 실시간 방(2026-09-20) — 방 고르기 줄 · 지금 여기 · 입력 중 · 읽음 */
+.방줄 { padding-top: 4px; }
+.여기줄 { font-size: 13px; color: var(--보조); padding: 2px 4px 8px; min-height: 18px; }
+.여기줄 .점 { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #2EAD6B; margin-right: 4px; vertical-align: middle; }
+.여기줄 .점.끊김 { background: #C9B8A8; }
+.말 .때 .읽음 { color: var(--강조); }
 .말 .때 { font-size: 13px; color: var(--흐림); margin-top: 6px; }
 .말 .제목 { font-size: 17px; margin-bottom: 4px; }
 .말 img { max-width: 100%; border-radius: 12px; display: block; }
@@ -245,6 +251,9 @@ a { color: var(--강조); }
   if (m) { 저장.set('데스크열쇠', m[1]); history.replaceState(null, '', location.pathname + location.search); }   // 열쇠(#k=)만 지우고 ?탭= 같은 것은 남긴다
   열쇠 = 저장.get('데스크열쇠');
   var 누구 = 저장.get('데스크누구') || '';
+  // 실시간 방(2026-09-20 유니스 「사내 메신저처럼 · 확장까지 미리」) — 워커 Durable Object(src/room.js)에 웹소켓으로 붙는다
+  var 방 = 저장.get('데스크방') || '', 소켓 = null, 소켓방 = '', 소켓켜짐 = false, 여기들 = [], 입력중들 = {}, 방읽은때 = {}, 다시붙기 = null, 입력중보낸때 = 0, 읽음보낸때 = 0;
+  function 현재방() { var 나 = 누구 || (자료 && 자료.누구) || ''; return 방 || (나 ? 'me-' + 나 : 'all'); }
 
   function 토스트(말) { var t = $('토스트'); t.textContent = 말; t.classList.add('보임'); setTimeout(function () { t.classList.remove('보임'); }, 2600); }
   function 때글(iso) { if (!iso) return ''; var d = new Date(iso); if (isNaN(d)) return iso; var 오늘 = new Date();
@@ -258,7 +267,7 @@ a { color: var(--강조); }
   function 뒷단주소(q) { return 설정.뒷단 + (설정.뒷단.indexOf('?') < 0 ? '?' : '&') + q + '&k=' + encodeURIComponent(열쇠); }
   function 받아오기() {
     if (!설정 || !열쇠) return Promise.resolve();
-    return fetch(뒷단주소('p=desk'), { redirect: 'follow' }).then(function (r) { return r.json(); }).then(function (j) {
+    return fetch(뒷단주소('p=desk&방=' + encodeURIComponent(현재방())), { redirect: 'follow' }).then(function (r) { return r.json(); }).then(function (j) {
       if (!j || !j.됨) { if (j && j.왜 === '열쇠') 토스트('링크가 맞지 않아요. 대표님께 다시 받아 주세요.'); return; }
       자료 = j; 저장.set('자료', JSON.stringify(j)); if (j.누구) { 누구 = j.누구; 저장.set('데스크누구', j.누구); } if (j.역할) 저장.set('데스크역할', j.역할); 그리기();
     }).catch(function () { /* 조용히 — 다음 30초에 다시 */ });
@@ -380,23 +389,37 @@ a { color: var(--강조); }
     if (안) h += '<section class="카드"><h2>안내 <button class="더" data-가="알림">전부 보기</button></h2><div class="줄" data-가="알림"><div class="제목">' + esc(안.제목) + '</div><div class="한줄">' + esc(안.글) + '</div><div class="때">' + 때글(안.시각) + '</div></div></section>';
     return h;
   }
+  function 방줄() {
+    var 나 = (자료 && 자료.누구) || 누구 || '';
+    var 목록 = (자료 && 자료.방들) || [{ id: 'all', 이름: '다 같이' }, { id: 'me-' + 나, 이름: '저희와 나' }];
+    var 지금 = 현재방();
+    var h = '<div class="갈래줄 방줄">' + 목록.map(function (m) { return '<button class="' + (m.id === 지금 ? '켬' : '') + '" data-방="' + esc(m.id) + '">' + esc(m.이름) + '</button>'; }).join('') + '</div>';
+    var 남들 = 여기들.filter(function (n) { return n !== 나; });
+    var 치는 = Object.keys(입력중들).filter(function (n) { return 입력중들[n] && n !== 나; });
+    h += '<div class="여기줄"><span class="점' + (소켓켜짐 ? '' : ' 끊김') + '"></span>' + (소켓켜짐 ? (남들.length ? '지금 여기 · ' + esc(남들.join(' · ')) : '지금은 저만 있어요') : '연결 중…') + (치는.length ? ' · <b>' + esc(치는.join(', ')) + ' 입력 중…</b>' : '') + '</div>';
+    return h;
+  }
   function 대화() {
     var 줄들 = [];
     var 나 = (자료 && 자료.누구) || '';
-    ((자료 && 자료.대화) || []).forEach(function (x) { 줄들.push({ 누가: (x.who && 나 && x.who !== 나) ? '남' : '나', 이름: x.who || '', id: x.id, 시각: x.시각, 글: x.글, 종류: x.종류, 파일이름: x.파일이름, 상태: x.상태 }); });
-    ((자료 && 자료.피드.답) || []).forEach(function (x) { 줄들.push({ 누가: '우리', 받는이: (x.대상 && x.대상 !== '모두' && x.대상 !== 나) ? x.대상 : '', id: x.id, 시각: x.시각, 제목: x.제목, 글: x.글, 파일: x.파일 }); });
-    (JSON.parse(저장.get('보낸것') || '[]')).forEach(function (x) { if (!줄들.some(function (y) { return y.누가 === '나' && y.시각 === x.시각; })) 줄들.push(x); });
+    var 지금방 = 현재방();
+    ((자료 && 자료.대화) || []).forEach(function (x) { 줄들.push({ 누가: (x.who && 나 && x.who !== 나) ? (x.who === '관리자' ? '우리' : '남') : '나', 이름: x.who || '', id: x.id, 시각: x.시각, 글: x.글, 종류: x.종류, 파일이름: x.파일이름, 상태: x.상태 }); });
+    if (지금방.indexOf('me-') === 0) ((자료 && 자료.피드.답) || []).forEach(function (x) { 줄들.push({ 누가: '우리', 받는이: (x.대상 && x.대상 !== '모두' && x.대상 !== 나) ? x.대상 : '', id: x.id, 시각: x.시각, 제목: x.제목, 글: x.글, 파일: x.파일 }); });
+    (JSON.parse(저장.get('보낸것') || '[]')).forEach(function (x) { if ((x.방 || '') === 지금방 && !줄들.some(function (y) { return y.누가 === '나' && y.시각 === x.시각; })) 줄들.push(x); });
     줄들.sort(function (a, b) { return a.시각 < b.시각 ? -1 : 1; });
-    if (!줄들.length) return '<div class="카드"><div class="빈">아래에 적어 보내시면 됩니다. 사진과 음성도 돼요.</div></div>';
-    return '<div class="대화">' + 줄들.map(function (x) {
+    var 마지막내것 = null; 줄들.forEach(function (x) { if (x.누가 === '나' && x.id) 마지막내것 = x; });
+    var 남읽음 = 마지막내것 ? Object.keys(방읽은때).filter(function (n) { return n !== 나 && 방읽은때[n] >= 마지막내것.시각; }) : [];
+    if (!줄들.length) return 방줄() + '<div class="카드"><div class="빈">아래에 적어 보내시면 됩니다. 사진과 음성도 돼요.</div></div>';
+    return 방줄() + '<div class="대화">' + 줄들.map(function (x) {
       if (x.누가 === '나' || x.누가 === '남') {
         var 몸 = x.종류 === '사진' ? '<div>사진 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '음성' ? '<div>음성 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '파일' ? '<div>파일 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '장부입력' ? 장부한줄(x.글) : esc(x.글);
         if (x.미리보기) 몸 = '<img class="썸" src="' + x.미리보기 + '" alt="보낸 사진">';
         else if (x.종류 === '사진' && x.id && 설정 && 설정.뒷단.indexOf('script.google') < 0) 몸 = '<img class="썸" loading="lazy" src="' + 뒷단주소('p=file&id=' + encodeURIComponent(x.id)) + '" alt="보낸 사진">';
         if ((x.종류 === '사진' || x.종류 === '파일') && (x.글 || '').indexOf('[영수증') === 0) 몸 = '<div><span class="칩">영수증</span> ' + esc((x.글 || '').replace('[영수증]', '').trim()) + '</div>' + 몸;
         var 이름줄 = x.누가 === '남' ? '<div class="이름">' + esc(x.이름) + '</div>' : '';
-        return '<div class="말 ' + x.누가 + '">' + 이름줄 + 몸 + '<div class="때">' + 때글(x.시각) + (x.누가 === '나' ? ' · ' + (x.상태 === '보내는중' ? '보내는 중' : '받았어요') : '') + '</div></div>';
+        return '<div class="말 ' + x.누가 + '">' + 이름줄 + 몸 + '<div class="때">' + 때글(x.시각) + (x.누가 === '나' ? ' · ' + (x.상태 === '보내는중' ? '보내는 중' : (x === 마지막내것 && 남읽음.length ? '<span class="읽음">' + esc(남읽음.join(', ')) + ' 읽음</span>' : '받았어요')) : '') + '</div></div>';
       }
+      if (x.누가 === '우리' && !x.제목 && x.종류) return '<div class="말 우리" data-id="' + esc(x.id || '') + '"><div class="이름">저희</div>' + esc(x.글 || '') + '<div class="때">' + 때글(x.시각) + '</div></div>';
       var 파일 = (x.파일 || []).map(function (f) { return '<div>파일 · ' + esc(f.이름) + '</div>'; }).join('');
       return '<div class="말 우리" data-id="' + esc(x.id || '') + '">' + (x.받는이 ? '<div class="이름">우리 → ' + esc(x.받는이) + '</div>' : '') + (x.제목 ? '<div class="제목">' + esc(x.제목) + '</div>' : '') + esc(x.글) + 파일 + '<div class="때">' + 때글(x.시각) + '</div></div>';
     }).join('') + '</div>';
@@ -669,7 +692,7 @@ a { color: var(--강조); }
     $('입력줄').classList.toggle('보임', 탭 === '대화');
     document.body.classList.toggle('대화중', 탭 === '대화');
     배지그리기();
-    if (탭 === '대화') window.scrollTo(0, document.body.scrollHeight);
+    if (탭 === '대화') { window.scrollTo(0, document.body.scrollHeight); 소켓열기(); 읽음보내기(); } else 소켓닫기();
   }
 
   // ── 누르기 ──
@@ -707,6 +730,7 @@ a { color: var(--강조); }
     var 복 = e.target.closest('[data-복사]'); if (복) { var id = 복.getAttribute('data-복사'), x = ((자료 && 자료.피드.받은것) || []).filter(function (y) { return y.id === id; })[0]; if (x) { var t = 복사용글(x); (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { 토스트('본문을 복사했어요. 블로그 글쓰기에 붙여 넣으세요.'); }, function () { 토스트('복사가 안 돼요. 글을 길게 눌러 복사해 주세요.'); }); } return; }
     var 단 = e.target.closest('[data-단계]'); if (단) { var 단계 = 단.getAttribute('data-단계'), 사유 = ''; if (단계 === '보류') { 사유 = window.prompt('안 쓰시는 이유를 한 줄 적어 주시면 다음 글에 반영해요(안 적어도 돼요)', '') || ''; } 단.disabled = true; 보내기짐({ 종류: '단계', id: 단.getAttribute('data-id'), 단계: 단계, 사유: 사유 }).then(function (j) { if (!j || !j.됨) throw new Error(); 토스트(단계 === '썼어요' ? '고마워요. 다음 글을 채워 둘게요.' : 단계 === '보류' ? '적어 두었어요.' : '다시 초안으로 두었어요.'); 받아오기(); }).catch(function () { 단.disabled = false; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); }); return; }
     var 더 = e.target.closest('[data-가]'); if (더) { if (더.getAttribute('data-블로그열기')) 열린블로그 = 더.getAttribute('data-블로그열기'); if (더.getAttribute('data-할일열기')) 열린할일id = 더.getAttribute('data-할일열기'); 가기(더.getAttribute('data-가'), 더.getAttribute('data-초점'), 더.getAttribute('data-펼침열기'), 더.getAttribute('data-스크롤')); return; }
+    var 방단 = e.target.closest('[data-방]'); if (방단) { 방 = 방단.getAttribute('data-방'); 저장.set('데스크방', 방); 소켓닫기(); 그리기(); 받아오기(); return; }
     var g = e.target.closest('[data-갈래]'); if (g) { 갈래 = g.getAttribute('data-갈래'); 그리기(); return; }
     var 끝 = e.target.closest('[data-끝]'); if (끝) { 끝내기(끝.getAttribute('data-끝'), 끝); return; }
     var 정 = e.target.closest('[data-정렬]'); if (정) { var k = 정.getAttribute('data-정렬'); if (재고정렬.키 === k) 재고정렬.방향 = -재고정렬.방향; else { 재고정렬.키 = k; 재고정렬.방향 = k === '남음' ? -1 : 1; } 그리기(); return; }
@@ -800,11 +824,50 @@ a { color: var(--강조); }
     if (대상) { setTimeout(function () { 대상.scrollIntoView({ behavior: 'smooth', block: 'center' }); 대상.classList.add('강조'); setTimeout(function () { 대상.classList.remove('강조'); }, 2200); }, 60); }
   }
 
+  // ── 실시간 방 소켓(2026-09-20) — 워커 /desk/ws · 방 DO. 끊기면 3초 뒤 다시 붙고, 그동안은 30초 폴링이 받쳐 준다 ──
+  function 소켓주소() { var b = 설정.뒷단.replace(/^http/, 'ws'); var i = b.indexOf('?'); var 길 = (i < 0 ? b : b.slice(0, i)) + '/ws'; var q = (i < 0 ? '' : b.slice(i + 1)); return 길 + '?' + (q ? q + '&' : '') + '방=' + encodeURIComponent(현재방()) + '&k=' + encodeURIComponent(열쇠); }
+  function 소켓열기() {
+    if (!설정 || !열쇠 || !window.WebSocket || 설정.뒷단.indexOf('script.google') >= 0) return;
+    if (소켓 && 소켓방 === 현재방() && (소켓.readyState === 0 || 소켓.readyState === 1)) return;
+    소켓닫기();
+    var ws; try { ws = new WebSocket(소켓주소()); } catch (e) { return; }
+    소켓 = ws; 소켓방 = 현재방();
+    ws.onopen = function () { 소켓켜짐 = true; if (탭 === '대화') 그리기(); };
+    ws.onmessage = function (e) {
+      var m; try { m = JSON.parse(e.data); } catch (err) { return; }
+      if (m.종류 === '접속') { 여기들 = m.여기 || []; 방읽은때 = m.읽은때 || {}; if (탭 === '대화') 그리기(); return; }
+      if (m.종류 === '들어옴' || m.종류 === '나감') { 여기들 = m.여기 || []; if (m.종류 === '나감') 입력중들[m.누구] = false; if (탭 === '대화') 그리기(); return; }
+      if (m.종류 === '입력중') { 입력중들[m.누구] = !!m.켬; if (탭 === '대화') 그리기(); return; }
+      if (m.종류 === '읽음') { 방읽은때[m.누구] = m.때; if (탭 === '대화') 그리기(); return; }
+      if (m.종류 === '새글' && m.줄) {
+        var 줄 = m.줄; if (!자료) return; 자료.대화 = 자료.대화 || [];
+        if (!자료.대화.some(function (x) { return x.id === 줄.id; })) 자료.대화.push(줄);
+        입력중들[줄.who] = false;
+        // 내가 소켓으로 보낸 것의 메아리면 「보내는 중」 임시 줄을 지운다
+        var 목 = JSON.parse(저장.get('보낸것') || '[]'); 목 = 목.filter(function (x) { return !(x.상태 === '보내는중' && x.글 === 줄.글 && x.종류 === 줄.종류); }); 저장.set('보낸것', JSON.stringify(목));
+        if (탭 === '대화') { 그리기(); 읽음보내기(); } else 배지그리기();
+        return;
+      }
+      if (m.종류 === '신호') { 통화신호받기(m); return; }
+    };
+    ws.onclose = function () { 소켓켜짐 = false; if (소켓 === ws) { 소켓 = null; if (탭 === '대화') { 그리기(); clearTimeout(다시붙기); 다시붙기 = setTimeout(소켓열기, 3000); } } };
+    ws.onerror = function () { try { ws.close(); } catch (e) {} };
+  }
+  function 소켓닫기() { clearTimeout(다시붙기); if (소켓) { var ws = 소켓; 소켓 = null; 소켓켜짐 = false; 여기들 = []; 입력중들 = {}; try { ws.onclose = null; ws.close(); } catch (e) {} } }
+  function 소켓으로(짐) { if (소켓 && 소켓.readyState === 1) { try { 소켓.send(JSON.stringify(짐)); return true; } catch (e) { return false; } } return false; }
+  function 읽음보내기() { var t = Date.now(); if (t - 읽음보낸때 < 4000) return; if (소켓으로({ 종류: '읽음' })) 읽음보낸때 = t; }
+  function 통화신호받기(m) { /* 2단계(음성·영상 통화) — 여기서 offer/answer/ICE 를 받는다 */ }
+
   // ── 보내기(글·사진·음성) ──
   function 보낸것기록(x) { var 목 = JSON.parse(저장.get('보낸것') || '[]'); 목.push(x); 저장.set('보낸것', JSON.stringify(목.slice(-30))); }
   function 지금iso() { var d = new Date(); d.setMilliseconds(0); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2) + 'T' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) + ':' + ('0' + d.getSeconds()).slice(-2); }
   function 보내기(짐, 화면항목) {
+    짐.방 = 짐.방 || 현재방(); 화면항목.방 = 짐.방;
     화면항목.상태 = '보내는중'; 보낸것기록(화면항목); 탭 = '대화'; 그리기();
+    if (짐.종류 === '글' && !짐.파일 && 소켓으로({ 종류: '글', 글: 짐.글 })) {
+      // 소켓으로 갔다 — 방이 「새글」 메아리를 주면 그때 임시 줄이 지워진다. 5초 안에 안 오면 HTTP 로 다시
+      return new Promise(function (ok) { setTimeout(function () { var 남 = JSON.parse(저장.get('보낸것') || '[]').some(function (x) { return x.임시 === 화면항목.임시 && x.상태 === '보내는중'; }); if (남) { 보내기짐(짐).then(function () { 받아오기(); }).catch(function () {}); } ok(); }, 5000); });
+    }
     return 보내기짐(짐).then(function (j) {
       if (!j || !j.됨) throw new Error(j && j.왜 || '');
       화면항목.상태 = '받음'; 화면항목.시각 = j.시각 || 화면항목.시각;
@@ -819,7 +882,8 @@ a { color: var(--강조); }
     var 글 = $('글').value.trim(); if (!글) return; $('글').value = '';
     보내기({ 종류: '글', 글: 글 }, { 누가: '나', 종류: '글', 글: 글, 시각: 지금iso(), 임시: Date.now() });
   });
-  $('글').addEventListener('input', function () { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 140) + 'px'; });
+  $('글').addEventListener('input', function () { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 140) + 'px'; var t = Date.now(); if (t - 입력중보낸때 > 2500) { 입력중보낸때 = t; 소켓으로({ 종류: '입력중', 켬: true }); } });
+  $('글').addEventListener('blur', function () { 소켓으로({ 종류: '입력중', 켬: false }); });
   $('사진단추').addEventListener('click', function () { $('사진파일').click(); });
   // 영수증 사진 — 「[영수증] 구분」 을 글로 붙여 보내면 노트북이 읽어 장부에 넣고 대화로 답한다 (2026-09-19 유니스 「영수증 사진 찍어 올리면 네가 읽고 반영」)
   document.addEventListener('change', function (e) {
