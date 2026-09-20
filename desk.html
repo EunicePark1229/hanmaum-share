@@ -451,7 +451,7 @@ a { color: var(--강조); }
   function 일정줄(x) {
     var 종일 = x.종일 || (x.시작 || '').slice(11, 16) === '00:00';
     var 때 = 종일 ? '하루' : (x.시작 || '').slice(11, 16);
-    var 급 = x.갈래 === '예약' ? (x.상태 === '확정' ? '<span class="칩">예약 확정</span>' : x.상태 === '취소' ? '<span class="칩">취소</span>' : '<span class="칩">예약 · 확정 전</span>') : x.갈래 === '기한' ? '<span class="칩">기한</span>' : '<span class="칩">참고</span>';
+    var 급 = x.갈래 === '예약' ? (x.상태 === '확정' ? '<span class="칩">예약 확정</span>' : x.상태 === '취소' ? '<span class="칩">취소</span>' : '<span class="칩">예약 · 확정 전</span>') : x.갈래 === '기한' ? '<span class="칩">기한</span>' : x.갈래 === '일정' ? '<span class="칩">캘린더</span>' : '<span class="칩">참고</span>';
     return '<div class="일정줄 ' + esc(x.갈래) + (x.상태 === '취소' ? ' 취소' : '') + (x.상태 === '끝' ? ' 끝' : '') + '"><div class="때칸">' + esc(때) + (종일 ? '' : '<small>' + esc((x.끝 || '').slice(11, 16)) + '까지</small>') + '</div><div class="몸"><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄 || '') + '</div><div class="때">' + 급 + (x.출처 ? ' · ' + esc(x.출처) : '') + '</div></div></div>';
   }
   function 일정() {
