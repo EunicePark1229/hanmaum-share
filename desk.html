@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="manifest" href="desk.webmanifest">
-<link rel="apple-touch-icon" sizes="180x180" href="desk-180.png">   <!-- 아이폰 홈 화면 아이콘 — 귀 + 하트(2026-09-20) -->
+<link rel="apple-touch-icon" sizes="180x180" href="desk-180.png">   <!-- 홈 화면 아이콘 — 원장님 로고 시안(구름 · 클레이 캐릭터 · 귀 마크)에서 글자만 뺀 것 · 대표는 연보라(boss-*) — 아래 스크립트가 역할에 맞춰 바꾼다(2026-09-20) -->
 <link rel="icon" type="image/png" sizes="192x192" href="desk-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- 글씨체는 Paperlogy(같은 폴더 woff2) — 2026-09-20 유니스 「바꿔」. 구글 폰트 링크는 뗐다 -->
@@ -263,6 +263,14 @@ a { color: var(--강조); }
   if (m) { 저장.set('데스크열쇠', m[1]); history.replaceState(null, '', location.pathname + location.search); }   // 열쇠(#k=)만 지우고 ?탭= 같은 것은 남긴다
   열쇠 = 저장.get('데스크열쇠');
   var 누구 = 저장.get('데스크누구') || '';
+  // 홈 화면 아이콘은 역할마다 — 대표는 연보라 바탕(boss-*) · 원장님은 시안 그대로(하늘색). 「홈 화면에 추가」할 때 읽는 것이라 미리 바꿔 둔다(2026-09-20 유니스 「내 버전과 원장님 버전이 구분되면서 통일성은 유지」)
+  function 아이콘맞추기() {
+    var 대표 = (저장.get('데스크역할') || '') === '대표';
+    var m = document.querySelector('link[rel="manifest"]'), a = document.querySelector('link[rel="apple-touch-icon"]');
+    if (m && m.getAttribute('href') !== (대표 ? 'desk-boss.webmanifest' : 'desk.webmanifest')) m.setAttribute('href', 대표 ? 'desk-boss.webmanifest' : 'desk.webmanifest');
+    if (a) a.setAttribute('href', 대표 ? 'boss-180.png' : 'desk-180.png');
+  }
+  아이콘맞추기();
   // 실시간 방(2026-09-20 유니스 「사내 메신저처럼 · 확장까지 미리」) — 워커 Durable Object(src/room.js)에 웹소켓으로 붙는다
   var 방 = 저장.get('데스크방') || '', 소켓 = null, 소켓방 = '', 소켓켜짐 = false, 여기들 = [], 입력중들 = {}, 방읽은때 = {}, 다시붙기 = null, 입력중보낸때 = 0, 읽음보낸때 = 0;
   function 현재방() { var 나 = 누구 || (자료 && 자료.누구) || ''; return 방 || (나 ? 'me-' + 나 : 'all'); }
@@ -281,7 +289,7 @@ a { color: var(--강조); }
     if (!설정 || !열쇠) return Promise.resolve();
     return fetch(뒷단주소('p=desk&방=' + encodeURIComponent(현재방())), { redirect: 'follow' }).then(function (r) { return r.json(); }).then(function (j) {
       if (!j || !j.됨) { if (j && j.왜 === '열쇠') 토스트('링크가 맞지 않아요. 대표님께 다시 받아 주세요.'); return; }
-      자료 = j; 저장.set('자료', JSON.stringify(j)); if (j.누구) { 누구 = j.누구; 저장.set('데스크누구', j.누구); } if (j.역할) 저장.set('데스크역할', j.역할); 그리기();
+      자료 = j; 저장.set('자료', JSON.stringify(j)); if (j.누구) { 누구 = j.누구; 저장.set('데스크누구', j.누구); } if (j.역할) { 저장.set('데스크역할', j.역할); 아이콘맞추기(); } 그리기();
     }).catch(function () { /* 조용히 — 다음 30초에 다시 */ });
   }
   function 보내기짐(짐) {
