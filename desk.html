@@ -139,6 +139,26 @@ details { margin: 10px 0; } details summary { cursor: pointer; color: var(--강�
 .일정줄.취소 .제목 { text-decoration: line-through; color: var(--흐림); }
 .일정줄.끝 { opacity: .55; }
 .날머리 { font-size: 15px; font-weight: 600; color: var(--보조); margin: 14px 0 2px; }
+/* 일정 보기 넷(2026-09-20 유니스 「월간·주간·1일·목록」) */
+.보기줄 { display: flex; gap: 6px; margin: 4px 0 10px }
+.보기줄 button { flex: 1; height: 38px; border-radius: 10px; border: 1px solid var(--선); background: var(--카드); color: var(--보조); font-size: 15px }
+.보기줄 button.켬 { background: var(--강조연); border-color: var(--강조연); color: var(--강조); font-weight: 600 }
+.이동줄 { display: flex; align-items: center; justify-content: space-between; margin: 4px 0 8px }
+.이동줄 b { font-size: 17px }
+.이동줄 button { height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--선); background: var(--카드); color: var(--글); font-size: 15px }
+.달표 { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px }
+.달표 .요일 { text-align: center; font-size: 12px; color: var(--흐림); padding: 4px 0 }
+.달표 .칸 { min-height: 58px; border-radius: 8px; background: var(--바탕); padding: 4px 3px; font-size: 12px; position: relative; overflow: hidden }
+.달표 .칸.빈칸 { background: transparent }
+.달표 .칸 .날 { font-size: 13px; font-weight: 600; color: var(--글) }
+.달표 .칸.오늘 .날 { color: #fff; background: var(--강조); border-radius: 50%; display: inline-block; width: 22px; height: 22px; line-height: 22px; text-align: center }
+.달표 .칸.골 { outline: 2px solid var(--강조) }
+.달표 .칸 .점줄 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; color: var(--보조) }
+.달표 .칸 .점줄.예약 { color: var(--강조); font-weight: 600 }
+.달표 .칸 .더수 { color: var(--흐림) }
+.주표 .날머리 { margin-top: 10px }
+.시간줄 { display: flex; gap: 10px; padding: 8px 0; border-top: 1px dashed var(--선); min-height: 34px }
+.시간줄 .시 { flex: 0 0 48px; font-size: 13px; color: var(--흐림) }
 .날머리.오늘 { color: var(--강조); }
 .고정힌트 { font-size: 15px; color: var(--보조); background: var(--강조연); border-radius: 10px; padding: 10px 12px; margin-top: 6px; line-height: 1.5; }
 .단추 { height: 48px; padding: 0 18px; border-radius: 12px; border: 1px solid var(--강조); background: var(--강조); color: #fff; font-size: 16px; }
@@ -462,16 +482,75 @@ a { color: var(--강조); }
     var 급 = x.갈래 === '예약' ? (x.상태 === '확정' ? '<span class="칩">예약 확정</span>' : x.상태 === '취소' ? '<span class="칩">취소</span>' : '<span class="칩">예약 · 확정 전</span>') : x.갈래 === '기한' ? '<span class="칩">기한</span>' : x.갈래 === '일정' ? '<span class="칩">캘린더</span>' : '<span class="칩">참고</span>';
     return '<div class="일정줄 ' + esc(x.갈래) + (x.상태 === '취소' ? ' 취소' : '') + (x.상태 === '끝' ? ' 끝' : '') + '"><div class="때칸">' + esc(때) + (종일 ? '' : '<small>' + esc((x.끝 || '').slice(11, 16)) + '까지</small>') + '</div><div class="몸"><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄 || '') + '</div><div class="때">' + 급 + (x.출처 ? ' · ' + esc(x.출처) : '') + '</div></div></div>';
   }
-  function 일정() {
-    var 전부 = 일정목록();
-    var 오늘 = 날짜키(지금iso());
-    var 보임 = 전부.filter(function (x) { return 참고보기 || x.갈래 !== '참고'; }).filter(function (x) { return 날짜키(x.시작) >= 오늘 || (x.갈래 === '예약' && 날짜키(x.시작) >= 날짜키(new Date(Date.now() - 7 * 86400000).toISOString())); });
-    var 참고수 = 전부.filter(function (x) { return x.갈래 === '참고' && 날짜키(x.시작) >= 오늘; }).length;
-    var h = '<section class="카드"><h2>일정 <button class="더" data-참고토글="1">' + (참고보기 ? '참고 숨기기' : '참고도 보기' + (참고수 ? ' (' + 참고수 + ')' : '')) + '</button></h2>';
-    h += '<div class="한줄" style="color:var(--보조);margin-bottom:6px">손님 예약은 네이버 예약 메일에서 저절로 · 기한은 기한대장에서 · 「참고」는 매달 비슷한 때 오는 명세서·안내예요.</div>';
-    if (!보임.length) h += '<div class="빈">앞으로 잡힌 일정이 없어요. 네이버 예약이 들어오면 여기에 바로 떠요.</div>';
-    var 키 = '';
+  var 일정보기 = 저장.get('일정보기') || '목록', 일정기준 = '', 일정골 = '';
+  function 날키(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function 날짜에서(키) { return new Date(키 + 'T00:00:00'); }
+  function 요일글(d) { return '일월화수목금토'[d.getDay()]; }
+  function 일정보기줄() {
+    return '<div class="보기줄">' + ['월간', '주간', '1일', '목록'].map(function (v) { return '<button class="' + (일정보기 === v ? '켬' : '') + '" data-일정보기="' + v + '">' + v + '</button>'; }).join('') + '</div>';
+  }
+  function 이동줄(제목, 단위) { return '<div class="이동줄"><button data-일정이동="-1">‹ 지난 ' + 단위 + '</button><b>' + esc(제목) + '</b><button data-일정이동="1">다음 ' + 단위 + ' ›</button></div><div style="text-align:right;margin:-6px 0 6px"><button class="더" data-일정이동="0">오늘로</button></div>'; }
+  function 그날것(전부, 키) { return 전부.filter(function (x) { return 날짜키(x.시작) === 키; }); }
+  function 일정목록보기(전부, 오늘) {
+    var 보임 = 전부.filter(function (x) { return 날짜키(x.시작) >= 오늘 || (x.갈래 === '예약' && 날짜키(x.시작) >= 날짜키(new Date(Date.now() - 7 * 86400000).toISOString())); });
+    if (!보임.length) return '<div class="빈">앞으로 잡힌 일정이 없어요. 네이버 예약이 들어오면 여기에 바로 떠요.</div>';
+    var h = '', 키 = '';
     보임.forEach(function (x) { var k = 날짜키(x.시작); if (k !== 키) { 키 = k; h += '<div class="날머리' + (k === 오늘 ? ' 오늘' : '') + '">' + esc(날머리글(k)) + '</div>'; } h += 일정줄(x); });
+    return h;
+  }
+  function 일정1일보기(전부, 오늘) {
+    var 키 = 일정기준 || 오늘, d = 날짜에서(키);
+    var 것 = 그날것(전부, 키);
+    var h = 이동줄((d.getMonth() + 1) + '월 ' + d.getDate() + '일 (' + 요일글(d) + ')' + (키 === 오늘 ? ' · 오늘' : ''), '날');
+    var 종일들 = 것.filter(function (x) { return x.종일 || (x.시작 || '').slice(11, 16) === '00:00'; }), 시간들 = 것.filter(function (x) { return !(x.종일 || (x.시작 || '').slice(11, 16) === '00:00'); });
+    if (종일들.length) h += '<div class="날머리">하루 종일</div>' + 종일들.map(일정줄).join('');
+    if (!것.length) h += '<div class="빈">이날은 잡힌 것이 없어요.</div>';
+    if (시간들.length) {
+      h += '<div class="날머리">시간</div>';
+      for (var hh = 9; hh <= 19; hh++) {
+        var 시 = ('0' + hh).slice(-2);
+        var 이때 = 시간들.filter(function (x) { return (x.시작 || '').slice(11, 13) === 시; });
+        h += '<div class="시간줄"><div class="시">' + 시 + ':00</div><div style="flex:1">' + (이때.length ? 이때.map(function (x) { return '<div class="' + (x.갈래 === '예약' ? '제목' : '한줄') + '" style="' + (x.갈래 === '예약' ? 'color:var(--강조)' : '') + '">' + esc((x.시작 || '').slice(11, 16)) + ' ' + esc(x.제목) + (x.한줄 ? '<div class="한줄">' + esc(x.한줄) + '</div>' : '') + '</div>'; }).join('') : '') + '</div></div>';
+      }
+      var 밖 = 시간들.filter(function (x) { var h2 = parseInt((x.시작 || '').slice(11, 13), 10); return h2 < 9 || h2 > 19; });
+      if (밖.length) h += 밖.map(일정줄).join('');
+    }
+    return h;
+  }
+  function 일정주간보기(전부, 오늘) {
+    var 기준 = 날짜에서(일정기준 || 오늘); var 월 = new Date(기준); 월.setDate(기준.getDate() - ((기준.getDay() + 6) % 7));
+    var 끝 = new Date(월); 끝.setDate(월.getDate() + 6);
+    var h = 이동줄((월.getMonth() + 1) + '/' + 월.getDate() + ' ~ ' + (끝.getMonth() + 1) + '/' + 끝.getDate(), '주') + '<div class="주표">';
+    for (var i = 0; i < 7; i++) {
+      var d = new Date(월); d.setDate(월.getDate() + i); var k = 날키(d); var 것 = 그날것(전부, k);
+      h += '<div class="날머리' + (k === 오늘 ? ' 오늘' : '') + '">' + esc(날머리글(k)) + (것.length ? '' : ' <span style="font-weight:normal;color:var(--흐림)">— 없음</span>') + '</div>' + 것.map(일정줄).join('');
+    }
+    return h + '</div>';
+  }
+  function 일정월간보기(전부, 오늘) {
+    var 기준 = 날짜에서(일정기준 || 오늘); var 첫 = new Date(기준.getFullYear(), 기준.getMonth(), 1); var 끝 = new Date(기준.getFullYear(), 기준.getMonth() + 1, 0);
+    var h = 이동줄(첫.getFullYear() + '년 ' + (첫.getMonth() + 1) + '월', '달') + '<div class="달표">' + '월화수목금토일'.split('').map(function (r) { return '<div class="요일">' + r + '</div>'; }).join('');
+    var 앞빈 = (첫.getDay() + 6) % 7;
+    for (var i = 0; i < 앞빈; i++) h += '<div class="칸 빈칸"></div>';
+    for (var d = 1; d <= 끝.getDate(); d++) {
+      var k = 날키(new Date(첫.getFullYear(), 첫.getMonth(), d)); var 것 = 그날것(전부, k);
+      h += '<div class="칸' + (k === 오늘 ? ' 오늘' : '') + (k === 일정골 ? ' 골' : '') + '" data-일정날="' + k + '"><div class="날">' + d + '</div>' + 것.slice(0, 2).map(function (x) { return '<div class="점줄 ' + esc(x.갈래) + '">' + esc(x.갈래 === '예약' ? (x.시작 || '').slice(11, 16) + ' ' + x.제목.split(' · ')[0] : x.제목) + '</div>'; }).join('') + (것.length > 2 ? '<div class="더수">+' + (것.length - 2) + '</div>' : '') + '</div>';
+    }
+    h += '</div>';
+    var 골 = 일정골 || 오늘; var 골것 = 그날것(전부, 골);
+    h += '<div class="날머리' + (골 === 오늘 ? ' 오늘' : '') + '" style="margin-top:14px">' + esc(날머리글(골)) + '</div>' + (골것.length ? 골것.map(일정줄).join('') : '<div class="빈">이날은 잡힌 것이 없어요. 날짜를 누르면 그날 것이 여기 보여요.</div>');
+    return h;
+  }
+  function 일정() {
+    var 전부 = 일정목록().filter(function (x) { return 참고보기 || x.갈래 !== '참고'; });
+    var 오늘 = 날짜키(지금iso());
+    var 참고수 = 일정목록().filter(function (x) { return x.갈래 === '참고' && 날짜키(x.시작) >= 오늘; }).length;
+    var h = '<section class="카드"><h2>일정 <button class="더" data-참고토글="1">' + (참고보기 ? '참고 숨기기' : '참고도 보기' + (참고수 ? ' (' + 참고수 + ')' : '')) + '</button></h2>' + 일정보기줄();
+    if (일정보기 === '월간') h += 일정월간보기(전부, 오늘);
+    else if (일정보기 === '주간') h += 일정주간보기(전부, 오늘);
+    else if (일정보기 === '1일') h += 일정1일보기(전부, 오늘);
+    else h += 일정목록보기(전부, 오늘);
+    h += '<div class="한줄" style="color:var(--흐림);margin-top:12px;font-size:13px">손님 예약은 네이버 예약 메일에서 저절로 · 기한은 기한대장에서 · 「참고」는 매달 비슷한 때 오는 명세서·안내예요.</div>';
     return h + '</section>';
   }
   function 일정카드() {
@@ -791,6 +870,9 @@ a { color: var(--강조); }
     var 단 = e.target.closest('[data-단계]'); if (단) { var 단계 = 단.getAttribute('data-단계'), 사유 = ''; if (단계 === '보류') { 사유 = window.prompt('안 쓰시는 이유를 한 줄 적어 주시면 다음 글에 반영해요(안 적어도 돼요)', '') || ''; } 단.disabled = true; 보내기짐({ 종류: '단계', id: 단.getAttribute('data-id'), 단계: 단계, 사유: 사유 }).then(function (j) { if (!j || !j.됨) throw new Error(); 토스트(단계 === '썼어요' ? '고마워요. 다음 글을 채워 둘게요.' : 단계 === '보류' ? '적어 두었어요.' : '다시 초안으로 두었어요.'); 받아오기(); }).catch(function () { 단.disabled = false; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); }); return; }
     var 더 = e.target.closest('[data-가]'); if (더) { if (더.getAttribute('data-블로그열기')) 열린블로그 = 더.getAttribute('data-블로그열기'); if (더.getAttribute('data-할일열기')) 열린할일id = 더.getAttribute('data-할일열기'); 가기(더.getAttribute('data-가'), 더.getAttribute('data-초점'), 더.getAttribute('data-펼침열기'), 더.getAttribute('data-스크롤')); return; }
     if (e.target.closest('[data-참고토글]')) { 참고보기 = !참고보기; 그리기(); return; }
+    var 보 = e.target.closest('[data-일정보기]'); if (보) { 일정보기 = 보.getAttribute('data-일정보기'); 저장.set('일정보기', 일정보기); 그리기(); return; }
+    var 이 = e.target.closest('[data-일정이동]'); if (이) { var n = parseInt(이.getAttribute('data-일정이동'), 10), 오늘k = 날짜키(지금iso()); if (!n) { 일정기준 = ''; 일정골 = ''; } else { var d = 날짜에서(일정기준 || 오늘k); if (일정보기 === '월간') d.setMonth(d.getMonth() + n); else if (일정보기 === '주간') d.setDate(d.getDate() + 7 * n); else d.setDate(d.getDate() + n); 일정기준 = 날키(d); if (일정보기 === '월간') 일정골 = ''; } 그리기(); return; }
+    var 날 = e.target.closest('[data-일정날]'); if (날) { 일정골 = 날.getAttribute('data-일정날'); 그리기(); return; }
     var 방단 = e.target.closest('[data-방]'); if (방단) { 방 = 방단.getAttribute('data-방'); 저장.set('데스크방', 방); 소켓닫기(); 그리기(); 받아오기(); return; }
     var g = e.target.closest('[data-갈래]'); if (g) { 갈래 = g.getAttribute('data-갈래'); 그리기(); return; }
     var 끝 = e.target.closest('[data-끝]'); if (끝) { 끝내기(끝.getAttribute('data-끝'), 끝); return; }
