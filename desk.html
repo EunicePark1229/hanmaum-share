@@ -160,6 +160,14 @@ details { margin: 10px 0; } details summary { cursor: pointer; color: var(--강�
 .시간줄 { display: flex; gap: 10px; padding: 8px 0; border-top: 1px dashed var(--선); min-height: 34px }
 .시간줄 .시 { flex: 0 0 48px; font-size: 13px; color: var(--흐림) }
 .날머리.오늘 { color: var(--강조); }
+/* 차례 바꾸기(2026-09-21 유니스 「항목 순서는 원장님이 직접 판단하고 바꿀 수 있게」) — ▲▼ 글자 단추 · 홈은 「순서 바꾸기」를 켰을 때만 */
+.차례단추 { display: inline-flex; gap: 4px; margin-left: 6px; vertical-align: middle }
+.차례단추 button { width: 34px; height: 30px; border-radius: 8px; border: 1px solid var(--선); background: var(--카드); color: var(--보조); font-size: 14px; padding: 0 }
+.차례단추 button:disabled { opacity: .3 }
+.줄 .차례단추 { position: absolute; right: 0; top: 10px; margin: 0 }
+.줄.차례있음 { position: relative; padding-right: 82px }
+.정렬모드 h2 { display: flex; align-items: center; flex-wrap: wrap }
+.정렬안내 { font-size: 14px; color: var(--보조); background: var(--강조연); border-radius: 10px; padding: 8px 12px; margin-bottom: 8px }
 .고정힌트 { font-size: 15px; color: var(--보조); background: var(--강조연); border-radius: 10px; padding: 10px 12px; margin-top: 6px; line-height: 1.5; }
 .단추 { height: 48px; padding: 0 18px; border-radius: 12px; border: 1px solid var(--강조); background: var(--강조); color: #fff; font-size: 16px; }
 .단추.테 { background: var(--카드); color: var(--강조); }
@@ -356,6 +364,23 @@ a { color: var(--강조); }
     return '<div class="줄" data-가="할일" data-초점="' + esc(x.id) + '" data-할일열기="' + esc(x.id) + '"><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄 || '') + (덧있나 && x.덧 ? ' · ' + esc(x.덧) : '') + '</div><div class="때">' + (x.기한 ? esc(x.기한) + ' 까지 · ' : '') + (며 ? 며 + ' · ' : '') + 때글(x.시각) + '</div></div>';
   }
   function 신호(급, 말) { return '<span class="신호 ' + 급 + '">' + esc(말) + '</span>'; }
+  // ── 차례(순서) — 사람마다. 워커가 준 자료.순서 { 할일:[id…], 홈:[카드키…] } ──
+  var 홈정렬모드 = false;
+  function 순서목록(무엇) { return ((자료 && 자료.순서) || {})[무엇] || []; }
+  function 순서정렬(목록, 무엇, 키뽑기) {
+    var 차례 = 순서목록(무엇); if (!차례.length) return 목록;
+    var 위치 = {}; 차례.forEach(function (k, i) { 위치[k] = i; });
+    return 목록.slice().sort(function (a, b) { var ia = 위치[키뽑기(a)], ib = 위치[키뽑기(b)]; if (ia === undefined && ib === undefined) return 0; if (ia === undefined) return 1; if (ib === undefined) return -1; return ia - ib; });
+  }
+  function 차례단추(무엇, 키, 첫, 끝) { return '<span class="차례단추"><button data-차례="' + esc(무엇) + '" data-키="' + esc(키) + '" data-방향="-1" title="위로"' + (첫 ? ' disabled' : '') + '>▲</button><button data-차례="' + esc(무엇) + '" data-키="' + esc(키) + '" data-방향="1" title="아래로"' + (끝 ? ' disabled' : '') + '>▼</button></span>'; }
+  function 차례저장(무엇, 목록) {
+    if (!자료) return; 자료.순서 = 자료.순서 || {}; 자료.순서[무엇] = 목록; 그리기();
+    보내기짐({ 종류: '순서', 무엇: 무엇, 목록: 목록 }).then(function (j) { if (!j || !j.됨) throw new Error(); }).catch(function () { 토스트('차례는 바꿨는데 저장은 잠시 뒤 다시 돼요.'); });
+  }
+  function 차례옮기기(무엇, 지금목록, 키, 방향) {
+    var i = 지금목록.indexOf(키); if (i < 0) return; var j = i + 방향; if (j < 0 || j >= 지금목록.length) return;
+    var 새 = 지금목록.slice(); 새.splice(i, 1); 새.splice(j, 0, 키); 차례저장(무엇, 새);
+  }
   // ── 늘 쓰는 것(고정) — 사람마다. 워커가 준 자료.고정(id 목록)을 본다 ──
   function 고정됐나(id) { return !!(자료 && (자료.고정 || []).indexOf(id) >= 0); }
   function 고정단추(id) { var 켬 = 고정됐나(id); return '<button class="고정단추' + (켬 ? ' 켬' : '') + '" data-고정="' + esc(id) + '" data-켬="' + (켬 ? '1' : '0') + '" title="' + (켬 ? '맨 위 “늘 쓰는 것”에서 내려요' : '맨 위 “늘 쓰는 것”에 두어요') + '">' + (켬 ? '고정됨' : '고정') + '</button>'; }
@@ -429,7 +454,17 @@ a { color: var(--강조); }
       h += '</section>';
     }
     if (안) h += '<section class="카드"><h2>안내 <button class="더" data-가="알림">전부 보기</button></h2><div class="줄" data-가="알림"><div class="제목">' + esc(안.제목) + '</div><div class="한줄">' + esc(안.글) + '</div><div class="때">' + 때글(안.시각) + '</div></div></section>';
-    return h;
+    // 카드마다 키를 붙여 저장된 차례로 늘어놓는다(2026-09-21 유니스). 키 = 카드 제목의 앞말
+    var 카드들 = (h.match(/<section[\s\S]*?<\/section>/g) || []).map(function (조각) {
+      var m = 조각.match(/<h2>([^<]*)/); var 제목 = (m ? m[1] : '').trim();
+      var 키 = 제목.indexOf('이번 달') === 0 ? '이번 달' : (제목.indexOf('원장님 쪽') === 0 || 제목.indexOf('최근 받은 것') === 0) ? '받은 것' : 제목.replace(/\s+\d+$/, '');
+      return { 키: 키, 제목: 제목, html: 조각 };
+    });
+    카드들 = 순서정렬(카드들, '홈', function (c) { return c.키; });
+    var 키들 = 카드들.map(function (c) { return c.키; });
+    var 머리 = '<div style="text-align:right;margin:-4px 0 6px"><button class="더" data-홈정렬="1">' + (홈정렬모드 ? '순서 바꾸기 끝' : '순서 바꾸기') + '</button></div>' + (홈정렬모드 ? '<div class="정렬안내">▲▼ 로 카드 차례를 바꾸세요. 바꾼 차례는 이 폰에서 계속 그대로예요.</div>' : '');
+    if (!홈정렬모드) return 머리 + 카드들.map(function (c) { return c.html; }).join('');
+    return 머리 + 카드들.map(function (c, i) { return c.html.replace('<section class="', '<section class="정렬모드 ').replace(/<h2>([^<]*)/, function (_, t) { return '<h2>' + t + 차례단추('홈', c.키, i === 0, i === 카드들.length - 1); }); }).join('');
   }
   function 방줄() {
     var 나 = (자료 && 자료.누구) || 누구 || '';
@@ -572,9 +607,13 @@ a { color: var(--강조); }
         (끝났나 ? '<div style="margin-top:8px"><span class="칩 끝">끝냈어요</span></div>' : (x.대상 === '유니스' ? '' : '<div style="margin-top:10px"><button class="단추 테" data-끝="' + esc(x.id) + '">끝냈어요</button></div>')) + '</div>';
     }
     if (열린할일id) { var 하나 = 목록.filter(function (y) { return y.id === 열린할일id; })[0]; if (하나) return 할일상세(하나); if (자료) 열린할일id = ''; }
-    var 열림 = 목록.filter(function (x) { return x.단계 !== '완료' && !끝난할일(x.id); });
+    var 열림 = 순서정렬(목록.filter(function (x) { return x.단계 !== '완료' && !끝난할일(x.id); }), '할일', function (x) { return x.id; });
     var 끝 = 목록.filter(function (x) { return x.단계 === '완료' || 끝난할일(x.id); });
     var h = '';
+    // 차례 단추 — 열린 것끼리 위·아래 (2026-09-21)
+    var 열림키 = 열림.map(function (x) { return x.id; });
+    var 원한줄 = 한줄;
+    한줄 = function (x, 끝났나) { var t = 원한줄(x, 끝났나); if (끝났나) return t; var i = 열림키.indexOf(x.id); return t.replace('class="줄 할일줄"', 'class="줄 할일줄 차례있음"').replace('<div class="제목">', 차례단추('할일', x.id, i === 0, i === 열림키.length - 1) + '<div class="제목">'); };
     if (대표인가()) {
       var 결정 = 열림.filter(function (x) { return x.대상 === '유니스'; }), 원장것 = 열림.filter(function (x) { return x.대상 !== '유니스'; });
       h += '<section class="카드"><h2>정하실 것 ' + 결정.length + '</h2>' + (결정.length ? 결정.map(function (x) { return 한줄(x, false); }).join('') : '<div class="빈">지금 정하실 것이 없어요.</div>') + '</section>';
@@ -849,6 +888,13 @@ a { color: var(--강조); }
       }).catch(function () { 결.disabled = false; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); });
       return;
     }
+    var 차 = e.target.closest('[data-차례]'); if (차) {
+      e.preventDefault(); e.stopPropagation();
+      var 무엇 = 차.getAttribute('data-차례'), 키 = 차.getAttribute('data-키'), 방향 = parseInt(차.getAttribute('data-방향'), 10);
+      var 지금 = Array.prototype.map.call(document.querySelectorAll('[data-차례="' + 무엇 + '"][data-방향="-1"]'), function (b) { return b.getAttribute('data-키'); });
+      차례옮기기(무엇, 지금, 키, 방향); return;
+    }
+    if (e.target.closest('[data-홈정렬]')) { 홈정렬모드 = !홈정렬모드; 그리기(); return; }
     var 고 = e.target.closest('[data-고정]'); if (고) {
       e.preventDefault(); e.stopPropagation();
       var gid = 고.getAttribute('data-고정'), 켤 = 고.getAttribute('data-켬') !== '1';
