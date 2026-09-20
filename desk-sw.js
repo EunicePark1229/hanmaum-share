@@ -1,7 +1,7 @@
 /* 한마음 데스크 — 서비스 워커 (2026-09-18 · 1단계: 껍데기만 캐시 · 2단계: 웹 푸시)
    껍데기(desk.html · 글씨체 · 아이콘)는 캐시해서 전파가 약해도 열리게 하고, 자료(뒷단·desk-org.json)는 늘 새로 받는다. */
-var 이름 = 'desk-v9';   // desk.html 을 고쳐 올릴 때마다 숫자를 올린다 — 안 올리면 폰은 옛 화면을 계속 연다(09-18)
-var 껍데기 = ['./desk.html', './desk.webmanifest', './desk-icon.svg', './undongjang.woff2'];
+var 이름 = 'desk-v10';   // desk.html 을 고쳐 올릴 때마다 숫자를 올린다 — 안 올리면 폰은 옛 화면을 계속 연다(09-18)
+var 껍데기 = ['./desk.html', './desk.webmanifest', './desk-icon.svg', './desk-192.png', './undongjang.woff2'];
 self.addEventListener('install', function (e) { e.waitUntil(caches.open(이름).then(function (c) { return c.addAll(껍데기); }).then(function () { return self.skipWaiting(); })); });
 self.addEventListener('activate', function (e) { e.waitUntil(caches.keys().then(function (ks) { return Promise.all(ks.filter(function (k) { return k !== 이름; }).map(function (k) { return caches.delete(k); })); }).then(function () { return self.clients.claim(); })); });
 self.addEventListener('fetch', function (e) {
@@ -24,7 +24,7 @@ self.addEventListener('push', function (e) {
   var d = {}; try { d = e.data ? e.data.json() : {}; } catch (x) { d = { 제목: '한마음 데스크', 글: e.data ? e.data.text() : '' }; }
   var 자료 = { 탭: d.탭 || '홈', k: d.k || '', 뒷단: d.뒷단 || '' };
   e.waitUntil(Promise.all([
-    self.registration.showNotification(d.제목 || '한마음 데스크', { body: d.글 || '새로 온 것이 있어요.', icon: './desk-icon.svg', badge: './desk-icon.svg', tag: 'desk', renotify: true, data: 자료 }),
+    self.registration.showNotification(d.제목 || '한마음 데스크', { body: d.글 || '새로 온 것이 있어요.', icon: './desk-192.png', badge: './desk-192.png', tag: 'desk', renotify: true, data: 자료 }),
     기록(자료, '푸시받음', (d.제목 || '') + ' · sw ' + 이름)
   ]));
 });
