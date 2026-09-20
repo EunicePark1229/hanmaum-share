@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="manifest" href="desk.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600&display=swap">
+<!-- 글씨체는 Paperlogy(같은 폴더 woff2) — 2026-09-20 유니스 「바꿔」. 구글 폰트 링크는 뗐다 -->
 <title>한마음 데스크</title>
 <!--
   한마음 데스크 — 원장님용 웹앱 (2026-09-18)
@@ -22,7 +22,7 @@
 @font-face { font-family: '운동장'; src: url('undongjang.woff2') format('woff2'); font-display: swap; }
 @font-face { font-family: 'Paperlogy'; src: url('paperlogy-4.woff2') format('woff2'); font-weight: 400; font-display: swap; }
 @font-face { font-family: 'Paperlogy'; src: url('paperlogy-7.woff2') format('woff2'); font-weight: 700; font-display: swap; }
-/* 글씨체 — 2026-09-18 유니스가 시안 다섯 중 IBM Plex Sans KR(장부 탭 것)을 골랐다. 전부 그것으로 */
+/* 글씨체 — 2026-09-18 IBM Plex Sans KR 을 골랐다가 2026-09-20 유니스 「바꿔」로 Paperlogy(본문 4 Regular · 굵게 7 Bold). 밴드 페이지·PPT·표와 한 글씨체 */
 /* 색감 시안 — 탭마다 강조색 하나(한 화면엔 하나). 홈 초록 · 대화 초록 · 할 일 보라 · 재고 파랑 · 장부 황토 */
 body[data-탭="할일"] { --강조: #6B4E9B; --강조연: #EFEAF6; }
 body[data-탭="재고"] { --강조: #1F5F8C; --강조연: #E6EFF6; }
@@ -33,7 +33,7 @@ body[data-탭="받은것"] { --강조: #5B6672; --강조연: #EEF0F2; }
   --강조: #1F6F5F; --강조연: #E6F1EE; --선: #E5E7EB; --좋음: #2E7D32; --살핌: #B26A00; --막힘: #C62828;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; background: var(--바탕); color: var(--글); font-family: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; font-size: 16px; line-height: 1.5; -webkit-text-size-adjust: 100%; }
+html, body { margin: 0; background: var(--바탕); color: var(--글); font-family: 'Paperlogy', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; font-size: 16px; line-height: 1.5; -webkit-text-size-adjust: 100%; }
 button, input, textarea { font: inherit; }
 .위 { position: sticky; top: 0; z-index: 5; background: var(--카드); border-bottom: 1px solid var(--선); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
 .위 h1 { margin: 0; font-size: 20px; font-weight: 400; }
@@ -323,7 +323,7 @@ a { color: var(--강조); }
     else h += '<div class="고정힌트">자주 여는 링크를 여기에 모아 둘 수 있어요. ' + (어디 === '홈' ? '「받은 것」에서' : '아래 목록에서') + ' <b>“고정”</b>을 누르면 맨 위 여기에 늘 보여요.' + (어디 === '홈' ? ' <button class="더" data-가="받은것">받은 것 열기</button>' : '') + '</div>';
     return h + '</section>';
   }
-  function 글씨체표() { return ''; }   // 글씨체는 IBM Plex Sans KR 로 정해짐(09-18) — 시안 표는 뗐다
+  function 글씨체표() { return ''; }   // 글씨체는 Paperlogy(09-20 유니스) — 시안 표는 뗐다
   function 장부항목() { var f = (자료 && 자료.피드.장부) || []; var id = 대표인가() ? 'l-대표' : 'l-원장'; return f.filter(function (x) { return x.id === id; })[0] || f[0]; }
   function 재고항목() { return ((자료 && 자료.피드.재고) || [])[0]; }
 
