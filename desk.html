@@ -128,6 +128,16 @@ details { margin: 10px 0; } details summary { cursor: pointer; color: var(--강�
 .줄.고정있음 { padding-right: 86px; }
 .늘쓰는것 { border: 2px solid var(--강조); }
 .늘쓰는것 h2 { color: var(--강조); }
+/* 일정(2026-09-20) — 예약은 진하게 · 기한은 보통 · 참고는 접어서 */
+.일정줄 { display: flex; gap: 12px; padding: 12px 0; border-top: 1px solid var(--선); align-items: flex-start; }
+.일정줄 .때칸 { flex: 0 0 64px; font-size: 15px; font-weight: 600; color: var(--글); line-height: 1.3; }
+.일정줄 .때칸 small { display: block; font-weight: normal; color: var(--흐림); font-size: 12px; }
+.일정줄 .몸 { flex: 1; min-width: 0; }
+.일정줄.예약 .제목 { color: var(--강조); }
+.일정줄.취소 .제목 { text-decoration: line-through; color: var(--흐림); }
+.일정줄.끝 { opacity: .55; }
+.날머리 { font-size: 15px; font-weight: 600; color: var(--보조); margin: 14px 0 2px; }
+.날머리.오늘 { color: var(--강조); }
 .고정힌트 { font-size: 15px; color: var(--보조); background: var(--강조연); border-radius: 10px; padding: 10px 12px; margin-top: 6px; line-height: 1.5; }
 .단추 { height: 48px; padding: 0 18px; border-radius: 12px; border: 1px solid var(--강조); background: var(--강조); color: #fff; font-size: 16px; }
 .단추.테 { background: var(--카드); color: var(--강조); }
@@ -298,9 +308,10 @@ a { color: var(--강조); }
     할일: '<svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>',
     재고: '<svg viewBox="0 0 24 24"><path d="M3 8l9-4 9 4v9l-9 4-9-4zM3 8l9 4 9-4M12 12v9"/></svg>',
     장부: '<svg viewBox="0 0 24 24"><path d="M5 3h14v18H5zM8 8h8M8 12h8M8 16h5"/></svg>',
-    받은것: '<svg viewBox="0 0 24 24"><path d="M4 7h16v13H4zM4 7l2-3h12l2 3M9 11h6"/></svg>'
+    받은것: '<svg viewBox="0 0 24 24"><path d="M4 7h16v13H4zM4 7l2-3h12l2 3M9 11h6"/></svg>',
+    일정: '<svg viewBox="0 0 24 24"><path d="M4 5h16v15H4zM4 10h16M8 3v4M16 3v4M8 14h3"/></svg>'
   };
-  var 탭이름 = { 홈: '홈', 대화: '대화', 할일: '할 일', 재고: '재고', 장부: '장부', 받은것: '받은 것' };
+  var 탭이름 = { 홈: '홈', 대화: '대화', 할일: '할 일', 재고: '재고', 장부: '장부', 받은것: '받은 것', 일정: '일정' };
   function 역할() { return (자료 && 자료.역할) || 저장.get('데스크역할') || '원장'; }
   function 대표인가() { var r = 역할(); return r === '대표' || r === '관리자'; }
   function 탭목록() { var t = 설정 && 설정.탭; if (t && !Array.isArray(t)) t = t[역할()] || t['원장']; return (Array.isArray(t) && t.length) ? t : ['홈', '대화', '할일', '재고', '장부']; }
@@ -360,6 +371,7 @@ a { color: var(--강조); }
       h += 내것.length ? 내것.slice(0, 3).map(function (x) { return 할일줄(x, false); }).join('') : '<div class="빈">하실 것이 없어요.</div>';
       h += '</section>';
     }
+    h += 일정카드();           // 오늘·내일 일정(2026-09-20)
     h += 늘쓰는것카드('홈');   // 늘 쓰는 것 — 첫 카드(정하실 것 · 새로 온 것)는 그대로 두고 그 다음(2026-09-19)
     if (장) {
       h += '<section class="카드"><h2>' + (대표인가() ? '이번 달 장부' : '이번 달 판매·매입') + ' <button class="더" data-가="장부">자세히</button></h2><div class="숫자셋">';
@@ -423,6 +435,43 @@ a { color: var(--강조); }
       var 파일 = (x.파일 || []).map(function (f) { return '<div>파일 · ' + esc(f.이름) + '</div>'; }).join('');
       return '<div class="말 우리" data-id="' + esc(x.id || '') + '">' + (x.받는이 ? '<div class="이름">우리 → ' + esc(x.받는이) + '</div>' : '') + (x.제목 ? '<div class="제목">' + esc(x.제목) + '</div>' : '') + esc(x.글) + 파일 + '<div class="때">' + 때글(x.시각) + '</div></div>';
     }).join('') + '</div>';
+  }
+  // ── 일정(2026-09-20 유니스 「캘린더 기능도 만들자」) — 예약(네이버 예약 메일) · 기한(기한대장) · 참고(메일 이력의 되풀이) ──
+  var 참고보기 = false;
+  function 일정목록() { return ((자료 && 자료.피드.일정) || []).slice().sort(function (a, b) { return a.시작 < b.시작 ? -1 : 1; }); }
+  function 날짜키(iso) { return (iso || '').slice(0, 10); }
+  function 날머리글(키) {
+    var 오늘 = 날짜키(지금iso()), 내일 = 날짜키(new Date(Date.now() + 86400000).toISOString().replace('Z', ''));
+    var d = new Date(키 + 'T00:00:00'); var 요일 = '일월화수목금토'[d.getDay()];
+    var 글 = (d.getMonth() + 1) + '월 ' + d.getDate() + '일 (' + 요일 + ')';
+    if (키 === 오늘) return '오늘 · ' + 글; if (키 === 내일) return '내일 · ' + 글; return 글;
+  }
+  function 일정줄(x) {
+    var 종일 = x.종일 || (x.시작 || '').slice(11, 16) === '00:00';
+    var 때 = 종일 ? '하루' : (x.시작 || '').slice(11, 16);
+    var 급 = x.갈래 === '예약' ? (x.상태 === '확정' ? '<span class="칩">예약 확정</span>' : x.상태 === '취소' ? '<span class="칩">취소</span>' : '<span class="칩">예약 · 확정 전</span>') : x.갈래 === '기한' ? '<span class="칩">기한</span>' : '<span class="칩">참고</span>';
+    return '<div class="일정줄 ' + esc(x.갈래) + (x.상태 === '취소' ? ' 취소' : '') + (x.상태 === '끝' ? ' 끝' : '') + '"><div class="때칸">' + esc(때) + (종일 ? '' : '<small>' + esc((x.끝 || '').slice(11, 16)) + '까지</small>') + '</div><div class="몸"><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄 || '') + '</div><div class="때">' + 급 + (x.출처 ? ' · ' + esc(x.출처) : '') + '</div></div></div>';
+  }
+  function 일정() {
+    var 전부 = 일정목록();
+    var 오늘 = 날짜키(지금iso());
+    var 보임 = 전부.filter(function (x) { return 참고보기 || x.갈래 !== '참고'; }).filter(function (x) { return 날짜키(x.시작) >= 오늘 || (x.갈래 === '예약' && 날짜키(x.시작) >= 날짜키(new Date(Date.now() - 7 * 86400000).toISOString())); });
+    var 참고수 = 전부.filter(function (x) { return x.갈래 === '참고' && 날짜키(x.시작) >= 오늘; }).length;
+    var h = '<section class="카드"><h2>일정 <button class="더" data-참고토글="1">' + (참고보기 ? '참고 숨기기' : '참고도 보기' + (참고수 ? ' (' + 참고수 + ')' : '')) + '</button></h2>';
+    h += '<div class="한줄" style="color:var(--보조);margin-bottom:6px">손님 예약은 네이버 예약 메일에서 저절로 · 기한은 기한대장에서 · 「참고」는 매달 비슷한 때 오는 명세서·안내예요.</div>';
+    if (!보임.length) h += '<div class="빈">앞으로 잡힌 일정이 없어요. 네이버 예약이 들어오면 여기에 바로 떠요.</div>';
+    var 키 = '';
+    보임.forEach(function (x) { var k = 날짜키(x.시작); if (k !== 키) { 키 = k; h += '<div class="날머리' + (k === 오늘 ? ' 오늘' : '') + '">' + esc(날머리글(k)) + '</div>'; } h += 일정줄(x); });
+    return h + '</section>';
+  }
+  function 일정카드() {
+    var 오늘 = 날짜키(지금iso()), 모레 = 날짜키(new Date(Date.now() + 2 * 86400000).toISOString());
+    var 것 = 일정목록().filter(function (x) { return x.갈래 !== '참고' && x.상태 !== '취소' && 날짜키(x.시작) >= 오늘 && 날짜키(x.시작) < 모레; });
+    var h = '<section class="카드"><h2>오늘·내일 일정 <button class="더" data-가="일정">전부 보기</button></h2>';
+    if (!것.length) return h + '<div class="빈">오늘·내일 잡힌 것이 없어요.</div></section>';
+    var 키 = '';
+    것.slice(0, 4).forEach(function (x) { var k = 날짜키(x.시작); if (k !== 키) { 키 = k; h += '<div class="날머리' + (k === 오늘 ? ' 오늘' : '') + '">' + esc(날머리글(k)) + '</div>'; } h += 일정줄(x); });
+    return h + '</section>';
   }
   function 할일() {
     var 목록 = ((자료 && 자료.피드.할일) || []).slice().reverse();
@@ -681,7 +730,7 @@ a { color: var(--강조); }
   }
   function 그리기() {
     var 본 = $('본문');
-    var 화면 = { 홈: 홈, 대화: 대화, 할일: 할일, 재고: 재고, 장부: 장부, 받은것: 받은것 };
+    var 화면 = { 홈: 홈, 대화: 대화, 할일: 할일, 재고: 재고, 장부: 장부, 받은것: 받은것, 일정: 일정 };
     if (!화면[탭]) 탭 = '홈';
     본.innerHTML = 화면[탭]();
     본.classList.toggle('홈격자', 탭 === '홈');
@@ -693,6 +742,7 @@ a { color: var(--강조); }
     document.body.classList.toggle('대화중', 탭 === '대화');
     배지그리기();
     if (탭 === '대화') { window.scrollTo(0, document.body.scrollHeight); 소켓열기(); 읽음보내기(); } else 소켓닫기();
+    역사넣기();
   }
 
   // ── 누르기 ──
@@ -723,13 +773,14 @@ a { color: var(--강조); }
       }).catch(function () { 고.disabled = false; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); });
       return;
     }
-    if (e.target.closest('[data-할일닫기]')) { 열린할일id = ''; 그리기(); return; }
+    if (e.target.closest('[data-할일닫기]')) { if (!닫고돌아가기()) { 열린할일id = ''; 그리기(); } return; }
     var 할 = e.target.closest('[data-할일]'); if (할 && !e.target.closest('button')) { var hx = ((자료 && 자료.피드.할일) || []).filter(function (y) { return y.id === 할.getAttribute('data-할일'); })[0]; if (hx && (hx.배경 || hx.할일전문 || hx.대상 === '유니스')) { 열린할일id = hx.id; 탭 = '할일'; 그리기(); window.scrollTo(0, 0); } return; }
     var 블 = e.target.closest('[data-블로그],[data-문자]'); if (블) { 열린블로그 = 블.getAttribute('data-블로그') || 블.getAttribute('data-문자'); 탭 = '받은것'; 그리기(); window.scrollTo(0, 0); return; }
-    if (e.target.closest('[data-블로그닫기]')) { 열린블로그 = ''; 그리기(); return; }
+    if (e.target.closest('[data-블로그닫기]')) { if (!닫고돌아가기()) { 열린블로그 = ''; 그리기(); } return; }
     var 복 = e.target.closest('[data-복사]'); if (복) { var id = 복.getAttribute('data-복사'), x = ((자료 && 자료.피드.받은것) || []).filter(function (y) { return y.id === id; })[0]; if (x) { var t = 복사용글(x); (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { 토스트('본문을 복사했어요. 블로그 글쓰기에 붙여 넣으세요.'); }, function () { 토스트('복사가 안 돼요. 글을 길게 눌러 복사해 주세요.'); }); } return; }
     var 단 = e.target.closest('[data-단계]'); if (단) { var 단계 = 단.getAttribute('data-단계'), 사유 = ''; if (단계 === '보류') { 사유 = window.prompt('안 쓰시는 이유를 한 줄 적어 주시면 다음 글에 반영해요(안 적어도 돼요)', '') || ''; } 단.disabled = true; 보내기짐({ 종류: '단계', id: 단.getAttribute('data-id'), 단계: 단계, 사유: 사유 }).then(function (j) { if (!j || !j.됨) throw new Error(); 토스트(단계 === '썼어요' ? '고마워요. 다음 글을 채워 둘게요.' : 단계 === '보류' ? '적어 두었어요.' : '다시 초안으로 두었어요.'); 받아오기(); }).catch(function () { 단.disabled = false; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); }); return; }
     var 더 = e.target.closest('[data-가]'); if (더) { if (더.getAttribute('data-블로그열기')) 열린블로그 = 더.getAttribute('data-블로그열기'); if (더.getAttribute('data-할일열기')) 열린할일id = 더.getAttribute('data-할일열기'); 가기(더.getAttribute('data-가'), 더.getAttribute('data-초점'), 더.getAttribute('data-펼침열기'), 더.getAttribute('data-스크롤')); return; }
+    if (e.target.closest('[data-참고토글]')) { 참고보기 = !참고보기; 그리기(); return; }
     var 방단 = e.target.closest('[data-방]'); if (방단) { 방 = 방단.getAttribute('data-방'); 저장.set('데스크방', 방); 소켓닫기(); 그리기(); 받아오기(); return; }
     var g = e.target.closest('[data-갈래]'); if (g) { 갈래 = g.getAttribute('data-갈래'); 그리기(); return; }
     var 끝 = e.target.closest('[data-끝]'); if (끝) { 끝내기(끝.getAttribute('data-끝'), 끝); return; }
@@ -770,6 +821,7 @@ a { color: var(--강조); }
     $('알림목록').innerHTML = 목.length ? 목.map(function (x) { return '<div class="줄" data-탭가="' + x.탭 + '" data-초점="' + esc(x.id || '') + '">' + (새것인가(x.시각) ? '<span class="점" title="새"></span>' : '') + '<span class="칩 끝">' + esc(x.종류) + '</span>' + esc(x.제목) + '<div class="때">' + 때글(x.시각) + '</div></div>'; }).join('') : '<div class="빈">아직 온 것이 없어요. 답·할 일·안내가 오면 여기에 남아요.</div>';
     $('알림시트').classList.add('보임');
     푸시상태그리기();
+    역사넣기();
     var 지금 = new Date(); 지금.setMilliseconds(0);
     var iso = 지금.getFullYear() + '-' + ('0' + (지금.getMonth() + 1)).slice(-2) + '-' + ('0' + 지금.getDate()).slice(-2) + 'T' + ('0' + 지금.getHours()).slice(-2) + ':' + ('0' + 지금.getMinutes()).slice(-2) + ':' + ('0' + 지금.getSeconds()).slice(-2);
     저장.set('읽은때', iso); if (자료) 자료.읽은때 = iso;
@@ -810,9 +862,23 @@ a { color: var(--강조); }
     });
   }
   document.addEventListener('click', function (e) { if (e.target && e.target.id === '푸시켜기') 푸시켜기(); });
-  $('알림닫기').addEventListener('click', function () { $('알림시트').classList.remove('보임'); });
+  $('알림닫기').addEventListener('click', function () { if (!닫고돌아가기()) $('알림시트').classList.remove('보임'); });
   $('알림시트').addEventListener('click', function (e) { if (e.target === $('알림시트')) $('알림시트').classList.remove('보임'); var 줄 = e.target.closest('[data-탭가]'); if (줄) { $('알림시트').classList.remove('보임'); 가기(줄.getAttribute('data-탭가'), 줄.getAttribute('data-초점')); } });
   // 홈·알림의 항목을 누르면 그 탭의 그 자리로 — 펼칠 것은 펼치고, 그 줄로 내려가 잠깐 강조(2026-09-18 유니스)
+  // ── 뒤로 가기(2026-09-20 유니스 「항목 열고 코멘트 뒤 뒤로 가기를 누르면 화면이 아예 꺼져」) ──
+  //    홈 화면 앱은 브라우저 뒤로 가기가 곧 앱 닫기다. 상세·알림 시트·탭을 열 때 역사에 한 칸 넣어 두면 뒤로 가기가 그 칸을 빼고 목록으로 돌아온다.
+  var 역사적용중 = false;
+  function 역사상태() { return { 탭: 탭, 할일: 열린할일id || '', 블로그: 열린블로그 || '', 알림: $('알림시트').classList.contains('보임') }; }
+  function 역사넣기() { if (역사적용중) return; try { var 지금 = 역사상태(), 전 = history.state || {}; if (전.탭 === 지금.탭 && (전.할일 || '') === 지금.할일 && (전.블로그 || '') === 지금.블로그 && !!전.알림 === 지금.알림) return; history.pushState(지금, ''); } catch (e) {} }
+  window.addEventListener('popstate', function (e) {
+    var st = e.state || { 탭: '홈', 할일: '', 블로그: '', 알림: false };
+    역사적용중 = true;
+    try { 열린할일id = st.할일 || ''; 열린블로그 = st.블로그 || ''; 탭 = st.탭 || '홈'; if (!st.알림) $('알림시트').classList.remove('보임'); 그리기(); if (st.알림) 알림열기(); }
+    finally { 역사적용중 = false; }
+  });
+  function 닫고돌아가기() { var st = history.state; if (st && (st.할일 || st.블로그 || st.알림)) { history.back(); return true; } return false; }
+  try { history.replaceState(역사상태(), ''); } catch (e) {}
+
   function 가기(어디, 초점, 펼칠것, 구역) {
     if (어디 === '알림') { 알림열기(); return; }
     if (펼칠것) 펼침[펼칠것] = true;
