@@ -181,6 +181,25 @@ body.끌기중 * { cursor: grabbing !important }
 .정렬단추 { height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--선); background: var(--카드); color: var(--보조); font-size: 14px }
 .정렬단추.켬 { background: var(--강조연); border-color: var(--강조연); color: var(--강조) }
 .정렬안내 { font-size: 14px; color: var(--보조); background: var(--강조연); border-radius: 10px; padding: 8px 12px; margin-bottom: 8px }
+/* 바로가기(2026-09-21 유니스 「원장님은 블로그 자주 들어가실 테니 바로가기」 · 원장님 09-16 「다섯 곳을 한 번에」) — 네이버웍스 홈의 앱 바로가기 격자 결 */
+.바로가기줄 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px 6px; }
+.바로 { display: grid; justify-items: center; gap: 6px; padding: 10px 4px; border-radius: 14px; color: var(--글); text-decoration: none; font-size: 13px; line-height: 1.2; text-align: center; word-break: keep-all; }
+.바로 .바로아이콘 { width: 46px; height: 46px; border-radius: 14px; background: var(--강조연); color: var(--강조); display: grid; place-items: center; }
+.바로 .바로아이콘 svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.바로 .바로아이콘 b { font-size: 20px; font-weight: 700; }
+@media (hover: hover) { .바로:hover { background: var(--강조연); } }
+/* 메일(2026-09-21 유니스 「이메일 확인 기능도 하나로」) — 봐야 할 것만 홈에, 전부는 「메일」 화면에서 */
+.메일줄 .보낸이 { font-weight: 600; color: var(--글); }
+.메일줄 .제목 { font-weight: 400; margin-top: 2px; }
+.메일줄.접힘 { opacity: .62; }
+.메일줄 .단추줄 { margin: 10px 0 0; }
+.메일줄 .단추줄 .단추 { height: 40px; font-size: 15px; }
+a.단추 { display: inline-flex; align-items: center; text-decoration: none; color: #fff; }
+/* 소식 다섯 꼴(2026-09-21) — 한 글을 곳마다 꼴로 · 칩으로 고르고 「본문 복사」 */
+.꼴줄 { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 0 10px; }
+.꼴줄 button { height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--선); background: var(--카드); color: var(--보조); font-size: 14px; }
+.꼴줄 button.켬 { background: var(--강조연); border-color: var(--강조연); color: var(--강조); }
+.꼴안내 { font-size: 14px; color: var(--보조); margin: -4px 0 10px; }
 /* 다른 사람 화면으로 보기(2026-09-21 유니스 「내 화면에서 원장님 화면으로 바로 넘어갈 수 있는 옵션」) — 머리의 눈 단추로 들어가고, 보는 동안 띠가 늘 떠 있고, 쓰기는 막힌다 */
 .눈 { position: relative; height: 40px; padding: 0 12px 0 8px; border-radius: 999px; border: 1px solid var(--선); background: var(--카드); color: var(--보조); font-size: 14px; display: inline-flex; align-items: center; gap: 6px; margin-right: 4px }
 .눈 svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8 }
@@ -309,7 +328,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-21e';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-21f';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -399,6 +418,7 @@ a { color: var(--강조); }
     (자료.피드.답 || []).forEach(function (x) { 목록.push({ 종류: '답', id: x.id, 시각: x.시각, 제목: x.제목, 탭: '대화' }); });
     (자료.피드.할일 || []).forEach(function (x) { if (x.단계 !== '완료') 목록.push({ 종류: '할 일', id: x.id, 시각: x.시각, 제목: x.제목, 탭: '할일' }); });
     (자료.피드.안내 || []).forEach(function (x) { 목록.push({ 종류: '안내', id: x.id, 시각: x.시각, 제목: x.제목, 탭: '홈' }); });
+    봐야할메일().forEach(function (x) { 목록.push({ 종류: '메일', id: x.id, 시각: x.시각, 제목: x.보낸이 + ' · ' + x.제목, 탭: '메일' }); });
     return 목록.filter(function (x) { return 새것인가(x.시각); }).sort(function (a, b) { return a.시각 < b.시각 ? 1 : -1; });
   }
   function 배지그리기() { var n = 안읽은것().length; var b = $('배지'); b.textContent = n ? String(n) : ''; b.setAttribute('data-n', n); }
@@ -417,7 +437,7 @@ a { color: var(--강조); }
     받은것: '<svg viewBox="0 0 24 24"><path d="M4 7h16v13H4zM4 7l2-3h12l2 3M9 11h6"/></svg>',
     일정: '<svg viewBox="0 0 24 24"><path d="M4 5h16v15H4zM4 10h16M8 3v4M16 3v4M8 14h3"/></svg>'
   };
-  var 탭이름 = { 홈: '홈', 대화: '대화', 할일: '할 일', 재고: '재고', 장부: '장부', 받은것: '받은 것', 일정: '일정' };
+  var 탭이름 = { 홈: '홈', 대화: '대화', 할일: '할 일', 재고: '재고', 장부: '장부', 받은것: '받은 것', 일정: '일정', 메일: '메일' };
   function 역할() { return (자료 && 자료.역할) || 저장.get('데스크역할') || '원장'; }
   function 대표인가() { var r = 역할(); return r === '대표' || r === '관리자'; }
   function 탭목록() { var t = 설정 && 설정.탭; if (t && !Array.isArray(t)) t = t[역할()] || t['원장'] || t[Object.keys(t)[0]]; return (Array.isArray(t) && t.length) ? t : ['홈', '대화', '할일', '재고', '장부']; }
@@ -584,7 +604,9 @@ a { color: var(--강조); }
       h += 내것.length ? 내것.slice(0, 3).map(function (x) { return 할일줄(x, false); }).join('') : '<div class="빈">하실 것이 없어요.</div>';
       h += '</section>';
     }
+    h += 메일카드();           // 메일 — 봐야 할 것(2026-09-21 · 피드에 메일이 있는 조직만)
     h += 일정카드();           // 오늘·내일 일정(2026-09-20)
+    h += 바로가기카드();       // 바로가기(2026-09-21 · 설정에 있는 조직만)
     h += 늘쓰는것카드('홈');   // 늘 쓰는 것 — 첫 카드(정하실 것 · 새로 온 것)는 그대로 두고 그 다음(2026-09-19)
     if (장) {
       h += '<section class="카드"><h2>' + (대표인가() ? '이번 달 장부' : '이번 달 판매·매입') + ' <button class="더" data-가="장부">자세히</button></h2><div class="숫자셋">';
@@ -618,7 +640,7 @@ a { color: var(--강조); }
     // 카드마다 키를 붙여 저장된 차례로 늘어놓는다(2026-09-21 유니스). 키 = 카드 제목의 앞말
     var 카드들 = (h.match(/<section[\s\S]*?<\/section>/g) || []).map(function (조각) {
       var m = 조각.match(/<h2>([^<]*)/); var 제목 = (m ? m[1] : '').trim();
-      var 키 = 제목.indexOf('이번 달') === 0 ? '이번 달' : (제목.indexOf(말('받은것카드')) === 0 || 제목.indexOf('최근 받은 것') === 0) ? '받은 것' : 제목.replace(/\s+\d+$/, '');
+      var 키 = 제목.indexOf('이번 달') === 0 ? '이번 달' : (제목.indexOf(말('받은것카드')) === 0 || 제목.indexOf('최근 받은 것') === 0) ? '받은 것' : 제목.indexOf('메일') === 0 ? '메일' : 제목.replace(/\s+\d+$/, '');
       return { 키: 키, 제목: 제목, html: 조각 };
     });
     카드들 = 순서정렬(카드들, '홈', function (c) { return c.키; });
@@ -754,6 +776,76 @@ a { color: var(--강조); }
     else h += 일정목록보기(전부, 오늘);
     h += '<div class="한줄" style="color:var(--흐림);margin-top:12px;font-size:13px">손님 예약은 네이버 예약 메일에서 저절로 · 기한은 기한대장에서 · 「참고」는 매달 비슷한 때 오는 명세서·안내예요.</div>';
     return h + '</section>';
+  }
+  // ── 바로가기(2026-09-21) — desk-org.json 「바로가기」 [{이름, 주소, 아이콘, 한줄, 대상}] · 대상이 없으면 모두. 「이 밖에」는 대화로 적으면 우리가 넣는다 ──
+  var 바로아이콘 = {
+    글: '<svg viewBox="0 0 24 24"><path d="M4 20h4l10-10-4-4L4 16zM13 7l4 4"/></svg>',
+    장소: '<svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>',
+    이웃: '<svg viewBox="0 0 24 24"><path d="M4 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="10" cy="8" r="3.5"/><path d="M17 11a3 3 0 0 0 0-6M21 21v-2a4 4 0 0 0-3-3.9"/></svg>',
+    말풍선: '<svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>',
+    지도: '<svg viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2zM9 4v14M15 6v14"/></svg>',
+    메일: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>',
+    달력: '<svg viewBox="0 0 24 24"><path d="M4 5h16v15H4zM4 10h16M8 3v4M16 3v4"/></svg>',
+    링크: '<svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>'
+  };
+  function 내것인가(x) { var 나 = (자료 && 자료.누구) || 누구 || ''; return !x.대상 || x.대상 === '모두' || x.대상 === 나 || x.대상 === 역할(); }
+  function 바로가기카드() {
+    var 들 = ((설정 && 설정.바로가기) || []).filter(내것인가);
+    if (!들.length) return '';
+    var h = '<section class="카드 바로가기카드"><h2>바로가기</h2><div class="바로가기줄">' + 들.map(function (x) {
+      var 아 = 바로아이콘[x.아이콘] || (x.아이콘 && x.아이콘.length <= 2 ? '<b>' + esc(x.아이콘) + '</b>' : 바로아이콘.링크);
+      return '<a class="바로" href="' + esc(x.주소) + '" target="_blank" rel="noopener" title="' + esc(x.한줄 || '') + '" data-바로="' + esc(x.이름) + '"><span class="바로아이콘">' + 아 + '</span><span>' + esc(x.이름) + '</span></a>';
+    }).join('') + '</div>';
+    h += '<div class="고정힌트" style="margin-top:12px">자주 여시는 곳이 더 있으면 「대화」에 적어 주세요 — 여기에 넣어 드려요.</div>';
+    return h + '</section>';
+  }
+  // ── 메일(2026-09-21) — 피드 「메일」(데스크_메일.py · 10분마다). 봐야함 = 사람이 봐야 할 것 · 처리했어요 = 끝냈어요(체크 csv) ──
+  function 메일목록() { return ((자료 && 자료.피드.메일) || []).slice().sort(function (a, b) { return a.시각 < b.시각 ? 1 : -1; }); }
+  function 봐야할메일() { return 메일목록().filter(function (x) { return x.봐야함 && !끝난할일(x.id); }); }
+  var 메일보기 = '봐야';
+  function 메일줄(x, 자세히) {
+    var 끝 = 끝난할일(x.id);
+    var 칩 = 끝 ? '<span class="칩 끝">처리함</span>' : x.갈래 === '장부' ? '<span class="칩 끝">장부로</span>' : x.갈래 === '자동' ? '<span class="칩 끝">자동</span>' : '<span class="칩">' + esc(x.갈래) + '</span>';
+    var h = '<div class="줄 메일줄' + ((끝 || !x.봐야함) ? ' 접힘' : '') + '" data-id="' + esc(x.id) + '"><div class="보낸이">' + esc(x.보낸이) + '</div><div class="제목">' + esc(x.제목) + '</div>';
+    if (자세히 && x.한줄) h += '<div class="한줄">' + esc(x.한줄) + '</div>';
+    h += '<div class="때">' + 칩 + ' · ' + 때글(x.시각) + '</div>';
+    if (자세히) h += '<div class="단추줄"><a class="단추" href="' + esc(x.열기) + '" target="_blank" rel="noopener">지메일에서 열기</a>' + (x.봐야함 && !끝 ? '<button class="단추 테" data-끝="' + esc(x.id) + '" data-끝글="처리한 것으로 적었어요.">처리했어요</button>' : '') + '</div>';
+    return h + '</div>';
+  }
+  function 메일카드() {
+    if (!설정 || !(자료 && 자료.피드.메일 && 자료.피드.메일.length)) return '';
+    var 봐 = 봐야할메일();
+    var h = '<section class="카드"><h2>메일 — 봐야 할 것 ' + 봐.length + ' <button class="더" data-가="메일">전부 보기</button></h2>';
+    h += 봐.length ? 봐.slice(0, 3).map(function (x) { return '<div data-가="메일" data-초점="' + esc(x.id) + '">' + 메일줄(x, false) + '</div>'; }).join('') : '<div class="빈">봐야 할 메일이 없어요. 광고·자동 메일은 「전부 보기」에 접혀 있어요.</div>';
+    return h + '</section>';
+  }
+  function 메일화면() {
+    var 전부 = 메일목록();
+    if (!전부.length) return '<div class="카드"><div class="빈">아직 읽어 온 메일이 없어요. 10분마다 받은편지함을 봐서 여기에 채워요.</div></div>';
+    var 봐 = 봐야할메일(), 나머지 = 전부.filter(function (x) { return !(x.봐야함 && !끝난할일(x.id)); });
+    var h = '<div class="갈래줄"><button class="' + (메일보기 === '봐야' ? '켬' : '') + '" data-메일보기="봐야">봐야 할 것 ' + 봐.length + '</button><button class="' + (메일보기 === '전부' ? '켬' : '') + '" data-메일보기="전부">전부 ' + 전부.length + '</button></div>';
+    if (메일보기 === '봐야') {
+      h += '<section class="카드"><h2>봐야 할 것 ' + 봐.length + '</h2><div class="한줄" style="color:var(--보조);margin-bottom:8px">사람이 보낸 것·거래처·공공기관·플랫폼이 물은 것만 골랐어요. 「지메일에서 열기」로 답하고, 끝나면 「처리했어요」.</div>' + (봐.length ? 봐.map(function (x) { return 메일줄(x, true); }).join('') : '<div class="빈">봐야 할 메일이 없어요.</div>') + '</section>';
+    } else {
+      h += '<section class="카드"><h2>지난 2주 메일 ' + 전부.length + '</h2><div class="한줄" style="color:var(--보조);margin-bottom:8px">장부로 간 것(세금계산서·명세)과 자동 메일은 흐리게 보여요.</div>' + 전부.map(function (x) { return 메일줄(x, true); }).join('') + '</section>';
+    }
+    return h;
+  }
+  // ── 소식 다섯 꼴(2026-09-21 · 원장님 09-16 「곳마다 맞는 꼴로」 약속) — desk-org.json 「소식꼴」 {당근:{꼬리}, 블로그:{머리,꼬리,안내}, …} ──
+  var 소식꼴선택 = '';
+  function 소식꼴들() { var k = (설정 && 설정.소식꼴) || {}; return Object.keys(k); }
+  function 꼴본문(x, 꼴) {
+    var 설 = (설정 && 설정.소식꼴) || {};
+    var 몸 = 복사용글(x);
+    if (!꼴 || 꼴 === x.갈래 || !설[꼴]) return 몸;
+    var 원꼬리 = ((설[x.갈래] || {}).꼬리 || '').trim();
+    if (원꼬리 && 몸.slice(-원꼬리.length) === 원꼬리) 몸 = 몸.slice(0, -원꼬리.length).trim();   // 원래 꼴의 꼬리(상호·전화)를 떼고 그 곳의 꼬리를 붙인다
+    return ((설[꼴].머리 || '') + 몸 + (설[꼴].꼬리 || '')).trim();
+  }
+  function 소식꼴줄(x) {
+    var 꼴 = 소식꼴들(); if (x.갈래 !== '당근' || 꼴.length < 2) return '';
+    var 지금 = 소식꼴선택 || x.갈래, 설 = 설정.소식꼴;
+    return '<div class="한줄" style="margin:8px 0 4px;color:var(--보조)">어디에 올리시나요? 그 곳에 맞는 꼴로 바꿔서 복사돼요.</div><div class="꼴줄">' + 꼴.map(function (k) { return '<button class="' + (k === 지금 ? '켬' : '') + '" data-소식꼴="' + esc(k) + '">' + esc((설[k] && 설[k].이름) || k) + '</button>'; }).join('') + '</div>' + (설[지금] && 설[지금].안내 ? '<div class="꼴안내">' + esc(설[지금].안내) + '</div>' : '');
   }
   function 일정카드() {
     var 오늘 = 날짜키(지금iso()), 모레 = 날짜키(new Date(Date.now() + 2 * 86400000).toISOString());
@@ -983,8 +1075,10 @@ a { color: var(--강조); }
     var h = '<section class="카드 블로그상세"><button class="더" data-블로그닫기="1">‹ 목록으로</button><h2 style="margin-top:8px">' + esc(x.제목) + '</h2>';
     if ((x.제목후보 || []).length > 1) h += '<div class="한줄" style="margin-bottom:8px">제목 후보 · ' + x.제목후보.slice(1).map(esc).join(' / ') + '</div>';
     h += '<div style="margin:8px 0 12px">' + (x.단계 === '썼어요' ? 신호('좋음', '썼어요' + (x.단계때 ? ' · ' + 때글(x.단계때) : '')) : x.단계 === '보류' ? 신호('모름', '안 쓸래요' + (x.사유 ? ' · ' + esc(x.사유) : '')) : 신호('살핌', '초안')) + '</div>';
+    h += 소식꼴줄(x);
     h += '<div class="단추줄"><button class="단추" data-복사="' + esc(x.id) + '">본문 복사</button>' + (x.단계 !== '썼어요' ? '<button class="단추 테" data-단계="썼어요" data-id="' + esc(x.id) + '">썼어요</button>' : '') + (x.단계 === '초안' ? '<button class="단추 테" data-단계="보류" data-id="' + esc(x.id) + '">안 쓸래요</button>' : '') + (x.단계 !== '초안' ? '<button class="단추 테" data-단계="초안" data-id="' + esc(x.id) + '">다시 초안으로</button>' : '') + '</div>';
-    h += '<div class="본문글">' + 마크다운(x.본문) + '</div>';
+    var 꼴 = (x.갈래 === '당근' && 소식꼴선택 && 소식꼴선택 !== x.갈래) ? 소식꼴선택 : '';
+    h += '<div class="본문글">' + (꼴 ? '<pre style="white-space:pre-wrap;font:inherit;margin:0">' + esc(꼴본문(x, 꼴)) + '</pre>' : 마크다운(x.본문)) + '</div>';
     if ((x.태그 || []).length) h += '<div class="한줄" style="margin-top:12px">' + x.태그.map(esc).join(' ') + '</div>';
     if (x.그림) h += '<h3>새로 만드실 그림(견본 + 프롬프트)</h3><div class="본문글"><pre>' + esc(x.그림) + '</pre></div>';
     if (x.확인) h += '<h3>확인해 주실 것</h3><div class="본문글">' + 마크다운(x.확인) + '</div>';
@@ -1033,7 +1127,7 @@ a { color: var(--강조); }
   }
   function 그리기() {
     var 본 = $('본문');
-    var 화면 = { 홈: 홈, 대화: 대화, 할일: 할일, 재고: 재고, 장부: 장부, 받은것: 받은것, 일정: 일정 };
+    var 화면 = { 홈: 홈, 대화: 대화, 할일: 할일, 재고: 재고, 장부: 장부, 받은것: 받은것, 일정: 일정, 메일: 메일화면 };
     if (!화면[탭]) 탭 = '홈';
     본.innerHTML = 화면[탭]();
     본.classList.toggle('홈격자', 탭 === '홈');
@@ -1091,9 +1185,11 @@ a { color: var(--강조); }
     }
     if (e.target.closest('[data-할일닫기]')) { if (!닫고돌아가기()) { 열린할일id = ''; 그리기(); } return; }
     var 할 = e.target.closest('[data-할일]'); if (할 && !e.target.closest('button')) { var hx = ((자료 && 자료.피드.할일) || []).filter(function (y) { return y.id === 할.getAttribute('data-할일'); })[0]; if (hx && (hx.배경 || hx.할일전문 || hx.대상 === '유니스')) { 열린할일id = hx.id; 탭 = '할일'; 그리기(); window.scrollTo(0, 0); } return; }
-    var 블 = e.target.closest('[data-블로그],[data-문자]'); if (블) { 열린블로그 = 블.getAttribute('data-블로그') || 블.getAttribute('data-문자'); 탭 = '받은것'; 그리기(); window.scrollTo(0, 0); return; }
+    var 블 = e.target.closest('[data-블로그],[data-문자]'); if (블) { 열린블로그 = 블.getAttribute('data-블로그') || 블.getAttribute('data-문자'); 소식꼴선택 = ''; 탭 = '받은것'; 그리기(); window.scrollTo(0, 0); return; }
     if (e.target.closest('[data-블로그닫기]')) { if (!닫고돌아가기()) { 열린블로그 = ''; 그리기(); } return; }
-    var 복 = e.target.closest('[data-복사]'); if (복) { var id = 복.getAttribute('data-복사'), x = ((자료 && 자료.피드.받은것) || []).filter(function (y) { return y.id === id; })[0]; if (x) { var t = 복사용글(x); (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { 토스트(x.갈래 === '당근' ? '본문을 복사했어요. 당근 「소식」 글쓰기에 붙여 넣으세요.' : '본문을 복사했어요. 블로그 글쓰기에 붙여 넣으세요.'); }, function () { 토스트('복사가 안 돼요. 글을 길게 눌러 복사해 주세요.'); }); } return; }
+    var 복 = e.target.closest('[data-복사]'); if (복) { var id = 복.getAttribute('data-복사'), x = ((자료 && 자료.피드.받은것) || []).filter(function (y) { return y.id === id; })[0]; if (x) { var 꼴k = (x.갈래 === '당근' && 소식꼴선택) ? 소식꼴선택 : ''; var t = 꼴k ? 꼴본문(x, 꼴k) : 복사용글(x); var 안 = 꼴k && 설정.소식꼴 && 설정.소식꼴[꼴k] && 설정.소식꼴[꼴k].안내; (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { 토스트('본문을 복사했어요. ' + (안 || (x.갈래 === '당근' ? '당근 「소식」 글쓰기에 붙여 넣으세요.' : '블로그 글쓰기에 붙여 넣으세요.'))); }, function () { 토스트('복사가 안 돼요. 글을 길게 눌러 복사해 주세요.'); }); } return; }
+    var 꼴단 = e.target.closest('[data-소식꼴]'); if (꼴단) { 소식꼴선택 = 꼴단.getAttribute('data-소식꼴'); 그리기(); return; }
+    var 메보 = e.target.closest('[data-메일보기]'); if (메보) { 메일보기 = 메보.getAttribute('data-메일보기'); 그리기(); return; }
     var 단 = e.target.closest('[data-단계]'); if (단) { var 단계 = 단.getAttribute('data-단계'), 사유 = ''; if (단계 === '보류') { 사유 = window.prompt('안 쓰시는 이유를 한 줄 적어 주시면 다음 글에 반영해요(안 적어도 돼요)', '') || ''; } 단.disabled = true; 보내기짐({ 종류: '단계', id: 단.getAttribute('data-id'), 단계: 단계, 사유: 사유 }).then(function (j) { if (!j || !j.됨) throw new Error(); 토스트(단계 === '썼어요' ? '고마워요. 다음 글을 채워 둘게요.' : 단계 === '보류' ? '적어 두었어요.' : '다시 초안으로 두었어요.'); 받아오기(); }).catch(function () { 단.disabled = false; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); }); return; }
     var 더 = e.target.closest('[data-가]'); if (더) { if (더.getAttribute('data-블로그열기')) 열린블로그 = 더.getAttribute('data-블로그열기'); if (더.getAttribute('data-할일열기')) 열린할일id = 더.getAttribute('data-할일열기'); 가기(더.getAttribute('data-가'), 더.getAttribute('data-초점'), 더.getAttribute('data-펼침열기'), 더.getAttribute('data-스크롤')); return; }
     if (e.target.closest('[data-참고토글]')) { 참고보기 = !참고보기; 그리기(); return; }
@@ -1102,7 +1198,7 @@ a { color: var(--강조); }
     var 날 = e.target.closest('[data-일정날]'); if (날) { 일정골 = 날.getAttribute('data-일정날'); 그리기(); return; }
     var 방단 = e.target.closest('[data-방]'); if (방단) { 방 = 방단.getAttribute('data-방'); if (!보기) 저장.set('데스크방', 방); 소켓닫기(); 그리기(); 받아오기(); return; }
     var g = e.target.closest('[data-갈래]'); if (g) { 갈래 = g.getAttribute('data-갈래'); 그리기(); return; }
-    var 끝 = e.target.closest('[data-끝]'); if (끝) { 끝내기(끝.getAttribute('data-끝'), 끝); return; }
+    var 끝 = e.target.closest('[data-끝]'); if (끝) { 끝내기(끝.getAttribute('data-끝'), 끝, 끝.getAttribute('data-끝글')); return; }
     var 정 = e.target.closest('[data-정렬]'); if (정) { var k = 정.getAttribute('data-정렬'); if (재고정렬.키 === k) 재고정렬.방향 = -재고정렬.방향; else { 재고정렬.키 = k; 재고정렬.방향 = k === '남음' ? -1 : 1; } 그리기(); return; }
     var 입구 = e.target.closest('[data-입력구분]'); if (입구) { 입력구분 = 입구.getAttribute('data-입력구분'); 그리기(); return; }
     if (e.target.id === '입_자세히') { 자세히 = !자세히; 그리기(); return; }
@@ -1121,10 +1217,10 @@ a { color: var(--강조); }
     var 상정 = e.target.closest('[data-상세정렬]'); if (상정) { var pr = 상정.getAttribute('data-상세정렬').split('|'), 정 = 상세정렬[pr[0]] || { 키: '일자', 방향: 1 }; if (정.키 === pr[1]) 정.방향 = -정.방향; else { 정.키 = pr[1]; 정.방향 = pr[1] === '금액' ? -1 : 1; } 상세정렬[pr[0]] = 정; 그리기(); return; }
     var 펼 = e.target.closest('[data-펼침]'); if (펼) { var kk = 펼.getAttribute('data-펼침'); 펼침[kk] = !펼침[kk]; 그리기(); return; }
   });
-  function 끝내기(id, b) {
-    b.disabled = true; b.textContent = '보내는 중';
-    보내기짐({ 종류: '끝냈어요', id: id }).then(function (j) { if (!j || !j.됨) throw new Error(); 저장.set('끝_' + id, '1'); 토스트('끝낸 것으로 적었어요.'); 받아오기().then(그리기); })
-      .catch(function () { b.disabled = false; b.textContent = '끝냈어요'; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); });
+  function 끝내기(id, b, 말) {
+    var 원글 = b.textContent; b.disabled = true; b.textContent = '보내는 중';
+    보내기짐({ 종류: '끝냈어요', id: id }).then(function (j) { if (!j || !j.됨) throw new Error(); 저장.set('끝_' + id, '1'); 토스트(말 || '끝낸 것으로 적었어요.'); 받아오기().then(그리기); })
+      .catch(function () { b.disabled = false; b.textContent = 원글 || '끝냈어요'; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); });
   }
   function 알림목록전부() {
     // 최근 것 전부(읽은 것 포함) — 종을 여는 순간 읽은 것으로 적히는데, 그래도 목록은 남아 있어야 「무엇이 왔었나」를 다시 볼 수 있다
@@ -1133,6 +1229,7 @@ a { color: var(--강조); }
     (자료.피드.답 || []).forEach(function (x) { 목록.push({ 종류: '답', id: x.id, 시각: x.시각, 제목: x.제목, 탭: '대화' }); });
     (자료.피드.할일 || []).forEach(function (x) { if (x.단계 !== '완료' && !끝난할일(x.id)) 목록.push({ 종류: '할 일', id: x.id, 시각: x.시각, 제목: x.제목, 탭: '할일' }); });
     (자료.피드.안내 || []).forEach(function (x) { 목록.push({ 종류: '안내', id: x.id, 시각: x.시각, 제목: x.제목, 탭: '홈' }); });
+    봐야할메일().forEach(function (x) { 목록.push({ 종류: '메일', id: x.id, 시각: x.시각, 제목: x.보낸이 + ' · ' + x.제목, 탭: '메일' }); });
     return 목록.sort(function (a, b) { return a.시각 < b.시각 ? 1 : -1; }).slice(0, 30);
   }
   function 알림열기() {
