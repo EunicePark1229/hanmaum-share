@@ -1,13 +1,18 @@
 /* 한마음 데스크 — 서비스 워커 (2026-09-18 · 1단계: 껍데기만 캐시 · 2단계: 웹 푸시)
    껍데기(desk.html · 글씨체 · 아이콘)는 캐시해서 전파가 약해도 열리게 하고, 자료(뒷단·desk-org.json)는 늘 새로 받는다. */
-var 이름 = 'desk-v13';   // desk.html 을 고쳐 올릴 때마다 숫자를 올린다 — 안 올리면 폰은 옛 화면을 계속 연다(09-18)
+var 이름 = 'desk-v15';   // desk.html 을 고쳐 올릴 때마다 숫자를 올린다 — 안 올리면 폰은 옛 화면을 계속 연다(09-18)
 var 껍데기 = ['./desk.html', './desk.webmanifest', './desk-192.png', './boss-192.png', './paperlogy-4.woff2', './paperlogy-7.woff2'];
 self.addEventListener('install', function (e) { e.waitUntil(caches.open(이름).then(function (c) { return c.addAll(껍데기); }).then(function () { return self.skipWaiting(); })); });
 self.addEventListener('activate', function (e) { e.waitUntil(caches.keys().then(function (ks) { return Promise.all(ks.filter(function (k) { return k !== 이름; }).map(function (k) { return caches.delete(k); })); }).then(function () { return self.clients.claim(); })); });
 self.addEventListener('fetch', function (e) {
   var u = new URL(e.request.url);
-  if (e.request.method !== 'GET' || u.origin !== location.origin) return;           // 뒷단(앱스 스크립트)은 안 건드린다
+  if (e.request.method !== 'GET' || u.origin !== location.origin) return;           // 다른 origin(앱스 스크립트)은 안 건드린다
   if (u.pathname.endsWith('desk-org.json')) return;                                   // 설정은 늘 새로
+  // 뒷단이 같은 origin 일 때(GN — 워커가 앱도 뒷단도 낸다) ?p=desk 같은 자료 요청이 캐시에 앉아 옛 대화가 보였다(2026-09-21 유니스 「보낸 게 없어져」).
+  // 캐시는 껍데기(글씨체·아이콘·매니페스트)만 — 물음표가 붙은 요청과 그 밖의 경로는 늘 네트워크
+  if (u.search || !/\.(png|woff2|webmanifest|svg|ico)$/.test(u.pathname)) {
+    if (!(u.pathname.endsWith('desk.html') || e.request.mode === 'navigate')) return;
+  }
   if (u.pathname.endsWith('desk.html') || e.request.mode === 'navigate') {              // 화면은 네트워크 먼저 — 고쳐 올린 것이 바로 보이게. 전파가 없으면 캐시
     e.respondWith(fetch(e.request).then(function (res) { var 사본 = res.clone(); caches.open(이름).then(function (c) { c.put(e.request, 사본); }); return res; }).catch(function () { return caches.match(e.request); }));
     return;
