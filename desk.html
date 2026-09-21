@@ -200,6 +200,22 @@ a.단추 { display: inline-flex; align-items: center; text-decoration: none; col
 .꼴줄 button { height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--선); background: var(--카드); color: var(--보조); font-size: 14px; }
 .꼴줄 button.켬 { background: var(--강조연); border-color: var(--강조연); color: var(--강조); }
 .꼴안내 { font-size: 14px; color: var(--보조); margin: -4px 0 10px; }
+/* 고객(2026-09-21 유니스 「앱 하나로 · 고객 명단 통째 · 주민번호는 앞자리+뒷자리 첫 번호」) — 검색 · 전화 걸기 · 이번 주 연락 · 결과 단추 */
+.검색줄 { display: flex; gap: 8px; margin-bottom: 10px; }
+.검색줄 input { flex: 1; height: 46px; border-radius: 12px; border: 1px solid var(--선); padding: 0 14px; font-size: 16px; background: var(--카드); color: var(--글); }
+.고객줄 { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: start; }
+.고객줄 .이름 { font-size: 17px; font-weight: 600; color: var(--글); }
+.고객줄 .이름 small { font-weight: 400; color: var(--보조); font-size: 14px; margin-left: 6px; }
+.고객줄 .이유 { font-size: 15px; color: var(--강조); margin-top: 2px; }
+.전화단추 { height: 40px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--강조); background: var(--카드); color: var(--강조); font-size: 15px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; white-space: nowrap; }
+.전화단추 svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.전화단추.채움 { background: var(--강조); color: #fff; }
+.고객표 { width: 100%; border-collapse: collapse; font-size: 15px; margin-top: 8px; }
+.고객표 th { text-align: left; color: var(--보조); font-weight: 400; width: 34%; padding: 7px 4px; vertical-align: top; border-bottom: 1px solid var(--선); }
+.고객표 td { padding: 7px 4px; border-bottom: 1px solid var(--선); word-break: break-all; }
+.결과줄 { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 4px; }
+.결과줄 button { height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--강조); background: var(--카드); color: var(--강조); font-size: 15px; }
+.결과줄 button.켬 { background: var(--강조); color: #fff; }
 /* 다른 사람 화면으로 보기(2026-09-21 유니스 「내 화면에서 원장님 화면으로 바로 넘어갈 수 있는 옵션」) — 머리의 눈 단추로 들어가고, 보는 동안 띠가 늘 떠 있고, 쓰기는 막힌다 */
 .눈 { position: relative; height: 40px; padding: 0 12px 0 8px; border-radius: 999px; border: 1px solid var(--선); background: var(--카드); color: var(--보조); font-size: 14px; display: inline-flex; align-items: center; gap: 6px; margin-right: 4px }
 .눈 svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8 }
@@ -328,7 +344,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-21f';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-21g';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -435,9 +451,10 @@ a { color: var(--강조); }
     재고: '<svg viewBox="0 0 24 24"><path d="M3 8l9-4 9 4v9l-9 4-9-4zM3 8l9 4 9-4M12 12v9"/></svg>',
     장부: '<svg viewBox="0 0 24 24"><path d="M5 3h14v18H5zM8 8h8M8 12h8M8 16h5"/></svg>',
     받은것: '<svg viewBox="0 0 24 24"><path d="M4 7h16v13H4zM4 7l2-3h12l2 3M9 11h6"/></svg>',
-    일정: '<svg viewBox="0 0 24 24"><path d="M4 5h16v15H4zM4 10h16M8 3v4M16 3v4M8 14h3"/></svg>'
+    일정: '<svg viewBox="0 0 24 24"><path d="M4 5h16v15H4zM4 10h16M8 3v4M16 3v4M8 14h3"/></svg>',
+    고객: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>'
   };
-  var 탭이름 = { 홈: '홈', 대화: '대화', 할일: '할 일', 재고: '재고', 장부: '장부', 받은것: '받은 것', 일정: '일정', 메일: '메일' };
+  var 탭이름 = { 홈: '홈', 대화: '대화', 할일: '할 일', 재고: '재고', 장부: '장부', 받은것: '받은 것', 일정: '일정', 메일: '메일', 고객: '고객' };
   function 역할() { return (자료 && 자료.역할) || 저장.get('데스크역할') || '원장'; }
   function 대표인가() { var r = 역할(); return r === '대표' || r === '관리자'; }
   function 탭목록() { var t = 설정 && 설정.탭; if (t && !Array.isArray(t)) t = t[역할()] || t['원장'] || t[Object.keys(t)[0]]; return (Array.isArray(t) && t.length) ? t : ['홈', '대화', '할일', '재고', '장부']; }
@@ -604,6 +621,7 @@ a { color: var(--강조); }
       h += 내것.length ? 내것.slice(0, 3).map(function (x) { return 할일줄(x, false); }).join('') : '<div class="빈">하실 것이 없어요.</div>';
       h += '</section>';
     }
+    h += 연락카드();           // 이번 주 연락(2026-09-21 · 고객 명단이 있는 조직만)
     h += 메일카드();           // 메일 — 봐야 할 것(2026-09-21 · 피드에 메일이 있는 조직만)
     h += 일정카드();           // 오늘·내일 일정(2026-09-20)
     h += 바로가기카드();       // 바로가기(2026-09-21 · 설정에 있는 조직만)
@@ -640,7 +658,7 @@ a { color: var(--강조); }
     // 카드마다 키를 붙여 저장된 차례로 늘어놓는다(2026-09-21 유니스). 키 = 카드 제목의 앞말
     var 카드들 = (h.match(/<section[\s\S]*?<\/section>/g) || []).map(function (조각) {
       var m = 조각.match(/<h2>([^<]*)/); var 제목 = (m ? m[1] : '').trim();
-      var 키 = 제목.indexOf('이번 달') === 0 ? '이번 달' : (제목.indexOf(말('받은것카드')) === 0 || 제목.indexOf('최근 받은 것') === 0) ? '받은 것' : 제목.indexOf('메일') === 0 ? '메일' : 제목.replace(/\s+\d+$/, '');
+      var 키 = 제목.indexOf('이번 달') === 0 ? '이번 달' : (제목.indexOf(말('받은것카드')) === 0 || 제목.indexOf('최근 받은 것') === 0) ? '받은 것' : 제목.indexOf('메일') === 0 ? '메일' : 제목.indexOf('이번 주 연락') === 0 ? '이번 주 연락' : 제목.replace(/\s+\d+$/, '');
       return { 키: 키, 제목: 제목, html: 조각 };
     });
     카드들 = 순서정렬(카드들, '홈', function (c) { return c.키; });
@@ -846,6 +864,72 @@ a { color: var(--강조); }
     var 꼴 = 소식꼴들(); if (x.갈래 !== '당근' || 꼴.length < 2) return '';
     var 지금 = 소식꼴선택 || x.갈래, 설 = 설정.소식꼴;
     return '<div class="한줄" style="margin:8px 0 4px;color:var(--보조)">어디에 올리시나요? 그 곳에 맞는 꼴로 바꿔서 복사돼요.</div><div class="꼴줄">' + 꼴.map(function (k) { return '<button class="' + (k === 지금 ? '켬' : '') + '" data-소식꼴="' + esc(k) + '">' + esc((설[k] && 설[k].이름) || k) + '</button>'; }).join('') + '</div>' + (설[지금] && 설[지금].안내 ? '<div class="꼴안내">' + esc(설[지금].안내) + '</div>' : '');
+  }
+  // ── 고객(2026-09-21) — 피드 「고객」(데스크_고객.py · 월요일 + --갱신). 이번 주 연락 = 연락 칸이 있는 사람 · 결과는 단계(통화했어요 · 안 받으셨어요 · 방문 약속 · 다음에 다시 · 괜찮다고 하셔요) ──
+  var 고객검색 = '', 고객보기 = '연락', 열린고객 = '';
+  var 연락결과들 = ['통화했어요', '안 받으셨어요', '방문 약속', '다음에 다시', '괜찮다고 하셔요'];
+  function 고객목록() { return ((자료 && 자료.피드.고객) || []).slice(); }
+  function 이번주연락() { return 고객목록().filter(function (x) { return x.연락; }); }
+  function 연락남은() { return 이번주연락().filter(function (x) { return 연락결과들.indexOf(x.단계) < 0; }); }
+  function 전화번호(x) { var v = x.휴대폰 || ''; if (!v && x.보호자) v = x.보호자; return (v.match(/0\d{1,2}-?\d{3,4}-?\d{4}/) || [''])[0]; }
+  var 전화아이콘 = '<svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>';
+  function 전화단추(x, 채움) { var 번 = 전화번호(x); if (!번) return '<span class="칩 끝">번호 없음</span>'; return '<a class="전화단추' + (채움 ? ' 채움' : '') + '" href="tel:' + esc(번.replace(/-/g, '')) + '" data-전화="' + esc(x.id) + '">' + 전화아이콘 + '전화</a>'; }
+  function 고객줄(x, 자세히) {
+    var 결 = 연락결과들.indexOf(x.단계) >= 0 ? '<span class="칩 끝">' + esc(x.단계) + (x.단계때 ? ' · ' + 때글(x.단계때) : '') + '</span>' : '';
+    var h = '<div class="줄 고객줄" data-고객="' + esc(x.id) + '" data-id="' + esc(x.id) + '"><div><div class="이름">' + esc(x.이름) + '<small>' + esc([x.나이 ? x.나이 + '세' : '', x.성별].filter(Boolean).join(' · ')) + '</small></div>';
+    if (x.연락) h += '<div class="이유">' + esc(x.연락.이유) + '</div>';
+    else if (자세히) h += '<div class="한줄" style="padding-left:0;border:0">' + esc(x.기기목록 || x.분류 || '') + (x.최근접촉 ? ' · 최근 ' + esc(x.최근접촉) : '') + '</div>';
+    h += '<div class="때">' + (결 ? 결 + ' · ' : '') + esc(전화번호(x) || '') + (x.미수건수 && x.미수건수 !== '0' ? ' · <span class="신호 살핌">미수 ' + esc(x.미수건수) + '건</span>' : '') + '</div></div>';
+    h += '<div>' + 전화단추(x, !!x.연락 && !결) + '</div></div>';
+    return h;
+  }
+  function 고객상세(x) {
+    var 칸 = [['주민번호 앞', x.주민앞], ['생년월일', x.생년 + (x.나이 ? ' (' + x.나이 + '세)' : '')], ['성별', x.성별], ['분류', x.분류], ['휴대폰', x.휴대폰], ['보호자', x.보호자], ['주소', x.주소], ['구입경로', x.구입경로],
+              ['가입일', x.가입일], ['최근 접촉', x.최근접촉], ['거래', (x.거래건수 || '0') + '건' + (x.누적판매가 ? ' · ' + Number(x.누적판매가).toLocaleString('ko-KR') + '원' : '')], ['우리 기기', x.자사기기], ['다른 센터 기기', x.타센터기기], ['기기', x.기기목록],
+              ['미수', x.미수건수 && x.미수건수 !== '0' ? x.미수건수 + '건' : ''], ['급여 신청일', x.급여신청일], ['급여 만료', x.급여만료], ['타사 만료', x.타사만료], ['메모', x.메모]];
+    var h = '<section class="카드"><button class="더" data-고객닫기="1">‹ 목록으로</button><h2 style="margin-top:8px">' + esc(x.이름) + '<small style="font-weight:400;color:var(--보조);font-size:15px;margin-left:8px">' + esc([x.나이 ? x.나이 + '세' : '', x.성별].filter(Boolean).join(' · ')) + '</small></h2>';
+    var 번 = 전화번호(x);
+    h += '<div class="단추줄">' + (번 ? '<a class="전화단추 채움" href="tel:' + esc(번.replace(/-/g, '')) + '" data-전화="' + esc(x.id) + '">' + 전화아이콘 + '전화 ' + esc(번) + '</a><a class="전화단추" href="sms:' + esc(번.replace(/-/g, '')) + '" data-전화="' + esc(x.id) + '">문자</a>' : '<span class="칩 끝">번호 없음</span>') + '</div>';
+    if (x.연락) {
+      h += '<div class="고정힌트"><b>이번 주 연락</b> — ' + esc(x.연락.이유) + '</div>';
+      h += '<div class="한줄" style="margin:10px 0 0;padding-left:0;border:0;color:var(--보조)">통화하신 뒤 하나만 눌러 주세요. 다음 주 명단에서 빠져요.</div>';
+      h += '<div class="결과줄">' + 연락결과들.map(function (r) { return '<button data-연락결과="' + esc(r) + '" data-id="' + esc(x.id) + '"' + (x.단계 === r ? ' class="켬"' : '') + '>' + esc(r) + '</button>'; }).join('') + '</div>';
+      if (연락결과들.indexOf(x.단계) >= 0) h += '<div class="때">' + esc(x.단계) + (x.단계때 ? ' · ' + 때글(x.단계때) : '') + (x.사유 ? ' · ' + esc(x.사유) : '') + '</div>';
+    }
+    h += '<table class="고객표">' + 칸.filter(function (r) { return r[1]; }).map(function (r) { return '<tr><th>' + esc(r[0]) + '</th><td>' + esc(r[1]) + '</td></tr>'; }).join('') + '</table>';
+    return h + '</section>';
+  }
+  function 고객거르기() {
+    var 전부 = 고객목록(), q = 고객검색.trim().replace(/-/g, '');
+    var 골 = 고객보기 === '연락' ? 전부.filter(function (x) { return x.연락; }) : 고객보기 === '미수' ? 전부.filter(function (x) { return x.미수건수 && x.미수건수 !== '0'; }) : 전부;
+    if (q) 골 = 전부.filter(function (x) { return (x.이름 || '').indexOf(q) >= 0 || (x.휴대폰 || '').replace(/-/g, '').indexOf(q) >= 0 || (x.보호자 || '').replace(/-/g, '').indexOf(q) >= 0 || (x.기기목록 || '').indexOf(q) >= 0; });
+    if (고객보기 === '연락' && !q) 골 = 골.slice().sort(function (a, b) { var ra = 연락결과들.indexOf(a.단계) >= 0 ? 1 : 0, rb = 연락결과들.indexOf(b.단계) >= 0 ? 1 : 0; return ra - rb; });
+    return 골;
+  }
+  function 고객목록그리기() {
+    var 골 = 고객거르기(), q = 고객검색.trim();
+    if (!골.length) return '<div class="빈">' + (q ? '「' + esc(q) + '」로 찾은 분이 없어요.' : 고객보기 === '연락' ? '이번 주 연락드릴 분이 없어요.' : 고객보기 === '미수' ? '미수 없어요.' : '아직 고객 명단이 안 들어왔어요.') + '</div>';
+    return 골.slice(0, 200).map(function (x) { return 고객줄(x, true); }).join('') + (골.length > 200 ? '<div class="빈">' + (골.length - 200) + '명 더 — 이름으로 찾아 주세요.</div>' : '');
+  }
+  function 고객화면() {
+    var 전부 = 고객목록();
+    if (!전부.length) return '<div class="카드"><div class="빈">아직 고객 명단이 안 들어왔어요. 월요일마다 새로 채워요.</div></div>';
+    if (열린고객) { var x = 전부.filter(function (y) { return y.id === 열린고객; })[0]; if (x) return 고객상세(x); 열린고객 = ''; }
+    var 남 = 연락남은().length, 연 = 이번주연락().length;
+    var h = '<div class="검색줄"><input id="고객검색" type="search" placeholder="이름·전화번호·기기로 찾기" value="' + esc(고객검색) + '" autocomplete="off"></div>';
+    h += '<div class="갈래줄"><button class="' + (고객보기 === '연락' ? '켬' : '') + '" data-고객보기="연락">이번 주 연락 ' + 남 + (연 > 남 ? '/' + 연 : '') + '</button><button class="' + (고객보기 === '전부' ? '켬' : '') + '" data-고객보기="전부">전부 ' + 전부.length + '</button><button class="' + (고객보기 === '미수' ? '켬' : '') + '" data-고객보기="미수">미수</button></div>';
+    h += '<section class="카드"><h2>' + (고객검색.trim() ? '찾은 분' : 고객보기 === '연락' ? '이번 주 연락' : 고객보기 === '미수' ? '미수 있는 분' : '고객 전부') + '</h2>';
+    if (고객보기 === '연락' && !고객검색.trim()) h += '<div class="한줄" style="color:var(--보조);margin-bottom:8px;padding-left:0;border:0">이름을 누르면 이유와 정보가 보이고, 「전화」를 누르면 바로 걸려요. 통화하신 뒤 결과 단추 하나만.</div>';
+    h += '<div id="고객목록">' + 고객목록그리기() + '</div></section>';
+    return h;
+  }
+  function 연락카드() {
+    if (!고객목록().length) return '';
+    var 남 = 연락남은(), 연 = 이번주연락();
+    if (!연.length) return '';
+    var h = '<section class="카드"><h2>이번 주 연락 ' + 남.length + (연.length > 남.length ? '<small style="font-weight:400;color:var(--보조);font-size:14px;margin-left:6px">/ ' + 연.length + '</small>' : '') + ' <button class="더" data-가="고객" data-고객보기="연락">전부 보기</button></h2>';
+    h += 남.length ? 남.slice(0, 3).map(function (x) { return 고객줄(x, false); }).join('') : '<div class="빈">이번 주 연락은 다 하셨어요. 고마워요.</div>';
+    return h + '</section>';
   }
   function 일정카드() {
     var 오늘 = 날짜키(지금iso()), 모레 = 날짜키(new Date(Date.now() + 2 * 86400000).toISOString());
@@ -1127,7 +1211,7 @@ a { color: var(--강조); }
   }
   function 그리기() {
     var 본 = $('본문');
-    var 화면 = { 홈: 홈, 대화: 대화, 할일: 할일, 재고: 재고, 장부: 장부, 받은것: 받은것, 일정: 일정, 메일: 메일화면 };
+    var 화면 = { 홈: 홈, 대화: 대화, 할일: 할일, 재고: 재고, 장부: 장부, 받은것: 받은것, 일정: 일정, 메일: 메일화면, 고객: 고객화면 };
     if (!화면[탭]) 탭 = '홈';
     본.innerHTML = 화면[탭]();
     본.classList.toggle('홈격자', 탭 === '홈');
@@ -1189,9 +1273,24 @@ a { color: var(--강조); }
     if (e.target.closest('[data-블로그닫기]')) { if (!닫고돌아가기()) { 열린블로그 = ''; 그리기(); } return; }
     var 복 = e.target.closest('[data-복사]'); if (복) { var id = 복.getAttribute('data-복사'), x = ((자료 && 자료.피드.받은것) || []).filter(function (y) { return y.id === id; })[0]; if (x) { var 꼴k = (x.갈래 === '당근' && 소식꼴선택) ? 소식꼴선택 : ''; var t = 꼴k ? 꼴본문(x, 꼴k) : 복사용글(x); var 안 = 꼴k && 설정.소식꼴 && 설정.소식꼴[꼴k] && 설정.소식꼴[꼴k].안내; (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { 토스트('본문을 복사했어요. ' + (안 || (x.갈래 === '당근' ? '당근 「소식」 글쓰기에 붙여 넣으세요.' : '블로그 글쓰기에 붙여 넣으세요.'))); }, function () { 토스트('복사가 안 돼요. 글을 길게 눌러 복사해 주세요.'); }); } return; }
     var 꼴단 = e.target.closest('[data-소식꼴]'); if (꼴단) { 소식꼴선택 = 꼴단.getAttribute('data-소식꼴'); 그리기(); return; }
+    if (e.target.closest('[data-전화]')) { e.stopPropagation(); return; }                                              // 전화·문자 링크는 줄을 열지 않고 그대로 간다
+    var 고보 = e.target.closest('[data-고객보기]'); if (고보 && !고보.getAttribute('data-가')) { 고객보기 = 고보.getAttribute('data-고객보기'); 고객검색 = ''; 그리기(); return; }
+    if (e.target.closest('[data-고객닫기]')) { if (!닫고돌아가기()) { 열린고객 = ''; 그리기(); } return; }
+    var 결과단 = e.target.closest('[data-연락결과]'); if (결과단) {
+      var 결과 = 결과단.getAttribute('data-연락결과'), 고id = 결과단.getAttribute('data-id'), 메모 = '';
+      if (결과 === '방문 약속' || 결과 === '다음에 다시') { var 답 = window.prompt(결과 === '방문 약속' ? '언제 오시기로 했나요? (예: 목요일 2시)' : '언제쯤 다시 연락드릴까요? (안 적어도 돼요)', ''); if (답 === null) return; 메모 = 답; }
+      결과단.disabled = true;
+      보내기짐({ 종류: '단계', id: 고id, 단계: 결과, 사유: 메모 }).then(function (j) {
+        if (!j || !j.됨) throw new Error();
+        var x = 고객목록().filter(function (y) { return y.id === 고id; })[0]; if (x) { x.단계 = 결과; x.단계때 = 지금iso(); x.사유 = 메모; }
+        토스트('적었어요 — ' + 결과 + '. 다음 주 명단에서 빠져요.'); 그리기();
+      }).catch(function () { 결과단.disabled = false; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); });
+      return;
+    }
+    var 고객줄el = e.target.closest('[data-고객]'); if (고객줄el) { 열린고객 = 고객줄el.getAttribute('data-고객'); 탭 = '고객'; 그리기(); window.scrollTo(0, 0); return; }
     var 메보 = e.target.closest('[data-메일보기]'); if (메보) { 메일보기 = 메보.getAttribute('data-메일보기'); 그리기(); return; }
     var 단 = e.target.closest('[data-단계]'); if (단) { var 단계 = 단.getAttribute('data-단계'), 사유 = ''; if (단계 === '보류') { 사유 = window.prompt('안 쓰시는 이유를 한 줄 적어 주시면 다음 글에 반영해요(안 적어도 돼요)', '') || ''; } 단.disabled = true; 보내기짐({ 종류: '단계', id: 단.getAttribute('data-id'), 단계: 단계, 사유: 사유 }).then(function (j) { if (!j || !j.됨) throw new Error(); 토스트(단계 === '썼어요' ? '고마워요. 다음 글을 채워 둘게요.' : 단계 === '보류' ? '적어 두었어요.' : '다시 초안으로 두었어요.'); 받아오기(); }).catch(function () { 단.disabled = false; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); }); return; }
-    var 더 = e.target.closest('[data-가]'); if (더) { if (더.getAttribute('data-블로그열기')) 열린블로그 = 더.getAttribute('data-블로그열기'); if (더.getAttribute('data-할일열기')) 열린할일id = 더.getAttribute('data-할일열기'); 가기(더.getAttribute('data-가'), 더.getAttribute('data-초점'), 더.getAttribute('data-펼침열기'), 더.getAttribute('data-스크롤')); return; }
+    var 더 = e.target.closest('[data-가]'); if (더) { if (더.getAttribute('data-고객보기')) { 고객보기 = 더.getAttribute('data-고객보기'); 고객검색 = ''; 열린고객 = ''; } if (더.getAttribute('data-블로그열기')) 열린블로그 = 더.getAttribute('data-블로그열기'); if (더.getAttribute('data-할일열기')) 열린할일id = 더.getAttribute('data-할일열기'); 가기(더.getAttribute('data-가'), 더.getAttribute('data-초점'), 더.getAttribute('data-펼침열기'), 더.getAttribute('data-스크롤')); return; }
     if (e.target.closest('[data-참고토글]')) { 참고보기 = !참고보기; 그리기(); return; }
     var 보 = e.target.closest('[data-일정보기]'); if (보) { 일정보기 = 보.getAttribute('data-일정보기'); 저장.set('일정보기', 일정보기); 그리기(); return; }
     var 이 = e.target.closest('[data-일정이동]'); if (이) { var n = parseInt(이.getAttribute('data-일정이동'), 10), 오늘k = 날짜키(지금iso()); if (!n) { 일정기준 = ''; 일정골 = ''; } else { var d = 날짜에서(일정기준 || 오늘k); if (일정보기 === '월간') d.setMonth(d.getMonth() + n); else if (일정보기 === '주간') d.setDate(d.getDate() + 7 * n); else d.setDate(d.getDate() + n); 일정기준 = 날키(d); if (일정보기 === '월간') 일정골 = ''; } 그리기(); return; }
@@ -1285,15 +1384,15 @@ a { color: var(--강조); }
   // ── 뒤로 가기(2026-09-20 유니스 「항목 열고 코멘트 뒤 뒤로 가기를 누르면 화면이 아예 꺼져」) ──
   //    홈 화면 앱은 브라우저 뒤로 가기가 곧 앱 닫기다. 상세·알림 시트·탭을 열 때 역사에 한 칸 넣어 두면 뒤로 가기가 그 칸을 빼고 목록으로 돌아온다.
   var 역사적용중 = false;
-  function 역사상태() { return { 탭: 탭, 할일: 열린할일id || '', 블로그: 열린블로그 || '', 알림: $('알림시트').classList.contains('보임'), 보기: 보기 || '' }; }
-  function 역사넣기() { if (역사적용중) return; try { var 지금 = 역사상태(), 전 = history.state || {}; if (전.탭 === 지금.탭 && (전.할일 || '') === 지금.할일 && (전.블로그 || '') === 지금.블로그 && !!전.알림 === 지금.알림 && (전.보기 || '') === 지금.보기) return; history.pushState(지금, ''); } catch (e) {} }
+  function 역사상태() { return { 탭: 탭, 할일: 열린할일id || '', 블로그: 열린블로그 || '', 고객: 열린고객 || '', 알림: $('알림시트').classList.contains('보임'), 보기: 보기 || '' }; }
+  function 역사넣기() { if (역사적용중) return; try { var 지금 = 역사상태(), 전 = history.state || {}; if (전.탭 === 지금.탭 && (전.할일 || '') === 지금.할일 && (전.블로그 || '') === 지금.블로그 && (전.고객 || '') === 지금.고객 && !!전.알림 === 지금.알림 && (전.보기 || '') === 지금.보기) return; history.pushState(지금, ''); } catch (e) {} }
   window.addEventListener('popstate', function (e) {
     var st = e.state || { 탭: '홈', 할일: '', 블로그: '', 알림: false };
     역사적용중 = true;
-    try { if ((st.보기 || '') !== 보기) { if (st.보기) 보기시작(st.보기); else 보기끝(); } 열린할일id = st.할일 || ''; 열린블로그 = st.블로그 || ''; 탭 = st.탭 || '홈'; if (!st.알림) $('알림시트').classList.remove('보임'); 그리기(); if (st.알림) 알림열기(); }
+    try { if ((st.보기 || '') !== 보기) { if (st.보기) 보기시작(st.보기); else 보기끝(); } 열린할일id = st.할일 || ''; 열린블로그 = st.블로그 || ''; 열린고객 = st.고객 || ''; 탭 = st.탭 || '홈'; if (!st.알림) $('알림시트').classList.remove('보임'); 그리기(); if (st.알림) 알림열기(); }
     finally { 역사적용중 = false; }
   });
-  function 닫고돌아가기() { var st = history.state; if (st && (st.할일 || st.블로그 || st.알림)) { history.back(); return true; } return false; }
+  function 닫고돌아가기() { var st = history.state; if (st && (st.할일 || st.블로그 || st.고객 || st.알림)) { history.back(); return true; } return false; }
   try { history.replaceState(역사상태(), ''); } catch (e) {}
 
   function 가기(어디, 초점, 펼칠것, 구역) {
@@ -1373,6 +1472,7 @@ a { color: var(--강조); }
     if (!window.matchMedia || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
     e.preventDefault(); 글보내기();
   });
+  $('본문').addEventListener('input', function (e) { if (e.target && e.target.id === '고객검색') { 고객검색 = e.target.value; var 목 = $('고객목록'); if (목) 목.innerHTML = 고객목록그리기(); } });
   $('글').addEventListener('input', function () { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 140) + 'px'; var t = Date.now(); if (t - 입력중보낸때 > 2500) { 입력중보낸때 = t; 소켓으로({ 종류: '입력중', 켬: true }); } });
   $('글').addEventListener('blur', function () { 소켓으로({ 종류: '입력중', 켬: false }); });
   $('사진단추').addEventListener('click', function () { $('사진파일').click(); });
