@@ -37,16 +37,17 @@ body[data-탭="받은것"] { --강조: #5B6672; --강조연: #EEF0F2; }
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--바탕); color: var(--글); font-family: 'Paperlogy', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; font-size: 16px; line-height: 1.5; -webkit-text-size-adjust: 100%; }
 button, input, textarea { font: inherit; }
-.위 { position: sticky; top: 0; z-index: 5; background: var(--카드); border-bottom: 1px solid var(--선); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
-.위 h1 { margin: 0; font-size: 20px; font-weight: 400; }
+.위 { position: sticky; top: 0; z-index: 5; background: var(--머리바탕, var(--카드)); color: var(--머리글, var(--글)); border-bottom: 1px solid var(--머리선, var(--선)); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
+.위 h1 { margin: 0; font-size: 20px; font-weight: var(--머리굵기, 400); font-family: var(--제목서체, inherit); color: inherit; }
+.위 .종 svg { stroke: currentColor; }
 .종 { position: relative; width: 44px; height: 44px; border: 0; background: transparent; border-radius: 12px; display: grid; place-items: center; }
 .종 svg { width: 26px; height: 26px; fill: none; stroke: var(--글); stroke-width: 1.8; }
 .배지 { position: absolute; top: 4px; right: 2px; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--강조); color: #fff; font-size: 13px; line-height: 20px; text-align: center; }
 .배지:empty, .배지[data-n="0"] { display: none; }
 main { padding: 16px 16px 96px; max-width: 720px; margin: 0 auto; }
-.카드 { background: var(--카드); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+.카드 { background: var(--카드); border-radius: var(--둥근, 16px); padding: 20px; margin-bottom: 16px; box-shadow: var(--그림자, 0 1px 2px rgba(0,0,0,.04)); border: var(--카드테, 0); }
 /* 카드 제목 — 본문과 확실히 갈리게: 굵게 · 조금 크게 · 왼쪽 강조 띠 · 밑선 (2026-09-19 유니스 「항목 제목이 눈에 안 띈다」) */
-.카드 h2 { margin: 0 0 14px; padding: 2px 0 8px 12px; font-size: 19px; font-weight: 700; letter-spacing: -0.2px; color: var(--글); border-left: 5px solid var(--강조); border-bottom: 1px solid var(--선); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.카드 h2 { margin: 0 0 14px; padding: 2px 0 8px 12px; font-size: 19px; font-weight: 700; letter-spacing: -0.2px; color: var(--글); font-family: var(--제목서체, inherit); border-left: 5px solid var(--강조); border-bottom: 1px solid var(--선); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .카드 h2 .더 { font-weight: 400; letter-spacing: 0; }
 .시트 .판 h2 { border-left: 5px solid var(--강조); padding-left: 12px; font-weight: 700; }
 .본문글 h3, .블로그상세 h3 { font-weight: 700; }
@@ -208,7 +209,10 @@ body.보기중 .입력줄 { display: none !important }
 .숫자셋 .한줄 { color: var(--보조); font-size: 14px; }
 .말 img.썸 { max-width: 220px; max-height: 220px; border-radius: 12px; display: block; }
 body.끌어옴::after { content: '여기에 놓으면 보내요'; position: fixed; inset: 12px; border: 2px dashed var(--강조); border-radius: 16px; background: rgba(31,111,95,.06); color: var(--강조); font-size: 20px; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 60; }
-nav.탭 { position: fixed; left: 0; right: 0; bottom: 0; background: var(--카드); border-top: 1px solid var(--선); display: flex; padding-bottom: env(safe-area-inset-bottom); z-index: 5; }
+nav.탭 { position: fixed; left: 0; right: 0; bottom: 0; background: var(--탭바탕, var(--카드)); border-top: 1px solid var(--선); display: flex; padding-bottom: env(safe-area-inset-bottom); z-index: 5; }
+/* 테마(2026-09-21 유니스 「분야가 다르니 앱마다 다른 이미지와 느낌」) — desk-org.json 「테마」 토큰이 :root 를 덮는다. 테마가 있으면 탭마다 강조색을 바꾸던 시안은 끈다(강조색 하나) */
+html.테마있음 body[data-탭] { --강조: var(--테마강조); --강조연: var(--테마강조연); }
+html.테마있음 .위 .배지 { background: var(--머리글); color: var(--머리바탕); }   /* 색 머리띠 위에서 배지가 안 보이던 것(시안 렌더 09-21) */
 nav.탭 button { flex: 1; height: 60px; border: 0; background: transparent; color: var(--흐림); font-size: 14px; display: grid; place-items: center; gap: 2px; }
 nav.탭 button.켬 { color: var(--강조); }
 nav.탭 svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; }
@@ -297,6 +301,7 @@ a { color: var(--강조); }
 
 <div class="시트" id="알림시트"><div class="판"><h2>알림</h2><div id="알림목록"></div>
   <div id="푸시칸" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--선)"><div class="한줄" style="color:var(--보조);margin-bottom:8px">앱을 닫아 두어도 새 답·할 일·안내가 오면 폰에 알림이 떠요.</div><button class="단추" id="푸시켜기" style="width:100%">폰 알림 켜기</button></div>
+  <div id="스타일칸" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--선)" hidden><div class="제목" style="margin-bottom:2px">화면 스타일</div><div class="한줄" style="color:var(--보조);margin-bottom:8px">보는 사람마다 골라요 — 이 기기에 남고, 같은 이름으로 여는 다른 기기에도 따라가요.</div><div class="단추줄" id="스타일단추들"></div></div>
   <div style="margin-top:12px"><button class="단추 테" id="알림닫기" style="width:100%">닫기</button></div></div></div>
 <div class="힌트" id="힌트">캡처는 Ctrl+V · 파일은 화면에 끌어다 놓기</div>
 <div class="토스트" id="토스트"></div>
@@ -304,7 +309,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-21c';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-21e';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -351,7 +356,9 @@ a { color: var(--강조); }
       }
       if (물을때보기 !== 보기) return;                       // 그 사이 내 화면으로 돌아왔으면 버린다
       if (보기) { 자료 = j; 그리기(); return; }             // 남의 화면은 이 폰에 안 남긴다(누구·역할·아이콘도 그대로)
-      자료 = j; 저장.set('자료', JSON.stringify(j)); if (j.누구) { 누구 = j.누구; 저장.set('데스크누구', j.누구); } if (j.역할) { 저장.set('데스크역할', j.역할); 아이콘맞추기(); } 그리기();
+      자료 = j; 저장.set('자료', JSON.stringify(j)); if (j.누구) { 누구 = j.누구; 저장.set('데스크누구', j.누구); } if (j.역할) { 저장.set('데스크역할', j.역할); 아이콘맞추기(); }
+      if (!스타일고른것 && 설정 && j.순서 && j.순서.스타일) 테마입히기(설정);   // 다른 기기에서 고른 스타일이 따라온다
+      그리기();
     }).catch(function () { /* 조용히 — 다음 30초에 다시 */ });
   }
   function 보내기짐(짐) {
@@ -1129,6 +1136,7 @@ a { color: var(--강조); }
     return 목록.sort(function (a, b) { return a.시각 < b.시각 ? 1 : -1; }).slice(0, 30);
   }
   function 알림열기() {
+    스타일단추그리기();
     var 목 = 알림목록전부();
     $('알림목록').innerHTML = 목.length ? 목.map(function (x) { return '<div class="줄" data-탭가="' + x.탭 + '" data-초점="' + esc(x.id || '') + '">' + (새것인가(x.시각) ? '<span class="점" title="새"></span>' : '') + '<span class="칩 끝">' + esc(x.종류) + '</span>' + esc(x.제목) + '<div class="때">' + 때글(x.시각) + '</div></div>'; }).join('') : '<div class="빈">아직 온 것이 없어요. 답·할 일·안내가 오면 여기에 남아요.</div>';
     $('알림시트').classList.add('보임'); $('푸시칸').classList.remove('숨김');
@@ -1364,10 +1372,47 @@ a { color: var(--강조); }
     }).catch(function () { 토스트('마이크를 쓸 수 없어요. 글로 적어 주세요.'); });
   });
 
+  // ── 테마 — 조직마다 다른 이미지와 느낌(2026-09-21 유니스). desk-org.json 「테마」 = { 바탕, 카드, 글, 보조, 흐림, 강조, 강조연, 선, 둥근, 그림자, 카드테, 머리바탕, 머리글, 머리선, 머리굵기, 탭바탕, 제목서체, 어둡게 }
+  //    「테마후보」{이름: 테마} 가 있으면 ?테마=이름 으로 미리 본다(시안 고르기). 고른 것은 desk-org.json 「테마」 로 굳힌다
+  var 스타일고른것 = 저장.get('데스크스타일') || '';   // 이 기기에서 고른 스타일 이름('' = 조직 기본) — 사람 설정(자료.순서.스타일)이 오면 그것도 본다
+  function 스타일이름() { var q = (decodeURIComponent(location.search || '').match(/[?&]테마=([^&]+)/) || [])[1]; if (q) return q; if (스타일고른것) return 스타일고른것; var 서버 = (자료 && 자료.순서 && 자료.순서.스타일 && 자료.순서.스타일[0]) || ''; return 서버 === '기본' ? '' : 서버; }
+  function 테마입히기(j) {
+    var 이름 = 스타일이름();
+    var t = (이름 && j.테마후보 && j.테마후보[이름]) || j.테마 || null;
+    var r0 = document.documentElement;
+    ['--바탕', '--카드', '--글', '--보조', '--흐림', '--강조', '--강조연', '--선', '--둥근', '--그림자', '--카드테', '--머리바탕', '--머리글', '--머리선', '--머리굵기', '--탭바탕', '--제목서체', '--테마강조', '--테마강조연'].forEach(function (k) { r0.style.removeProperty(k); });
+    r0.classList.remove('테마있음'); r0.style.colorScheme = '';
+    if (j.강조색) r0.style.setProperty('--강조', j.강조색);
+    if (!t) return;
+    var r = document.documentElement, 칸 = { 바탕: '--바탕', 카드: '--카드', 글: '--글', 보조: '--보조', 흐림: '--흐림', 강조: '--강조', 강조연: '--강조연', 선: '--선', 둥근: '--둥근', 그림자: '--그림자', 카드테: '--카드테',
+      머리바탕: '--머리바탕', 머리글: '--머리글', 머리선: '--머리선', 머리굵기: '--머리굵기', 탭바탕: '--탭바탕', 제목서체: '--제목서체' };
+    Object.keys(칸).forEach(function (k) { if (t[k] !== undefined && t[k] !== '') r.style.setProperty(칸[k], String(t[k])); });
+    if (t.강조) { r.style.setProperty('--테마강조', t.강조); r.style.setProperty('--테마강조연', t.강조연 || 'rgba(0,0,0,.06)'); }
+    r.classList.add('테마있음');
+    if (t.어둡게) r.style.colorScheme = 'dark';
+    var m = document.querySelector('meta[name="theme-color"]'); if (m && (t.머리바탕 || t.카드)) m.setAttribute('content', t.머리바탕 || t.카드);
+    if (t.제목서체 && /Myeongjo|Serif|명조/.test(t.제목서체) && !document.getElementById('테마서체')) { var l = document.createElement('link'); l.id = '테마서체'; l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700;800&display=swap'; document.head.appendChild(l); }
+  }
+  // 스타일 고르기 — 알림 시트 아래 단추들(조직 기본 + 테마후보). 고르면 이 기기(localStorage)에 남고 사람 설정(워커 순서_<이름>.스타일)에도 적어 다른 기기에서 따라간다
+  function 스타일단추그리기() {
+    var 칸 = $('스타일칸'), 줄 = $('스타일단추들'); if (!칸 || !줄 || !설정) return;
+    var 후보 = 설정.테마후보 || {}; var 이름들 = Object.keys(후보); if (!이름들.length) { 칸.hidden = true; return; }
+    var 기본키 = 이름들.filter(function (k) { return 설정.테마 && 후보[k].이름 === 설정.테마.이름; })[0] || '';   // 조직 기본이 후보 중 어느 것인가
+    var 지금 = 스타일이름() || 기본키; 칸.hidden = false;
+    줄.innerHTML = 이름들.map(function (k) { var t = 후보[k]; return '<button class="단추 ' + (지금 === k ? '' : '테') + '" data-스타일="' + esc(k) + '" data-기본="' + (k === 기본키 ? '1' : '') + '">' + esc((t && t.이름) || k) + (k === 기본키 ? ' <small style="opacity:.7">기본</small>' : '') + '</button>'; }).join('');
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-스타일]'); if (!b) return;
+    var k = b.getAttribute('data-스타일'); 스타일고른것 = b.getAttribute('data-기본') ? '' : k; 저장.set('데스크스타일', 스타일고른것);
+    테마입히기(설정); 스타일단추그리기(); 토스트('화면 스타일을 바꿨어요 — ' + b.textContent);
+    if (자료) { 자료.순서 = 자료.순서 || {}; 자료.순서.스타일 = [k]; }
+    보내기짐({ 종류: '순서', 무엇: '스타일', 목록: [k] }).catch(function () {});
+  });
   // ── 시작 ──
   fetch('desk-org.json', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) {
     설정 = j; $('이름').textContent = (j.짧은이름 || '한마음') + ' 데스크'; document.title = $('이름').textContent;
     if (j.강조색) document.documentElement.style.setProperty('--강조', j.강조색);
+    테마입히기(j);
     try { 자료 = JSON.parse(저장.get('자료') || 'null'); } catch (e) { 자료 = null; }
     if (보기) { 보기전 = { 자료: 자료, 방: 방, 탭: 탭 }; 방 = ''; 자료 = null; }   // ?보기=원장님 — 내 자료는 되돌아올 때 쓰려고 들고 있는다
     그리기();
