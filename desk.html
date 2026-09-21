@@ -344,7 +344,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-21g';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-21h';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -433,7 +433,7 @@ a { color: var(--강조); }
     var 목록 = [];
     (자료.피드.답 || []).forEach(function (x) { 목록.push({ 종류: '답', id: x.id, 시각: x.시각, 제목: x.제목, 탭: '대화' }); });
     (자료.피드.할일 || []).forEach(function (x) { if (x.단계 !== '완료') 목록.push({ 종류: '할 일', id: x.id, 시각: x.시각, 제목: x.제목, 탭: '할일' }); });
-    (자료.피드.안내 || []).forEach(function (x) { 목록.push({ 종류: '안내', id: x.id, 시각: x.시각, 제목: x.제목, 탭: '홈' }); });
+    (자료.피드.안내 || []).forEach(function (x) { 목록.push({ 종류: '안내', id: x.id, 시각: x.시각, 제목: x.제목, 글: x.글, 탭: '알림' }); });
     봐야할메일().forEach(function (x) { 목록.push({ 종류: '메일', id: x.id, 시각: x.시각, 제목: x.보낸이 + ' · ' + x.제목, 탭: '메일' }); });
     return 목록.filter(function (x) { return 새것인가(x.시각); }).sort(function (a, b) { return a.시각 < b.시각 ? 1 : -1; });
   }
@@ -1327,15 +1327,21 @@ a { color: var(--강조); }
     var 목록 = [];
     (자료.피드.답 || []).forEach(function (x) { 목록.push({ 종류: '답', id: x.id, 시각: x.시각, 제목: x.제목, 탭: '대화' }); });
     (자료.피드.할일 || []).forEach(function (x) { if (x.단계 !== '완료' && !끝난할일(x.id)) 목록.push({ 종류: '할 일', id: x.id, 시각: x.시각, 제목: x.제목, 탭: '할일' }); });
-    (자료.피드.안내 || []).forEach(function (x) { 목록.push({ 종류: '안내', id: x.id, 시각: x.시각, 제목: x.제목, 탭: '홈' }); });
+    (자료.피드.안내 || []).forEach(function (x) { 목록.push({ 종류: '안내', id: x.id, 시각: x.시각, 제목: x.제목, 글: x.글, 탭: '알림' }); });
     봐야할메일().forEach(function (x) { 목록.push({ 종류: '메일', id: x.id, 시각: x.시각, 제목: x.보낸이 + ' · ' + x.제목, 탭: '메일' }); });
     return 목록.sort(function (a, b) { return a.시각 < b.시각 ? 1 : -1; }).slice(0, 30);
   }
-  function 알림열기() {
+  function 알림열기(펼칠id) {
     스타일단추그리기();
     var 목 = 알림목록전부();
-    $('알림목록').innerHTML = 목.length ? 목.map(function (x) { return '<div class="줄" data-탭가="' + x.탭 + '" data-초점="' + esc(x.id || '') + '">' + (새것인가(x.시각) ? '<span class="점" title="새"></span>' : '') + '<span class="칩 끝">' + esc(x.종류) + '</span>' + esc(x.제목) + '<div class="때">' + 때글(x.시각) + '</div></div>'; }).join('') : '<div class="빈">아직 온 것이 없어요. 답·할 일·안내가 오면 여기에 남아요.</div>';
+    // 안내는 갈 탭이 없다 — 이 시트에서 글을 펼쳐 읽는다(누르면 펼치고 다시 누르면 접음 · 2026-09-21)
+    $('알림목록').innerHTML = 목.length ? 목.map(function (x) {
+      var 새 = 새것인가(x.시각) ? '<span class="점" title="새"></span>' : '';
+      if (x.종류 === '안내') return '<div class="줄" data-안내토글="' + esc(x.id || '') + '" data-id="' + esc(x.id || '') + '">' + 새 + '<span class="칩 끝">안내</span>' + esc(x.제목) + '<div class="때">' + 때글(x.시각) + ' · <span style="color:var(--강조)">' + (펼칠id === x.id ? '접기' : '읽기 ›') + '</span></div><div class="한줄 안내글' + (펼칠id === x.id ? '' : ' 숨김') + '" style="margin-top:8px">' + esc(x.글 || '') + '</div></div>';
+      return '<div class="줄" data-탭가="' + x.탭 + '" data-초점="' + esc(x.id || '') + '">' + 새 + '<span class="칩 끝">' + esc(x.종류) + '</span>' + esc(x.제목) + '<div class="때">' + 때글(x.시각) + '</div></div>';
+    }).join('') : '<div class="빈">아직 온 것이 없어요. 답·할 일·안내가 오면 여기에 남아요.</div>';
     $('알림시트').classList.add('보임'); $('푸시칸').classList.remove('숨김');
+    if (펼칠id) { var 줄 = $('알림목록').querySelector('[data-id="' + 펼칠id.replace(/"/g, '') + '"]'); if (줄) setTimeout(function () { 줄.scrollIntoView({ block: 'center' }); }, 50); }
     푸시상태그리기();
     역사넣기();
     var 지금 = new Date(); 지금.setMilliseconds(0);
@@ -1379,7 +1385,7 @@ a { color: var(--강조); }
   }
   document.addEventListener('click', function (e) { if (e.target && e.target.id === '푸시켜기') 푸시켜기(); });
   $('알림닫기').addEventListener('click', function () { if (!닫고돌아가기()) $('알림시트').classList.remove('보임'); });
-  $('알림시트').addEventListener('click', function (e) { if (e.target === $('알림시트')) $('알림시트').classList.remove('보임'); if (e.target.closest('[data-보기]')) { $('알림시트').classList.remove('보임'); $('푸시칸').classList.remove('숨김'); return; } var 줄 = e.target.closest('[data-탭가]'); if (줄) { $('알림시트').classList.remove('보임'); 가기(줄.getAttribute('data-탭가'), 줄.getAttribute('data-초점')); } });
+  $('알림시트').addEventListener('click', function (e) { if (e.target === $('알림시트')) $('알림시트').classList.remove('보임'); var 안토 = e.target.closest('[data-안내토글]'); if (안토) { var 글칸 = 안토.querySelector('.안내글'); if (글칸) { var 접힘 = 글칸.classList.toggle('숨김'); var 표 = 안토.querySelector('.때 span'); if (표) 표.textContent = 접힘 ? '읽기 ›' : '접기'; } return; } if (e.target.closest('[data-보기]')) { $('알림시트').classList.remove('보임'); $('푸시칸').classList.remove('숨김'); return; } var 줄 = e.target.closest('[data-탭가]'); if (줄) { $('알림시트').classList.remove('보임'); 가기(줄.getAttribute('data-탭가'), 줄.getAttribute('data-초점')); } });
   // 홈·알림의 항목을 누르면 그 탭의 그 자리로 — 펼칠 것은 펼치고, 그 줄로 내려가 잠깐 강조(2026-09-18 유니스)
   // ── 뒤로 가기(2026-09-20 유니스 「항목 열고 코멘트 뒤 뒤로 가기를 누르면 화면이 아예 꺼져」) ──
   //    홈 화면 앱은 브라우저 뒤로 가기가 곧 앱 닫기다. 상세·알림 시트·탭을 열 때 역사에 한 칸 넣어 두면 뒤로 가기가 그 칸을 빼고 목록으로 돌아온다.
@@ -1396,7 +1402,7 @@ a { color: var(--강조); }
   try { history.replaceState(역사상태(), ''); } catch (e) {}
 
   function 가기(어디, 초점, 펼칠것, 구역) {
-    if (어디 === '알림') { 알림열기(); return; }
+    if (어디 === '알림') { 알림열기(초점); return; }
     if (펼칠것) 펼침[펼칠것] = true;
     탭 = 어디 || '홈'; 그리기();
     var 대상 = null;
