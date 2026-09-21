@@ -58,13 +58,13 @@ main { padding: 16px 16px 96px; max-width: 720px; margin: 0 auto; }
 .줄 .제목 { font-size: 17px; font-weight: 600; color: var(--글); }
 .줄 .한줄 { font-size: 15px; color: var(--보조); margin-top: 3px; white-space: pre-wrap; padding-left: 10px; border-left: 3px solid var(--강조연); }
 /* 누를 수 있는 것은 커서가 올라가면 보인다(2026-09-18 유니스) */
-button, [data-가], [data-펼침], [data-정렬], a { cursor: pointer; }
+button, [data-가], [data-펼침], [data-정렬], [data-고객], [data-할일], [data-블로그], [data-문자], [data-안내토글], [data-탭가], a { cursor: pointer; }
 @media (hover: hover) {
   .카드 h2 .더:hover { text-decoration: underline; }
   .단추:hover { filter: brightness(.93); }
   .단추.테:hover { background: var(--강조연); }
   .표 th[data-정렬]:hover { color: var(--강조); text-decoration: underline; }
-  tr[data-펼침]:hover td, .줄[data-가]:hover, .줄[data-탭가]:hover { background: var(--강조연); }
+  tr[data-펼침]:hover td, .줄[data-가]:hover, .줄[data-탭가]:hover, .줄[data-고객]:hover, .줄[data-할일]:hover, .줄[data-블로그]:hover, .줄[data-문자]:hover, .줄[data-안내토글]:hover { background: var(--강조연); }
   nav.탭 button:hover { color: var(--강조); }
 }
 tr[data-펼침] td:first-child::before { content: '›'; display: inline-block; width: 16px; color: var(--강조); transition: transform .15s; }
@@ -216,6 +216,9 @@ a.단추 { display: inline-flex; align-items: center; text-decoration: none; col
 .결과줄 { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 4px; }
 .결과줄 button { height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--강조); background: var(--카드); color: var(--강조); font-size: 15px; }
 .결과줄 button.켬 { background: var(--강조); color: #fff; }
+.제외띠 { background: #F3EFE8; color: #6B5B45; border-radius: 10px; padding: 10px 12px; font-size: 15px; margin: 8px 0 10px; }
+.제외줄 { margin-top: 18px; padding-top: 12px; border-top: 1px dashed var(--선); }
+.제외줄 .결과줄 button { border-color: var(--선); color: var(--보조); }
 /* 다른 사람 화면으로 보기(2026-09-21 유니스 「내 화면에서 원장님 화면으로 바로 넘어갈 수 있는 옵션」) — 머리의 눈 단추로 들어가고, 보는 동안 띠가 늘 떠 있고, 쓰기는 막힌다 */
 .눈 { position: relative; height: 40px; padding: 0 12px 0 8px; border-radius: 999px; border: 1px solid var(--선); background: var(--카드); color: var(--보조); font-size: 14px; display: inline-flex; align-items: center; gap: 6px; margin-right: 4px }
 .눈 svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8 }
@@ -344,7 +347,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-21h';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-21i';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -869,20 +872,22 @@ a { color: var(--강조); }
   var 고객검색 = '', 고객보기 = '연락', 열린고객 = '';
   var 연락결과들 = ['통화했어요', '안 받으셨어요', '방문 약속', '다음에 다시', '괜찮다고 하셔요'];
   function 고객목록() { return ((자료 && 자료.피드.고객) || []).slice(); }
-  function 이번주연락() { return 고객목록().filter(function (x) { return x.연락; }); }
+  function 제외됐나(x) { return !!(x.제외 || x.단계 === '연락 안 함') && x.단계 !== '연락 다시'; }
+  function 이번주연락() { return 고객목록().filter(function (x) { return x.연락 && !제외됐나(x); }); }
   function 연락남은() { return 이번주연락().filter(function (x) { return 연락결과들.indexOf(x.단계) < 0; }); }
   function 전화번호(x) { var v = x.휴대폰 || ''; if (!v && x.보호자) v = x.보호자; return (v.match(/0\d{1,2}-?\d{3,4}-?\d{4}/) || [''])[0]; }
   var 전화아이콘 = '<svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>';
   function 전화단추(x, 채움) { var 번 = 전화번호(x); if (!번) return '<span class="칩 끝">번호 없음</span>'; return '<a class="전화단추' + (채움 ? ' 채움' : '') + '" href="tel:' + esc(번.replace(/-/g, '')) + '" data-전화="' + esc(x.id) + '">' + 전화아이콘 + '전화</a>'; }
   function 고객줄(x, 자세히) {
-    var 결 = 연락결과들.indexOf(x.단계) >= 0 ? '<span class="칩 끝">' + esc(x.단계) + (x.단계때 ? ' · ' + 때글(x.단계때) : '') + '</span>' : '';
+    var 결 = 제외됐나(x) ? '<span class="칩 끝">연락 안 함' + ((x.제외 && x.제외.이유) || x.사유 ? ' · ' + esc((x.제외 && x.제외.이유) || x.사유) : '') + '</span>' : 연락결과들.indexOf(x.단계) >= 0 ? '<span class="칩 끝">' + esc(x.단계) + (x.단계때 ? ' · ' + 때글(x.단계때) : '') + '</span>' : '';
     var h = '<div class="줄 고객줄" data-고객="' + esc(x.id) + '" data-id="' + esc(x.id) + '"><div><div class="이름">' + esc(x.이름) + '<small>' + esc([x.나이 ? x.나이 + '세' : '', x.성별].filter(Boolean).join(' · ')) + '</small></div>';
-    if (x.연락) h += '<div class="이유">' + esc(x.연락.이유) + '</div>';
+    if (x.연락 && !제외됐나(x)) h += '<div class="이유">' + esc(x.연락.이유) + '</div>';
     else if (자세히) h += '<div class="한줄" style="padding-left:0;border:0">' + esc(x.기기목록 || x.분류 || '') + (x.최근접촉 ? ' · 최근 ' + esc(x.최근접촉) : '') + '</div>';
     h += '<div class="때">' + (결 ? 결 + ' · ' : '') + esc(전화번호(x) || '') + (x.미수건수 && x.미수건수 !== '0' ? ' · <span class="신호 살핌">미수 ' + esc(x.미수건수) + '건</span>' : '') + '</div></div>';
     h += '<div>' + 전화단추(x, !!x.연락 && !결) + '</div></div>';
     return h;
   }
+  var 제외이유들 = ['돌아가심', '원치 않으심', '그 밖'];
   function 고객상세(x) {
     var 칸 = [['주민번호 앞', x.주민앞], ['생년월일', x.생년 + (x.나이 ? ' (' + x.나이 + '세)' : '')], ['성별', x.성별], ['분류', x.분류], ['휴대폰', x.휴대폰], ['보호자', x.보호자], ['주소', x.주소], ['구입경로', x.구입경로],
               ['가입일', x.가입일], ['최근 접촉', x.최근접촉], ['거래', (x.거래건수 || '0') + '건' + (x.누적판매가 ? ' · ' + Number(x.누적판매가).toLocaleString('ko-KR') + '원' : '')], ['우리 기기', x.자사기기], ['다른 센터 기기', x.타센터기기], ['기기', x.기기목록],
@@ -890,18 +895,22 @@ a { color: var(--강조); }
     var h = '<section class="카드"><button class="더" data-고객닫기="1">‹ 목록으로</button><h2 style="margin-top:8px">' + esc(x.이름) + '<small style="font-weight:400;color:var(--보조);font-size:15px;margin-left:8px">' + esc([x.나이 ? x.나이 + '세' : '', x.성별].filter(Boolean).join(' · ')) + '</small></h2>';
     var 번 = 전화번호(x);
     h += '<div class="단추줄">' + (번 ? '<a class="전화단추 채움" href="tel:' + esc(번.replace(/-/g, '')) + '" data-전화="' + esc(x.id) + '">' + 전화아이콘 + '전화 ' + esc(번) + '</a><a class="전화단추" href="sms:' + esc(번.replace(/-/g, '')) + '" data-전화="' + esc(x.id) + '">문자</a>' : '<span class="칩 끝">번호 없음</span>') + '</div>';
-    if (x.연락) {
+    var 제외 = 제외됐나(x);
+    if (제외) h += '<div class="제외띠"><b>앞으로 연락 안 함</b> — ' + esc((x.제외 && x.제외.이유) || x.사유 || '이유 없음') + ((x.제외 && x.제외.날짜) ? ' · ' + esc(x.제외.날짜) : (x.단계때 ? ' · ' + 때글(x.단계때) : '')) + ' <button class="더" data-연락다시="' + esc(x.id) + '" style="margin-left:8px">다시 연락해도 돼요</button></div>';
+    if (x.연락 && !제외) {
       h += '<div class="고정힌트"><b>이번 주 연락</b> — ' + esc(x.연락.이유) + '</div>';
       h += '<div class="한줄" style="margin:10px 0 0;padding-left:0;border:0;color:var(--보조)">통화하신 뒤 하나만 눌러 주세요. 다음 주 명단에서 빠져요.</div>';
       h += '<div class="결과줄">' + 연락결과들.map(function (r) { return '<button data-연락결과="' + esc(r) + '" data-id="' + esc(x.id) + '"' + (x.단계 === r ? ' class="켬"' : '') + '>' + esc(r) + '</button>'; }).join('') + '</div>';
       if (연락결과들.indexOf(x.단계) >= 0) h += '<div class="때">' + esc(x.단계) + (x.단계때 ? ' · ' + 때글(x.단계때) : '') + (x.사유 ? ' · ' + esc(x.사유) : '') + '</div>';
     }
     h += '<table class="고객표">' + 칸.filter(function (r) { return r[1]; }).map(function (r) { return '<tr><th>' + esc(r[0]) + '</th><td>' + esc(r[1]) + '</td></tr>'; }).join('') + '</table>';
+    // 앞으로 연락 안 할 분(2026-09-21 유니스 「돌아가시거나 진상고객이었다거나 다시 연락하지 않을 분 옵션」) — 누르면 다음 주부터 명단에서 빠진다
+    if (!제외) h += '<div class="제외줄"><div class="한줄" style="padding-left:0;border:0;color:var(--보조)">앞으로 연락 안 할 분이면 이유를 하나 눌러 주세요. 명단에서 계속 빠져요(고객 정보는 남아요).</div><div class="결과줄">' + 제외이유들.map(function (r) { return '<button data-연락제외="' + esc(r) + '" data-id="' + esc(x.id) + '">' + esc(r) + '</button>'; }).join('') + '</div></div>';
     return h + '</section>';
   }
   function 고객거르기() {
     var 전부 = 고객목록(), q = 고객검색.trim().replace(/-/g, '');
-    var 골 = 고객보기 === '연락' ? 전부.filter(function (x) { return x.연락; }) : 고객보기 === '미수' ? 전부.filter(function (x) { return x.미수건수 && x.미수건수 !== '0'; }) : 전부;
+    var 골 = 고객보기 === '연락' ? 전부.filter(function (x) { return x.연락 && !제외됐나(x); }) : 고객보기 === '미수' ? 전부.filter(function (x) { return x.미수건수 && x.미수건수 !== '0'; }) : 전부;
     if (q) 골 = 전부.filter(function (x) { return (x.이름 || '').indexOf(q) >= 0 || (x.휴대폰 || '').replace(/-/g, '').indexOf(q) >= 0 || (x.보호자 || '').replace(/-/g, '').indexOf(q) >= 0 || (x.기기목록 || '').indexOf(q) >= 0; });
     if (고객보기 === '연락' && !q) 골 = 골.slice().sort(function (a, b) { var ra = 연락결과들.indexOf(a.단계) >= 0 ? 1 : 0, rb = 연락결과들.indexOf(b.단계) >= 0 ? 1 : 0; return ra - rb; });
     return 골;
@@ -1285,6 +1294,27 @@ a { color: var(--강조); }
         var x = 고객목록().filter(function (y) { return y.id === 고id; })[0]; if (x) { x.단계 = 결과; x.단계때 = 지금iso(); x.사유 = 메모; }
         토스트('적었어요 — ' + 결과 + '. 다음 주 명단에서 빠져요.'); 그리기();
       }).catch(function () { 결과단.disabled = false; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); });
+      return;
+    }
+    var 제외단 = e.target.closest('[data-연락제외]'); if (제외단) {
+      var 이유 = 제외단.getAttribute('data-연락제외'), 제id = 제외단.getAttribute('data-id');
+      if (이유 === '그 밖') { var 적 = window.prompt('어떤 이유인가요? 한 줄이면 돼요.', ''); if (적 === null) return; 이유 = 적.trim() || '그 밖'; }
+      if (!window.confirm('앞으로 연락 안 할 분으로 둘까요? (' + 이유 + ') 명단에서 계속 빠지고, 정보는 남아요. 나중에 「다시 연락해도 돼요」로 되돌릴 수 있어요.')) return;
+      제외단.disabled = true;
+      보내기짐({ 종류: '단계', id: 제id, 단계: '연락 안 함', 사유: 이유 }).then(function (j) {
+        if (!j || !j.됨) throw new Error();
+        var x = 고객목록().filter(function (y) { return y.id === 제id; })[0]; if (x) { x.단계 = '연락 안 함'; x.단계때 = 지금iso(); x.사유 = 이유; x.제외 = { 이유: 이유, 날짜: 지금iso().slice(0, 10) }; }
+        토스트('앞으로 연락 안 함으로 두었어요 — ' + 이유); 그리기();
+      }).catch(function () { 제외단.disabled = false; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); });
+      return;
+    }
+    var 다시단 = e.target.closest('[data-연락다시]'); if (다시단) {
+      var 다id = 다시단.getAttribute('data-연락다시'); 다시단.disabled = true;
+      보내기짐({ 종류: '단계', id: 다id, 단계: '연락 다시', 사유: '' }).then(function (j) {
+        if (!j || !j.됨) throw new Error();
+        var x = 고객목록().filter(function (y) { return y.id === 다id; })[0]; if (x) { x.단계 = '연락 다시'; x.단계때 = 지금iso(); x.사유 = ''; x.제외 = null; }
+        토스트('다시 연락드릴 분으로 되돌렸어요.'); 그리기();
+      }).catch(function () { 다시단.disabled = false; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); });
       return;
     }
     var 고객줄el = e.target.closest('[data-고객]'); if (고객줄el) { 열린고객 = 고객줄el.getAttribute('data-고객'); 탭 = '고객'; 그리기(); window.scrollTo(0, 0); return; }
