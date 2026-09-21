@@ -296,6 +296,7 @@ nav.탭 svg { width: 24px; height: 24px; fill: none; stroke: currentColor; strok
   main.홈격자 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
   main.홈격자 > section { margin-bottom: 0; }
   main.홈격자 > section.넓게 { grid-column: 1 / -1; }
+  main.홈격자 > .정렬머리 { grid-column: 1 / -1; }   /* 「순서 바꾸기」 줄이 첫 칸을 차지해 왼쪽 위가 비어 보이던 것(2026-09-21 유니스 캡처) — 두 칸에 걸쳐 놓는다 */
   .입력줄 { left: 220px; padding: 12px 32px; bottom: 0; }
   .힌트 { left: 220px; bottom: 76px; }
   .토스트 { left: 260px; right: auto; max-width: 480px; bottom: 100px; }
@@ -487,7 +488,7 @@ a { color: var(--강조); }
     return 목록.slice().sort(function (a, b) { var ia = 위치[키뽑기(a)], ib = 위치[키뽑기(b)]; if (ia === undefined && ib === undefined) return 0; if (ia === undefined) return 1; if (ib === undefined) return -1; return ia - ib; });
   }
   var 손잡이 = '<span class="손잡이" data-손잡이="1" title="끌어서 차례 바꾸기" aria-label="끌어서 차례 바꾸기"><svg viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>';
-  function 정렬머리(무엇, 안내) { if (보기) return ''; return '<div style="text-align:right;margin:-4px 0 6px"><button class="정렬단추' + (정렬모드[무엇] ? ' 켬' : '') + '" data-정렬켜기="' + 무엇 + '">' + (정렬모드[무엇] ? '순서 바꾸기 끝' : '순서 바꾸기') + '</button></div>' + (정렬모드[무엇] ? '<div class="정렬안내">' + 안내 + ' 바꾼 차례는 그대로 남아요.</div>' : ''); }
+  function 정렬머리(무엇, 안내) { if (보기) return ''; return '<div class="정렬머리" style="text-align:right;margin:-4px 0 6px"><button class="정렬단추' + (정렬모드[무엇] ? ' 켬' : '') + '" data-정렬켜기="' + 무엇 + '">' + (정렬모드[무엇] ? '순서 바꾸기 끝' : '순서 바꾸기') + '</button>' + (정렬모드[무엇] ? '<div class="정렬안내" style="text-align:left">' + 안내 + ' 바꾼 차례는 그대로 남아요.</div>' : '') + '</div>'; }
   function 차례달기(html, 무엇, 키, 손잡이보임) {
     html = html.replace('<section class="', '<section data-차례무엇="' + esc(무엇) + '" data-차례키="' + esc(키) + '" class="' + (손잡이보임 ? '정렬모드 ' : ''));
     return 손잡이보임 ? html.replace('</h2>', 손잡이 + '</h2>') : html;
