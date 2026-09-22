@@ -381,7 +381,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-22f';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-22g';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -1413,7 +1413,9 @@ a { color: var(--강조); }
       if (당보류.length) h += '<section class="카드"><h2>안 쓰기로 한 당근 글 ' + 당보류.length + '</h2>' + 당보류.map(블로그카드).join('') + '</section>';
       if (당쓴.length) h += '<section class="카드"><h2>올린 당근 글 ' + 당쓴.length + '</h2>' + 당쓴.map(블로그카드).join('') + '</section>';
     }
-    if (나머지.length || (!블로그.length && !당근.length)) h += '<section class="카드">' + (나머지.length ? 나머지.map(function (x) { return 받은것줄(x); }).join('') : '<div class="빈">아직 없어요. 블로그 초안·문자 문안·명단·자료가 오면 여기에 모여요.</div>') + '</section>';
+    // 20건 넘으면 「더 보기」(2026-09-22 — GN 받은 것 82건이 폰 15,520px 였다)
+    var 나머지보임 = 펼침더['받은것'] ? 나머지 : 나머지.slice(0, 20);
+    if (나머지.length || (!블로그.length && !당근.length)) h += '<section class="카드">' + (나머지.length ? 나머지보임.map(function (x) { return 받은것줄(x); }).join('') + (나머지.length > 나머지보임.length ? '<div class="더보기줄"><button data-더보기="받은것">' + (나머지.length - 나머지보임.length) + '개 더 보기</button></div>' : '') : '<div class="빈">아직 없어요. 블로그 초안·문자 문안·명단·자료가 오면 여기에 모여요.</div>') + '</section>';
     return h;
   }
   function 그리기() {
