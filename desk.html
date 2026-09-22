@@ -219,6 +219,12 @@ a.단추 { display: inline-flex; align-items: center; text-decoration: none; col
 .제외띠 { background: #F3EFE8; color: #6B5B45; border-radius: 10px; padding: 10px 12px; font-size: 15px; margin: 8px 0 10px; }
 .제외줄 { margin-top: 18px; padding-top: 12px; border-top: 1px dashed var(--선); }
 .제외줄 .결과줄 button { border-color: var(--선); color: var(--보조); }
+/* 남이 하신 것(2026-09-22 유니스 「원장님이 무슨 피드백 주셨는지 바로 화면에서」) — 대표 홈 카드 · 뒷단 한일 표를 사람 말로 */
+.한일줄 { display: flex; gap: 10px; padding: 8px 0; border-top: 1px solid var(--선); font-size: 15px; }
+.한일줄:first-of-type { border-top: 0; }
+.한일줄 .때칸 { flex: 0 0 74px; color: var(--흐림); font-size: 14px; padding-top: 1px; }
+.한일줄 .몸 { flex: 1; }
+.한일줄 .몸 b { font-weight: 600; }
 /* 다른 사람 화면으로 보기(2026-09-21 유니스 「내 화면에서 원장님 화면으로 바로 넘어갈 수 있는 옵션」) — 머리의 눈 단추로 들어가고, 보는 동안 띠가 늘 떠 있고, 쓰기는 막힌다 */
 .눈 { position: relative; height: 40px; padding: 0 12px 0 8px; border-radius: 999px; border: 1px solid var(--선); background: var(--카드); color: var(--보조); font-size: 14px; display: inline-flex; align-items: center; gap: 6px; margin-right: 4px }
 .눈 svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8 }
@@ -348,7 +354,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-21i';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-22a';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -617,6 +623,7 @@ a { color: var(--강조); }
         h += '<div class="큰수">' + 내할일.length + '</div>' + 내할일.slice(0, 3).map(function (x) { return 할일줄(x, true); }).join('') + '</section>';
       }
     }
+    if (대표인가()) h += 한일카드();   // 원장님이 하신 것 — 대표에게만(2026-09-22)
     h += '<section class="카드"><h2>새로 온 것 <button class="더" data-가="알림">전부 보기</button></h2>';
     h += 새.length ? '<div class="줄" data-가="' + esc(새[0].탭) + '" data-초점="' + esc(새[0].id || '') + '"><div class="큰수">' + 새.length + '</div><div class="한줄" style="color:var(--보조)">' + esc(새[0].종류 + ' · ' + 새[0].제목) + (새.length > 1 ? ' 외 ' + (새.length - 1) : '') + '</div></div>' : '<div class="빈">지금은 없어요. 답이나 할 일이 오면 여기와 종에 떠요.</div>';
     h += '</section>';
@@ -662,7 +669,7 @@ a { color: var(--강조); }
     // 카드마다 키를 붙여 저장된 차례로 늘어놓는다(2026-09-21 유니스). 키 = 카드 제목의 앞말
     var 카드들 = (h.match(/<section[\s\S]*?<\/section>/g) || []).map(function (조각) {
       var m = 조각.match(/<h2>([^<]*)/); var 제목 = (m ? m[1] : '').trim();
-      var 키 = 제목.indexOf('이번 달') === 0 ? '이번 달' : (제목.indexOf(말('받은것카드')) === 0 || 제목.indexOf('최근 받은 것') === 0) ? '받은 것' : 제목.indexOf('메일') === 0 ? '메일' : 제목.indexOf('이번 주 연락') === 0 ? '이번 주 연락' : 제목.replace(/\s+\d+$/, '');
+      var 키 = 제목.indexOf('이번 달') === 0 ? '이번 달' : (제목.indexOf(말('받은것카드')) === 0 || 제목.indexOf('최근 받은 것') === 0) ? '받은 것' : 제목.indexOf('메일') === 0 ? '메일' : 제목.indexOf('이번 주 연락') === 0 ? '이번 주 연락' : /하신 것/.test(제목) ? '하신 것' : 제목.replace(/\s+\d+$/, '');
       return { 키: 키, 제목: 제목, html: 조각 };
     });
     카드들 = 순서정렬(카드들, '홈', function (c) { return c.키; });
@@ -939,6 +946,49 @@ a { color: var(--강조); }
     if (!연.length) return '';
     var h = '<section class="카드"><h2>이번 주 연락 ' + 남.length + (연.length > 남.length ? '<small style="font-weight:400;color:var(--보조);font-size:14px;margin-left:6px">/ ' + 연.length + '</small>' : '') + ' <button class="더" data-가="고객" data-고객보기="연락">전부 보기</button></h2>';
     h += 남.length ? 남.slice(0, 3).map(function (x) { return 고객줄(x, false); }).join('') : '<div class="빈">이번 주 연락은 다 하셨어요. 고마워요.</div>';
+    return h + '</section>';
+  }
+  // ── 남이 하신 것(2026-09-22) — 워커 자료.한일 [{때,누가,무엇,대상}] 을 사람 말로. 대표·관리자에게만 온다 ──
+  var 한일더 = false;
+  function 제목찾기(id) {
+    if (!자료 || !id) return '';
+    var 갈래들 = ['할일', '받은것', '메일', '안내', '답', '고객'];
+    for (var i = 0; i < 갈래들.length; i++) { var x = ((자료.피드 || {})[갈래들[i]] || []).filter(function (y) { return y.id === id; })[0]; if (x) return x.이름 ? x.이름 + '님' : (x.제목 || x.보낸이 || ''); }
+    return '';
+  }
+  function 한일말(h) {
+    var 무 = h.무엇 || '', 대 = h.대상 || '';
+    var id = 대.split(' · ')[0], 사유 = 대.indexOf(' · ') >= 0 ? 대.slice(대.indexOf(' · ') + 3) : '';
+    var 제 = 제목찾기(id);
+    if (무 === '열림') return '앱을 열어 봤어요';
+    if (무 === '끝냈어요') return (제 ? '<b>' + esc(제) + '</b> ' : '') + (id.indexOf('m-') === 0 ? '메일 처리했어요' : '끝냈어요');
+    if (무.indexOf('단계:') === 0) {
+      var 단 = 무.slice(3);
+      if (id.indexOf('c-') === 0) return '<b>' + esc(제 || '고객') + '</b> ' + esc(단) + (사유 ? ' · ' + esc(사유) : '');
+      if (단 === '결정') return (제 ? '<b>' + esc(제) + '</b>에 ' : '') + '답: ' + esc(사유 || '그대로 진행');
+      if (단 === '얘기중') return (제 ? '<b>' + esc(제) + '</b> — ' : '') + '더 얘기하자: ' + esc(사유);
+      if (단 === '보류') return (제 ? '<b>' + esc(제) + '</b> ' : '') + '나중에' + (사유 ? ' · ' + esc(사유) : '');
+      if (단 === '썼어요') return '<b>' + esc(제 || '글') + '</b> 올렸어요(썼어요)';
+      return (제 ? '<b>' + esc(제) + '</b> ' : '') + esc(단) + (사유 ? ' · ' + esc(사유) : '');
+    }
+    if (무.indexOf('순서:') === 0) return { 홈: '홈 카드', 할일: '할 일', 재고: '재고 묶음' }[무.slice(3)] ? { 홈: '홈 카드', 할일: '할 일', 재고: '재고 묶음' }[무.slice(3)] + ' 차례를 바꿨어요' : '차례를 바꿨어요';
+    if (무 === '고정') return (제 ? '<b>' + esc(제) + '</b> ' : '') + '늘 쓰는 것에 고정했어요';
+    if (무 === '고정풀기') return (제 ? '<b>' + esc(제) + '</b> ' : '') + '늘 쓰는 것에서 내렸어요';
+    if (무 === '스타일' || 무.indexOf('스타일') === 0) return '화면 스타일을 바꿨어요';
+    if (무 === '대화지움' || 무 === '지움') return '하나 지웠어요';
+    return esc(무) + (대 ? ' · ' + esc(대.slice(0, 60)) : '');
+  }
+  function 한일카드() {
+    var 줄들 = (자료 && 자료.한일) || [];
+    if (!줄들.length || 보기) return '';
+    var 사람 = ((자료 && 자료.사람들) || []);
+    var 제목 = 사람.length === 1 ? 사람[0].이름 + '이 하신 것' : '다른 분들이 하신 것';
+    // 연달아 「열림」이면 하나로(하루에 몇 번씩 열어 보신다)
+    var 뭉친 = [];
+    줄들.forEach(function (h) { var 앞 = 뭉친[뭉친.length - 1]; if (앞 && 앞.무엇 === '열림' && h.무엇 === '열림' && 앞.누가 === h.누가 && (앞.때 || '').slice(0, 10) === (h.때 || '').slice(0, 10)) { 앞.번 = (앞.번 || 1) + 1; return; } 뭉친.push(Object.assign({}, h)); });
+    var 보일 = 한일더 ? 뭉친 : 뭉친.slice(0, 6);
+    var h = '<section class="카드"><h2>' + esc(제목) + (뭉친.length > 6 ? ' <button class="더" data-한일더="1">' + (한일더 ? '접기' : '전부 ' + 뭉친.length) + '</button>' : '') + '</h2>';
+    h += 보일.map(function (x) { return '<div class="한일줄"><div class="때칸">' + 때글(x.때) + '</div><div class="몸">' + (사람.length > 1 ? esc(x.누가) + ' · ' : '') + 한일말(x) + (x.번 > 1 ? ' · ' + x.번 + '번' : '') + '</div></div>'; }).join('');
     return h + '</section>';
   }
   function 일정카드() {
@@ -1263,6 +1313,7 @@ a { color: var(--강조); }
       }).catch(function () { 결.disabled = false; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); });
       return;
     }
+    if (e.target.closest('[data-한일더]')) { 한일더 = !한일더; 그리기(); return; }
     var 정켜 = e.target.closest('[data-정렬켜기]'); if (정켜) { var 무 = 정켜.getAttribute('data-정렬켜기'); 정렬모드[무] = !정렬모드[무]; 그리기(); return; }
     var 고 = e.target.closest('[data-고정]'); if (고) {
       e.preventDefault(); e.stopPropagation();
