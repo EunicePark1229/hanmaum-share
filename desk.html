@@ -354,7 +354,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-22a';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-22b';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -979,15 +979,17 @@ a { color: var(--강조); }
     return esc(무) + (대 ? ' · ' + esc(대.slice(0, 60)) : '');
   }
   function 한일카드() {
-    var 줄들 = (자료 && 자료.한일) || [];
-    if (!줄들.length || 보기) return '';
+    var 줄들 = (자료 && 자료.한일) || [], 마지막 = 자료 && 자료.마지막열림;
+    if ((!줄들.length && !마지막) || 보기) return '';
     var 사람 = ((자료 && 자료.사람들) || []);
     var 제목 = 사람.length === 1 ? 사람[0].이름 + '이 하신 것' : '다른 분들이 하신 것';
+    var 연때 = 마지막 ? '<div class="한줄" style="padding-left:0;border:0;color:var(--보조);margin-bottom:6px">마지막으로 앱을 연 때 · ' + 때글(마지막.때) + (사람.length > 1 ? ' (' + esc(마지막.누가) + ')' : '') + '</div>' : '';
+    if (!줄들.length) return '<section class="카드"><h2>' + esc(제목) + '</h2>' + 연때 + '<div class="빈">아직 누르신 것이 없어요.</div></section>';
     // 연달아 「열림」이면 하나로(하루에 몇 번씩 열어 보신다)
     var 뭉친 = [];
     줄들.forEach(function (h) { var 앞 = 뭉친[뭉친.length - 1]; if (앞 && 앞.무엇 === '열림' && h.무엇 === '열림' && 앞.누가 === h.누가 && (앞.때 || '').slice(0, 10) === (h.때 || '').slice(0, 10)) { 앞.번 = (앞.번 || 1) + 1; return; } 뭉친.push(Object.assign({}, h)); });
     var 보일 = 한일더 ? 뭉친 : 뭉친.slice(0, 6);
-    var h = '<section class="카드"><h2>' + esc(제목) + (뭉친.length > 6 ? ' <button class="더" data-한일더="1">' + (한일더 ? '접기' : '전부 ' + 뭉친.length) + '</button>' : '') + '</h2>';
+    var h = '<section class="카드"><h2>' + esc(제목) + (뭉친.length > 6 ? ' <button class="더" data-한일더="1">' + (한일더 ? '접기' : '전부 ' + 뭉친.length) + '</button>' : '') + '</h2>' + 연때;
     h += 보일.map(function (x) { return '<div class="한일줄"><div class="때칸">' + 때글(x.때) + '</div><div class="몸">' + (사람.length > 1 ? esc(x.누가) + ' · ' : '') + 한일말(x) + (x.번 > 1 ? ' · ' + x.번 + '번' : '') + '</div></div>'; }).join('');
     return h + '</section>';
   }
