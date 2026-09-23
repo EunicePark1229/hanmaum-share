@@ -415,7 +415,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-23i';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-23j';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -1794,6 +1794,24 @@ a { color: var(--강조); }
   }
   function 푸시단추(글, 잠금) { var b = $('푸시켜기'); if (b) { b.disabled = !!잠금; b.textContent = 글; } }
   function urlB64ToU8(b) { var p = '='.repeat((4 - b.length % 4) % 4); var s = (b + p).replace(/-/g, '+').replace(/_/g, '/'); var r = atob(s); var u = new Uint8Array(r.length); for (var i = 0; i < r.length; i++) u[i] = r.charCodeAt(i); return u; }
+  // 앱을 열 때 저절로 붙는다 — 알림을 이미 허락한 기기인데 구독이 없거나, 옛 구독이 다른 이름으로 돼 있으면(09-18 「구성원」) 다시 붙인다.
+  //   2026-09-23 유니스 「폰 알림 오도록 설정 모두 해주고」 — 사람이 종을 눌러야만 붙던 것을 없앴다. 허락 창은 안 띄운다(이미 허락한 기기만).
+  function 푸시저절로() {
+    try {
+      if (!설정 || !설정.푸시공개키 || 보기) return;
+      if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
+      if (Notification.permission !== 'granted') return;
+      var 나 = (자료 && 자료.누구) || '';
+      navigator.serviceWorker.ready.then(function (reg) {
+        return reg.pushManager.getSubscription().then(function (sub) {
+          if (sub && 저장.get('구독이름') === 나 && 나) return;         // 이미 내 이름으로 붙어 있다
+          return (sub ? Promise.resolve(sub) : reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64ToU8(설정.푸시공개키) }))
+            .then(function (s2) { return 보내기짐({ 종류: '구독', 구독: s2.toJSON() }); })
+            .then(function (j) { if (j && j.됨) { 저장.set('푸시구독', '1'); 저장.set('구독이름', 나); 푸시상태그리기(); } });
+        });
+      }).catch(function () {});
+    } catch (e) {}
+  }
   function 푸시켜기() {
     if (!설정 || !설정.푸시공개키) { 토스트('아직 알림 열쇠가 없어요.'); return; }
     if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) { 토스트('이 브라우저는 알림을 못 받아요.'); return; }
@@ -1807,7 +1825,7 @@ a { color: var(--강조); }
         return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64ToU8(설정.푸시공개키) });
       }).then(function (sub) {
         return 보내기짐({ 종류: '구독', 구독: sub.toJSON() });
-      }).then(function (j) { if (!j || !j.됨) throw new Error('저장'); 저장.set('푸시구독', '1'); 토스트('이 기기의 알림을 켰어요.'); 푸시상태그리기(); });
+      }).then(function (j) { if (!j || !j.됨) throw new Error('저장'); 저장.set('푸시구독', '1'); 저장.set('구독이름', (자료 && 자료.누구) || ''); 토스트('이 기기의 알림을 켰어요.'); 푸시상태그리기(); });
     }).catch(function (e) {
       푸시단추('폰 알림 켜기', false);
       var 왜 = (e && e.message) || '';
@@ -2085,7 +2103,7 @@ a { color: var(--강조); }
     try { 보내기짐({ 종류: '기록', 무엇: '열림', 상세: '판 ' + 판 + (location.search.indexOf('%EC%95%8C%EB%A6%BC') >= 0 || location.search.indexOf('알림') >= 0 ? ' · 알림으로 열림' : ' · 손으로 열림') + ' · sw ' + ((navigator.serviceWorker && navigator.serviceWorker.controller) ? '있음' : '없음') + ' · ' + (navigator.userAgent || '').slice(0, 80) }).catch(function () {}); } catch (e) {}
     setInterval(function () { if (!document.hidden) 받아오기(); }, 30000);
     document.addEventListener('visibilitychange', function () { if (!document.hidden) 받아오기(); });
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('desk-sw.js').catch(function () {});
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('desk-sw.js').then(function () { setTimeout(푸시저절로, 1500); }).catch(function () {});
   }).catch(function () { $('본문').innerHTML = '<div class="카드"><div class="빈">설정을 못 읽었어요. 잠시 뒤 다시 열어 주세요.</div></div>'; });
 })();
 </script>
