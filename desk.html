@@ -155,7 +155,7 @@ details { margin: 10px 0; } details summary { cursor: pointer; color: var(--강�
 .손익그림 { position: relative; margin-top: 12px; }
 .손익그림 .영선 { position: absolute; left: 0; right: 0; top: 54px; height: 1px; background: var(--선); }
 .손익그림 .영글자 { position: absolute; right: 0; top: 56px; font-size: 11px; color: var(--흐림); }
-.손익막대 { display: flex; gap: 3px; align-items: stretch; }
+.손익막대 { display: flex; gap: 3px; align-items: stretch; padding-right: 16px; }   /* 오른쪽 16px 은 「0」 글자 자리 — 안 비우면 마지막 막대에 겹친다 */
 .손익막대 .달칸 { flex: 1; min-width: 0; }
 .손익막대 .윗칸 { height: 54px; display: flex; align-items: flex-end; }
 .손익막대 .아랫칸 { height: 54px; display: flex; align-items: flex-start; }
@@ -415,7 +415,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-23e';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-23f';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -1334,10 +1334,10 @@ a { color: var(--강조); }
     // 0 기준선 위로 남은 달, 아래로 모자란 달 — 부호를 자리가 말한다(색은 거들 뿐)
     h += '<div class="손익그림"><div class="영선"></div><div class="영글자">0</div><div class="손익막대">';
     h += 골.map(function (m) {
-      var v = m.손익 || 0, 키 = Math.max(3, Math.round(50 * Math.abs(v) / 최대));
+      var v = m.손익 || 0, 키 = v === 0 ? 0 : Math.max(3, Math.round(50 * Math.abs(v) / 최대));   // 0 인 달은 막대를 안 그린다(3px 토막이 「조금 남은 달」로 보였다)
       var 이름 = 이름다 ? (m.연월.slice(5) + '월') : (m.연월.slice(5) === '01' ? m.연월.slice(2, 4) + '년' : (m.연월.slice(5) === '07' ? '7월' : ''));
       return '<div class="달칸' + (펼친달 === m.연월 ? ' 짚음' : '') + '" data-손익달="' + esc(m.연월) + '" title="' + esc(m.연월) + ' · 매출 ' + 만원(m.매출) + ' · 손익 ' + 만원(v) + '">'
-        + '<div class="윗칸">' + (v >= 0 ? '<i style="height:' + 키 + 'px"></i>' : '') + '</div>'
+        + '<div class="윗칸">' + (v > 0 ? '<i style="height:' + 키 + 'px"></i>' : '') + '</div>'
         + '<div class="아랫칸">' + (v < 0 ? '<i style="height:' + 키 + 'px"></i>' : '') + '</div>'
         + '<div class="달이름">' + esc(이름) + '</div></div>';
     }).join('') + '</div></div>';
