@@ -37,7 +37,10 @@ body[data-탭="받은것"] { --강조: #5B6672; --강조연: #EEF0F2; }
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--바탕); color: var(--글); font-family: 'Paperlogy', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; font-size: 16px; line-height: 1.5; -webkit-text-size-adjust: 100%; }
 button, input, textarea { font: inherit; }
-.위 { position: sticky; top: 0; z-index: 5; background: var(--머리바탕, var(--카드)); color: var(--머리글, var(--글)); border-bottom: 1px solid var(--머리선, var(--선)); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
+.위 { position: sticky; top: 0; z-index: 5; background: var(--머리바탕, var(--카드)); color: var(--머리글, var(--글)); border-bottom: 1px solid var(--머리선, var(--선)); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+/* 앱 표시(2026-09-23 유니스 「페이지 안에도 이미지가 · CI 처럼 아이콘이」) — 홈 화면 아이콘 그대로. 역할이 바뀌면 아이콘맞추기가 같이 바꾼다 */
+.위 .앱표 { width: 28px; height: 28px; border-radius: 8px; flex: 0 0 auto; display: block; }
+.위 h1 { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .위 h1 { margin: 0; font-size: 20px; font-weight: var(--머리굵기, 400); font-family: var(--제목서체, inherit); color: inherit; }
 .위 .종 svg { stroke: currentColor; }
 .종 { position: relative; width: 44px; height: 44px; border: 0; background: transparent; border-radius: 12px; display: grid; place-items: center; }
@@ -363,6 +366,7 @@ a { color: var(--강조); }
 </head>
 <body>
 <header class="위">
+  <img class="앱표" id="앱표" src="desk-192.png" alt="" width="28" height="28">
   <h1 id="이름">한마음 데스크</h1>
   <span style="display:flex;align-items:center">
   <button class="눈 숨김" id="눈" data-보기="" title="다른 사람 화면으로 보기"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span id="눈글">원장님 화면</span></button>
@@ -416,6 +420,8 @@ a { color: var(--강조); }
     var m = document.querySelector('link[rel="manifest"]'), a = document.querySelector('link[rel="apple-touch-icon"]');
     if (m && m.getAttribute('href') !== (대표 ? 'desk-boss.webmanifest' : 'desk.webmanifest')) m.setAttribute('href', 대표 ? 'desk-boss.webmanifest' : 'desk.webmanifest');
     if (a) a.setAttribute('href', 대표 ? 'boss-180.png' : 'desk-180.png');
+    var 표 = document.getElementById('앱표');
+    if (표) { var 원 = 대표 ? 'boss-192.png' : 'desk-192.png'; if (표.getAttribute('src') !== 원) 표.setAttribute('src', 원); 표.alt = (설정 && 설정.짧은이름 ? 설정.짧은이름 : '') + ' 데스크'; }
   }
   아이콘맞추기();
   // 실시간 방(2026-09-20 유니스 「사내 메신저처럼 · 확장까지 미리」) — 워커 Durable Object(src/room.js)에 웹소켓으로 붙는다
