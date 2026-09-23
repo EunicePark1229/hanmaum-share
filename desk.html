@@ -415,7 +415,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-23f';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-23g';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -472,8 +472,18 @@ a { color: var(--강조); }
   function 보내기짐(짐) {
     if (보기 && 짐.종류 !== '기록') { 토스트(보기 + ' 화면을 보는 중이라 여기서는 못 바꿔요. 「내 화면으로」를 누른 뒤에 해 주세요.'); return Promise.reject(new Error('보기')); }
     짐.k = 열쇠;
+    if (!열쇠) return Promise.reject(new Error('열쇠가 이 기기에 없어요 — 받으신 링크로 다시 열어 주세요'));
     return fetch(설정.뒷단, { method: 'POST', body: JSON.stringify(짐), headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow' })
-      .then(function (r) { return r.json(); });
+      .then(function (r) { return r.json().catch(function () { throw new Error('뒷단이 답을 안 줬어요(' + r.status + ')'); }); })
+      .then(function (j) { if (!j || !j.됨) throw new Error(j && j.왜 ? j.왜 : '뒷단이 못 했다고 해요'); return j; });
+  }
+  // 왜 못 했는지 그대로 말한다(2026-09-23 유니스 「이거 계속 뜨네」 — 「지금은 못 보냈어요」만 뜨면 무엇을 해야 할지 모른다).
+  //   보기 중이면 이미 그쪽 말이 떴으니 덧대지 않는다. 그리고 뒷단에 한 줄 남겨(기록) 나중에 왜 그랬는지 찾을 수 있게 한다.
+  function 못했어요(e, 무엇) {
+    var 왜 = (e && e.message) || '';
+    if (왜 === '보기') return;
+    토스트(왜 ? ('못 했어요 — ' + 왜) : '지금은 안 됐어요. 인터넷이 끊겼는지 보시고 다시 눌러 주세요.');
+    try { if (열쇠 && !보기) 보내기짐({ 종류: '기록', 무엇: '못함', 상세: (무엇 || '') + ' · ' + 왜.slice(0, 120) }).catch(function () {}); } catch (e2) {}
   }
 
   // ── 다른 사람 화면으로 보기(2026-09-21) — Discord 「View Server as Role」· Canvas 「Student View」와 같은 꼴: 그 사람 눈으로 보되 띠가 늘 떠 있고 쓰기는 막힌다 ──
@@ -1604,7 +1614,7 @@ a { color: var(--강조); }
         if (!j || !j.됨) throw new Error();
         if (단계 === '얘기중' && x) { var 글 = '[정하실 것 · ' + x.제목 + '] ' + 사유; 보내기({ 종류: '글', 글: 글 }, { 누가: '나', 종류: '글', 글: 글, 시각: 지금iso(), 임시: Date.now() }); 열린할일id = ''; return; }
         토스트(단계 === '결정' ? (사유.indexOf('보내도 됩니다') >= 0 ? '고마워요. 정하신 시각에 나갑니다.' : '정하신 대로 처리할게요.') : 단계 === '보류' ? '나중에 다시 올릴게요.' : '끝낸 것으로 적었어요.'); 열린할일id = ''; 열린블로그 = ''; 받아오기();
-      }).catch(function () { 결.disabled = false; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); });
+      }).catch(function (e) { 결.disabled = false; 못했어요(e, '결정'); });
       return;
     }
     if (e.target.closest('[data-한일더]')) { 한일더 = !한일더; 그리기(); return; }
@@ -1634,7 +1644,7 @@ a { color: var(--강조); }
         그리기();
         토스트(켤 ? '맨 위 “늘 쓰는 것”에 두었어요.' : '“늘 쓰는 것”에서 내렸어요.');
         if (켤) window.scrollTo({ top: 0, behavior: 'smooth' });
-      }).catch(function () { 고.disabled = false; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); });
+      }).catch(function (e) { 고.disabled = false; 못했어요(e, '고정'); });
       return;
     }
     if (e.target.closest('[data-할일닫기]')) { if (!닫고돌아가기()) { 열린할일id = ''; 그리기(); } return; }
@@ -1654,7 +1664,7 @@ a { color: var(--강조); }
         if (!j || !j.됨) throw new Error();
         var x = 고객목록().filter(function (y) { return y.id === 고id; })[0]; if (x) { x.단계 = 결과; x.단계때 = 지금iso(); x.사유 = 메모; }
         토스트('적었어요 — ' + 결과 + '. 다음 주 명단에서 빠져요.'); 그리기();
-      }).catch(function () { 결과단.disabled = false; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); });
+      }).catch(function (e) { 결과단.disabled = false; 못했어요(e, '연락결과'); });
       return;
     }
     var 제외단 = e.target.closest('[data-연락제외]'); if (제외단) {
@@ -1666,7 +1676,7 @@ a { color: var(--강조); }
         if (!j || !j.됨) throw new Error();
         var x = 고객목록().filter(function (y) { return y.id === 제id; })[0]; if (x) { x.단계 = '연락 안 함'; x.단계때 = 지금iso(); x.사유 = 이유; x.제외 = { 이유: 이유, 날짜: 지금iso().slice(0, 10) }; }
         토스트('앞으로 연락 안 함으로 두었어요 — ' + 이유); 그리기();
-      }).catch(function () { 제외단.disabled = false; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); });
+      }).catch(function (e) { 제외단.disabled = false; 못했어요(e, '연락제외'); });
       return;
     }
     var 다시단 = e.target.closest('[data-연락다시]'); if (다시단) {
@@ -1675,12 +1685,12 @@ a { color: var(--강조); }
         if (!j || !j.됨) throw new Error();
         var x = 고객목록().filter(function (y) { return y.id === 다id; })[0]; if (x) { x.단계 = '연락 다시'; x.단계때 = 지금iso(); x.사유 = ''; x.제외 = null; }
         토스트('다시 연락드릴 분으로 되돌렸어요.'); 그리기();
-      }).catch(function () { 다시단.disabled = false; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); });
+      }).catch(function (e) { 다시단.disabled = false; 못했어요(e, '연락다시'); });
       return;
     }
     var 고객줄el = e.target.closest('[data-고객]'); if (고객줄el) { 열린고객 = 고객줄el.getAttribute('data-고객'); 탭 = '고객'; 그리기(); window.scrollTo(0, 0); return; }
     var 메보 = e.target.closest('[data-메일보기]'); if (메보) { 메일보기 = 메보.getAttribute('data-메일보기'); 그리기(); return; }
-    var 단 = e.target.closest('[data-단계]'); if (단) { var 단계 = 단.getAttribute('data-단계'), 사유 = ''; if (단계 === '보류') { 사유 = window.prompt('안 쓰시는 이유를 한 줄 적어 주시면 다음 글에 반영해요(안 적어도 돼요)', '') || ''; } 단.disabled = true; 보내기짐({ 종류: '단계', id: 단.getAttribute('data-id'), 단계: 단계, 사유: 사유 }).then(function (j) { if (!j || !j.됨) throw new Error(); 토스트(단계 === '썼어요' ? '고마워요. 다음 글을 채워 둘게요.' : 단계 === '보류' ? '적어 두었어요.' : '다시 초안으로 두었어요.'); 받아오기(); }).catch(function () { 단.disabled = false; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); }); return; }
+    var 단 = e.target.closest('[data-단계]'); if (단) { var 단계 = 단.getAttribute('data-단계'), 사유 = ''; if (단계 === '보류') { 사유 = window.prompt('안 쓰시는 이유를 한 줄 적어 주시면 다음 글에 반영해요(안 적어도 돼요)', '') || ''; } 단.disabled = true; 보내기짐({ 종류: '단계', id: 단.getAttribute('data-id'), 단계: 단계, 사유: 사유 }).then(function (j) { if (!j || !j.됨) throw new Error(); 토스트(단계 === '썼어요' ? '고마워요. 다음 글을 채워 둘게요.' : 단계 === '보류' ? '적어 두었어요.' : '다시 초안으로 두었어요.'); 받아오기(); }).catch(function (e) { 단.disabled = false; 못했어요(e, '블로그 단계'); }); return; }
     var 더보 = e.target.closest('[data-더보기]'); if (더보) { 펼침더[더보.getAttribute('data-더보기')] = true; 그리기(); return; }
     var 더 = e.target.closest('[data-가]'); if (더) { if (더.getAttribute('data-할일상대')) { 할일상대 = 더.getAttribute('data-할일상대'); 열린할일id = ''; } if (더.getAttribute('data-고객보기')) { 고객보기 = 더.getAttribute('data-고객보기'); 고객검색 = ''; 열린고객 = ''; } if (더.getAttribute('data-블로그열기')) 열린블로그 = 더.getAttribute('data-블로그열기'); if (더.getAttribute('data-할일열기')) 열린할일id = 더.getAttribute('data-할일열기'); 가기(더.getAttribute('data-가'), 더.getAttribute('data-초점'), 더.getAttribute('data-펼침열기'), 더.getAttribute('data-스크롤')); return; }
     if (e.target.closest('[data-참고토글]')) { 참고보기 = !참고보기; 그리기(); return; }
@@ -1695,7 +1705,7 @@ a { color: var(--강조); }
       보내기짐({ 종류: '단계', id: mid2, 단계: '답장', 사유: 글 }).then(function (j) {
         if (!j || !j.됨) throw new Error();
         답장쓰는id = ''; 토스트('답장을 적어 두었어요. 10분 안에 나가고, 나가면 「대화」에 알려 드려요.'); 받아오기();
-      }).catch(function () { 답보.disabled = false; 토스트('지금은 못 적었어요. 잠시 뒤 다시 눌러 주세요.'); });
+      }).catch(function (e) { 답보.disabled = false; 못했어요(e, '메일 답장'); });
       return;
     }
     var 메지 = e.target.closest('[data-메일지움]'); if (메지) {
@@ -1704,7 +1714,7 @@ a { color: var(--강조); }
       보내기짐({ 종류: '단계', id: mid3, 단계: '지움', 사유: '앱에서 지우기' }).then(function (j) {
         if (!j || !j.됨) throw new Error();
         토스트('지울 것으로 적었어요. 10분 안에 휴지편지함으로 가요.'); 받아오기();
-      }).catch(function () { 메지.disabled = false; 토스트('지금은 못 적었어요. 잠시 뒤 다시 눌러 주세요.'); });
+      }).catch(function (e) { 메지.disabled = false; 못했어요(e, '메일 지우기'); });
       return;
     }
     var 보 = e.target.closest('[data-일정보기]'); if (보) { 일정보기 = 보.getAttribute('data-일정보기'); 저장.set('일정보기', 일정보기); 그리기(); return; }
@@ -1736,7 +1746,7 @@ a { color: var(--강조); }
   function 끝내기(id, b, 말) {
     var 원글 = b.textContent; b.disabled = true; b.textContent = '보내는 중';
     보내기짐({ 종류: '끝냈어요', id: id }).then(function (j) { if (!j || !j.됨) throw new Error(); 저장.set('끝_' + id, '1'); 토스트(말 || '끝낸 것으로 적었어요.'); 받아오기().then(그리기); })
-      .catch(function () { b.disabled = false; b.textContent = 원글 || '끝냈어요'; 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.'); });
+      .catch(function (e) { b.disabled = false; b.textContent = 원글 || '끝냈어요'; 못했어요(e, '끝냈어요 · ' + id); });
   }
   function 알림목록전부() {
     // 최근 것 전부(읽은 것 포함) — 종을 여는 순간 읽은 것으로 적히는데, 그래도 목록은 남아 있어야 「무엇이 왔었나」를 다시 볼 수 있다
@@ -1887,9 +1897,9 @@ a { color: var(--강조); }
       화면항목.상태 = '받음'; 화면항목.시각 = j.시각 || 화면항목.시각;
       var 목 = JSON.parse(저장.get('보낸것') || '[]'); 목 = 목.map(function (x) { return x.임시 === 화면항목.임시 ? 화면항목 : x; }); 저장.set('보낸것', JSON.stringify(목));
       토스트('받았어요. 확인하고 답 드릴게요.'); 그리기(); setTimeout(받아오기, 1500);
-    }).catch(function () {
+    }).catch(function (e) {
       var 목 = JSON.parse(저장.get('보낸것') || '[]'); 목 = 목.filter(function (x) { return x.임시 !== 화면항목.임시; }); 저장.set('보낸것', JSON.stringify(목));
-      그리기(); 토스트('지금은 못 보냈어요. 잠시 뒤 다시 눌러 주세요.');
+      그리기(); 못했어요(e, '대화 보내기');
     });
   }
   function 글보내기() {
