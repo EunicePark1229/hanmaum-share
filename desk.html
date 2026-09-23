@@ -415,7 +415,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-23d';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-23e';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -1307,6 +1307,73 @@ a { color: var(--강조); }
   function 값(id) { var el = $(id); return el ? String(el.value || '').trim() : ''; }
   function 장부한줄(글) { try { var o = JSON.parse(글); return '<div><span class="칩">장부 ' + esc(o.구분 || '') + '</span>' + esc((o.날짜 || '') + ' · ' + (o.상대 || '') + ' · ' + (o.내용 || '') + ' · ' + (Number(o.금액) || 0).toLocaleString('ko-KR') + '원') + '</div>'; } catch (e) { return esc(글); } }
   var 펼침 = {}, 상세정렬 = {};
+  // ── 달마다 손익(2026-09-22 유니스 「좀 더 상세하면 좋겠고 더 이전의 데이터도 보고 싶어」) ──
+  //    종전에는 최근 여섯 달의 매출·손익만 보였다. 자료는 2024-08 부터 있는데 스무 달이 안 보이고 있었다.
+  //    달을 누르면 그 달의 매입·운영비·고정비와 줄이 펼쳐진다 — 이번 달 표의 「총액을 누르면」과 같은 결.
+  var 손익범위 = '1년', 펼친달 = '';
+  function 달마다카드(장) {
+    var 달들 = (장.달들 && 장.달들.length) ? 장.달들 : (장.최근 || []);
+    if (!달들.length) return '';
+    var 해들 = [];
+    달들.forEach(function (m) { var y = m.연월.slice(0, 4); if (해들.indexOf(y) < 0) 해들.push(y); });
+    var 범위들 = ['1년'].concat(해들.slice().reverse()).concat(['전부']);
+    if (범위들.indexOf(손익범위) < 0) 손익범위 = '1년';
+    var 골 = 손익범위 === '전부' ? 달들 : 손익범위 === '1년' ? 달들.slice(-12) : 달들.filter(function (m) { return m.연월.slice(0, 4) === 손익범위; });
+    if (!골.length) 골 = 달들.slice(-12);
+    var 합 = { 매출: 0, 매입: 0, 운영비: 0, 고정비: 0, 손익: 0 };
+    골.forEach(function (m) { ['매출', '매입', '운영비', '고정비', '손익'].forEach(function (k) { 합[k] += m[k] || 0; }); });
+    var 최대 = Math.max.apply(null, 골.map(function (m) { return Math.abs(m.손익 || 0); }).concat([1]));
+    var 이름다 = 골.length <= 14;
+
+    var h = '<section class="카드" data-구역="최근"><h2>달마다 손익</h2>';
+    h += '<div class="갈래줄" style="margin-top:8px">' + 범위들.map(function (r) {
+      return '<button class="' + (손익범위 === r ? '켬' : '') + '" data-손익범위="' + esc(r) + '">' + esc(r === '1년' ? '최근 1년' : r === '전부' ? '전부 ' + 달들.length + '달' : r + '년') + '</button>';
+    }).join('') + '</div>';
+    h += '<div class="한줄" style="color:var(--보조)">' + esc(골[0].연월) + ' ~ ' + esc(골[골.length - 1].연월) + ' · 매출 ' + 만원(합.매출) + ' · 손익 <span style="color:' + (합.손익 >= 0 ? 'var(--좋음)' : 'var(--막힘)') + '">' + 만원(합.손익) + '</span> · 달을 누르면 그달 줄이 펼쳐져요</div>';
+
+    // 0 기준선 위로 남은 달, 아래로 모자란 달 — 부호를 자리가 말한다(색은 거들 뿐)
+    h += '<div class="손익그림"><div class="영선"></div><div class="영글자">0</div><div class="손익막대">';
+    h += 골.map(function (m) {
+      var v = m.손익 || 0, 키 = Math.max(3, Math.round(50 * Math.abs(v) / 최대));
+      var 이름 = 이름다 ? (m.연월.slice(5) + '월') : (m.연월.slice(5) === '01' ? m.연월.slice(2, 4) + '년' : (m.연월.slice(5) === '07' ? '7월' : ''));
+      return '<div class="달칸' + (펼친달 === m.연월 ? ' 짚음' : '') + '" data-손익달="' + esc(m.연월) + '" title="' + esc(m.연월) + ' · 매출 ' + 만원(m.매출) + ' · 손익 ' + 만원(v) + '">'
+        + '<div class="윗칸">' + (v >= 0 ? '<i style="height:' + 키 + 'px"></i>' : '') + '</div>'
+        + '<div class="아랫칸">' + (v < 0 ? '<i style="height:' + 키 + 'px"></i>' : '') + '</div>'
+        + '<div class="달이름">' + esc(이름) + '</div></div>';
+    }).join('') + '</div></div>';
+
+    // 표 — 차트와 같은 숫자를 글자로 (색을 못 가르는 눈에도 읽히는 짝)
+    h += '<table class="표" style="margin-top:14px"><tr><th>달</th><th style="text-align:right">매출</th><th style="text-align:right">손익</th></tr>';
+    골.slice().reverse().forEach(function (m) {
+      var 줄들 = (장.달상세 || {})[m.연월] || [], 열림 = 펼친달 === m.연월;
+      h += '<tr data-손익달="' + esc(m.연월) + '" class="펼침가능' + (열림 ? ' 열림' : '') + '"><td>' + esc(m.연월) + '</td><td class="수">' + 만원(m.매출)
+        + '</td><td class="수" style="color:' + ((m.손익 || 0) >= 0 ? 'var(--좋음)' : 'var(--막힘)') + '">' + 만원(m.손익) + '</td></tr>';
+      if (!열림) return;
+      h += '<tr class="상세"><td colspan="3"><div class="안">';
+      h += '<table class="표 안표"><tr><td>매입</td><td class="수">' + 원(m.매입) + '</td></tr><tr><td>운영비</td><td class="수">' + 원(m.운영비)
+        + '</td></tr><tr><td>고정비</td><td class="수">' + 원(m.고정비) + '</td></tr><tr><td><b>손익</b></td><td class="수" style="color:'
+        + ((m.손익 || 0) >= 0 ? 'var(--좋음)' : 'var(--막힘)') + '"><b>' + 원(m.손익) + '</b></td></tr></table>';
+      if (줄들.length) {
+        h += '<table class="표 안표" style="margin-top:8px"><tr><th>일</th><th>구분</th><th>상대·내용</th><th style="text-align:right">금액</th></tr>';
+        h += 줄들.map(function (r) {
+          return '<tr><td>' + esc(r.일) + '</td><td>' + esc(r.구분) + '</td><td>' + esc([r.상대, r.내용].filter(Boolean).join(' · ')) + '</td><td class="수">' + 원(r.금액) + '</td></tr>';
+        }).join('') + '</table>';
+      } else {
+        h += '<div class="한줄" style="padding-left:0;border:0">줄 상세는 최근 ' + ((장.상세달수 || 12)) + '달만 두고 있어요. 이 달은 합계만 보여요.</div>';
+      }
+      h += '</div></td></tr>';
+    });
+    h += '</table>';
+
+    if ((장.연도 || []).length > 1) {
+      h += '<h3 style="margin:16px 0 0">해마다</h3><table class="표"><tr><th>해</th><th style="text-align:right">매출</th><th style="text-align:right">손익</th></tr>';
+      h += 장.연도.slice().reverse().map(function (y) {
+        return '<tr><td>' + esc(y.연도) + '년<span class="한줄" style="padding:0;border:0;display:inline;color:var(--흐림)"> · ' + y.달수 + '달</span></td><td class="수">' + 만원(y.매출)
+          + '</td><td class="수" style="color:' + ((y.손익 || 0) >= 0 ? 'var(--좋음)' : 'var(--막힘)') + '">' + 만원(y.손익) + '</td></tr>';
+      }).join('') + '</table>';
+    }
+    return h + '</section>';
+  }
   (function () { var m = decodeURIComponent(location.search || '').match(/[?&]펼침=([^&]+)/); if (m) 펼침[m[1]] = true; })();   // 링크로 특정 총액을 펼친 채 열기(?탭=장부&펼침=운영비)
   function 상세표(키, rows) {
     // 운영비·고정비는 과목(하위분류)으로 묶어 소계를 보이고, 표 머리를 누르면 정렬(09-18 유니스)
@@ -1663,6 +1730,8 @@ a { color: var(--강조); }
     }
     var 상정 = e.target.closest('[data-상세정렬]'); if (상정) { var pr = 상정.getAttribute('data-상세정렬').split('|'), 정 = 상세정렬[pr[0]] || { 키: '일자', 방향: 1 }; if (정.키 === pr[1]) 정.방향 = -정.방향; else { 정.키 = pr[1]; 정.방향 = pr[1] === '금액' ? -1 : 1; } 상세정렬[pr[0]] = 정; 그리기(); return; }
     var 펼 = e.target.closest('[data-펼침]'); if (펼) { var kk = 펼.getAttribute('data-펼침'); 펼침[kk] = !펼침[kk]; 그리기(); return; }
+    var 범 = e.target.closest('[data-손익범위]'); if (범) { 손익범위 = 범.getAttribute('data-손익범위'); 펼친달 = ''; 그리기(); return; }
+    var 달 = e.target.closest('[data-손익달]'); if (달) { var mm = 달.getAttribute('data-손익달'); 펼친달 = (펼친달 === mm) ? '' : mm; 그리기(); return; }
   });
   function 끝내기(id, b, 말) {
     var 원글 = b.textContent; b.disabled = true; b.textContent = '보내는 중';
