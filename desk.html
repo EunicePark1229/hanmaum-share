@@ -62,7 +62,10 @@ main { padding: 16px 16px 96px; max-width: 720px; margin: 0 auto; }
 .더보기줄 { text-align: center; padding: 8px 0 2px; }
 .더보기줄 button { background: none; border: 1px solid var(--선); border-radius: 999px; padding: 8px 18px; color: var(--강조); font-size: 15px; }
 /* 메일 — 전문 · 답장 칸(2026-09-23 유니스 「여기에는 삭제하기 답변하기 등」 · 대장 26) */
-.메일본문 { background: var(--바탕); border-radius: 12px; padding: 12px 14px; margin: 8px 0 10px; font-size: 15px; line-height: 1.65; white-space: pre-wrap; max-height: 420px; overflow-y: auto; color: var(--글); }
+.메일본문 { background: var(--바탕); border-radius: 12px; padding: 12px 14px; margin: 8px 0 10px; font-size: 15px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; max-height: 520px; overflow-y: auto; color: var(--글); }
+.메일본문 a { color: var(--강조); text-decoration: underline; }
+.메일본문 .긴주소 { font-size: 13px; }
+.가린이유 { color: var(--흐림); font-size: 13px; margin: 4px 0 0; }
 .답장칸 { margin: 8px 0 4px; }
 .답장칸 textarea { width: 100%; min-height: 110px; padding: 12px 14px; border: 1px solid var(--선); border-radius: 12px; background: var(--카드); color: var(--글); font: inherit; font-size: 15px; resize: vertical; }
 .답장칸 .줄 { display: flex; gap: 8px; margin-top: 8px; padding: 0; border: 0; }
@@ -393,7 +396,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-23b';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-23c';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -440,7 +443,7 @@ a { color: var(--강조); }
       }
       if (물을때보기 !== 보기) return;                       // 그 사이 내 화면으로 돌아왔으면 버린다
       if (보기) { 자료 = j; 그리기(); return; }             // 남의 화면은 이 폰에 안 남긴다(누구·역할·아이콘도 그대로)
-      자료 = j; 저장.set('자료', JSON.stringify(j)); if (j.누구) { 누구 = j.누구; 저장.set('데스크누구', j.누구); } if (j.역할) { 저장.set('데스크역할', j.역할); 아이콘맞추기(); }
+      자료 = j; 저장.set('자료', JSON.stringify(j)); if (j.누구) { 누구 = j.누구; 저장.set('데스크누구', j.누구); } if (j.역할) { 저장.set('데스크역할', j.역할); 아이콘맞추기(); if (설정) 테마입히기(설정); }
       if (!스타일고른것 && 설정 && j.순서 && j.순서.스타일) 테마입히기(설정);   // 다른 기기에서 고른 스타일이 따라온다
       그리기();
     }).catch(function () { /* 조용히 — 다음 30초에 다시 */ });
@@ -975,6 +978,15 @@ a { color: var(--강조); }
   function 메일목록() { return ((자료 && 자료.피드.메일) || []).slice().sort(function (a, b) { return a.시각 < b.시각 ? 1 : -1; }); }
   function 봐야할메일() { return 메일목록().filter(function (x) { return x.봐야함 && !끝난할일(x.id); }); }
   var 메일보기 = '봐야', 열린메일 = '', 답장쓰는id = '';
+  // 본문 안의 주소를 누를 수 있게 — 메일은 링크가 본론일 때가 많다(2026-09-23 유니스 「메일 본문에 링크가 있는 거면 그것도 살려야」).
+  //   <http://…> 꼴(구글 비즈니스 메일)의 꺾쇠는 떼고, 긴 주소는 작은 글씨로 줄바꿈해 가로 스크롤이 안 나게 한다.
+  function 링크살리기(글) {
+    var t = esc(글).replace(/&lt;(https?:\/\/[^\s&]+)&gt;/g, '$1');
+    return t.replace(/(https?:\/\/[^\s<>"')\]]+)/g, function (u) {
+      var 보임 = u.length > 60 ? u.slice(0, 57) + '…' : u;
+      return '<a href="' + u + '" target="_blank" rel="noopener"' + (u.length > 60 ? ' class="긴주소"' : '') + '>' + 보임 + '</a>';
+    });
+  }
   function 메일줄(x, 자세히) {
     var 끝 = 끝난할일(x.id);
     var 칩 = 끝 ? '<span class="칩 끝">처리함</span>' : x.갈래 === '장부' ? '<span class="칩 끝">장부로</span>' : x.갈래 === '자동' ? '<span class="칩 끝">자동</span>' : '<span class="칩">' + esc(x.갈래) + '</span>';
@@ -982,7 +994,7 @@ a { color: var(--강조); }
     if (자세히 && x.한줄) h += '<div class="한줄 접힘">' + esc(x.한줄) + '</div>';
     h += '<div class="때">' + 칩 + ' · ' + 때글(x.시각) + '</div>';
     if (자세히) {
-      if (x.본문 && 열린메일 === x.id) h += '<div class="메일본문">' + esc(x.본문) + '</div>';
+      if (x.본문 && 열린메일 === x.id) h += '<div class="메일본문">' + 링크살리기(x.본문) + '</div>' + (x.가린이유 ? '<div class="가린이유">이 메일은 대표님 화면에만 보여요 — ' + esc(x.가린이유) + '</div>' : '');
       else if (x.본문) h += '<div class="때" style="margin-top:6px"><span data-메일열기="' + esc(x.id) + '" style="color:var(--강조);cursor:pointer">전문 보기 ›</span></div>';
       if (x.답장) h += '<div class="보낸답장"><b>보낸 답장</b> · ' + 때글(x.답장때 || '') + String.fromCharCode(10) + esc(x.답장) + '</div>';
       if (x.단계 === '답장') h += '<div class="때">' + 신호('살핌', '답장 보내는 중 — 10분 안에 나가요') + '</div>';
@@ -1904,10 +1916,25 @@ a { color: var(--강조); }
     ['--바탕', '--카드', '--글', '--보조', '--흐림', '--강조', '--강조연', '--선', '--둥근', '--그림자', '--카드테', '--머리바탕', '--머리글', '--머리선', '--머리굵기', '--탭바탕', '--제목서체', '--테마강조', '--테마강조연'].forEach(function (k) { r0.style.removeProperty(k); });
     r0.classList.remove('테마있음'); r0.style.colorScheme = '';
     if (j.강조색) r0.style.setProperty('--강조', j.강조색);
-    if (!t) return;
+    if (!t) {                                   // 테마는 없고 역할 색만 있는 조직(한마음)
+      var 역0 = 저장.get('데스크역할') || (자료 && 자료.역할) || '';
+      var tr0 = (j.테마역할 && j.테마역할[역0]) || null;
+      if (tr0 && tr0.강조) {
+        r0.style.setProperty('--강조', tr0.강조);
+        r0.style.setProperty('--테마강조', tr0.강조);
+        r0.style.setProperty('--테마강조연', tr0.강조연 || 'rgba(0,0,0,.06)');
+        if (tr0.강조연) r0.style.setProperty('--강조연', tr0.강조연);
+        r0.classList.add('테마있음');
+      }
+      return;
+    }
     var r = document.documentElement, 칸 = { 바탕: '--바탕', 카드: '--카드', 글: '--글', 보조: '--보조', 흐림: '--흐림', 강조: '--강조', 강조연: '--강조연', 선: '--선', 둥근: '--둥근', 그림자: '--그림자', 카드테: '--카드테',
       머리바탕: '--머리바탕', 머리글: '--머리글', 머리선: '--머리선', 머리굵기: '--머리굵기', 탭바탕: '--탭바탕', 제목서체: '--제목서체' };
     Object.keys(칸).forEach(function (k) { if (t[k] !== undefined && t[k] !== '') r.style.setProperty(칸[k], String(t[k])); });
+    // 역할별 덮어쓰기(2026-09-23) — 같은 조직이라도 역할마다 강조색이 다를 수 있다(한마음 대표 = 리사운드 레드)
+    var 역 = 저장.get('데스크역할') || (자료 && 자료.역할) || '';
+    var tr = (j.테마역할 && j.테마역할[역]) || null;
+    if (tr) { Object.keys(칸).forEach(function (k) { if (tr[k] !== undefined && tr[k] !== '') r.style.setProperty(칸[k], String(tr[k])); }); t = Object.assign({}, t, tr); }
     if (t.강조) { r.style.setProperty('--테마강조', t.강조); r.style.setProperty('--테마강조연', t.강조연 || 'rgba(0,0,0,.06)'); }
     r.classList.add('테마있음');
     if (t.어둡게) r.style.colorScheme = 'dark';
