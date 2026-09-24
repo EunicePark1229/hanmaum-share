@@ -218,6 +218,17 @@ details { margin: 10px 0; } details summary { cursor: pointer; color: var(--강�
 body.끌기중 { -webkit-user-select: none; user-select: none; cursor: grabbing }
 body.끌기중 * { cursor: grabbing !important }
 .차례옮김 { transition: transform .18s ease }
+/* 왼쪽 메뉴·탭 차례(2026-09-24 유니스 「왼쪽 트리 순서도, 폰 아래 순서도」)
+   — PC 메뉴는 1단을 감싼 .메뉴항 을 길게 눌러 끈다(2단 구역이 함께 따라간다).
+     폰 아래 탭은 60px 칸이라 그 자리에서 못 끄니, 길게 누르면 「탭 차례」 시트가 열리고 거기서 세로로 끈다 */
+.메뉴항 { width: 100%; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none }
+.메뉴항.끌림 { background: var(--카드); box-shadow: 0 10px 28px rgba(0,0,0,.18); border-radius: 12px }
+.탭차례줄 { display: flex; align-items: center; gap: 12px; padding: 13px 6px; border-bottom: 1px solid var(--선); cursor: grab; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: none }
+.탭차례줄 .아이 { width: 24px; height: 24px; color: var(--강조); flex: 0 0 auto }
+.탭차례줄 .아이 svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8 }
+.탭차례줄 .제목 { flex: 1; font-size: 16px }
+.탭차례줄 .자리 { font-size: 13px; color: var(--흐림) }
+.탭차례줄.끌림 { background: var(--카드); border-radius: 12px; border-bottom-color: transparent }
 .정렬모드 h2 { display: flex; align-items: center; justify-content: flex-start }
 .정렬모드 h2 .더 { margin-left: auto } .정렬모드 h2 .손잡이 { margin-left: auto } .정렬모드 h2 .더 ~ .손잡이 { margin-left: 8px }
 .정렬단추 { height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--선); background: var(--카드); color: var(--보조); font-size: 14px }
@@ -474,7 +485,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-24i';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-24j';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -670,7 +681,13 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   var 부모탭 = { 메일: '받은것' };   // 메뉴에 없는 화면은 부모에 불을 켠다(받은 것·메일이 홈에서만 들어가 메뉴에 불이 안 켜지던 것 · 2026-09-22 재검토 3-1)
   function 역할() { return (자료 && 자료.역할) || 저장.get('데스크역할') || '원장'; }
   function 대표인가() { var r = 역할(); return r === '대표' || r === '관리자'; }
-  function 탭목록() { var t = 설정 && 설정.탭; if (t && !Array.isArray(t)) t = t[역할()] || t['원장'] || t[Object.keys(t)[0]]; return (Array.isArray(t) && t.length) ? t : ['홈', '대화', '할일', '재고', '장부']; }
+  // 왼쪽 메뉴(폰은 탭) 차례 — 설정의 기본 차례 위에 사람이 끌어 바꾼 것(자료.순서.메뉴)을 얹는다
+  //   2026-09-24 유니스 「홈에서 꾹 누르면 순서를 바꿀 수 있었던 것처럼 왼쪽 트리 순서도, 폰 아래 순서도」
+  function 탭목록() {
+    var t = 설정 && 설정.탭; if (t && !Array.isArray(t)) t = t[역할()] || t['원장'] || t[Object.keys(t)[0]];
+    var 기본 = (Array.isArray(t) && t.length) ? t : ['홈', '대화', '할일', '재고', '장부'];
+    return 순서정렬(기본, '메뉴', function (k) { return k; });
+  }
   // 조직마다 다른 말(2026-09-21 GN · 둘째 조직) — desk-org.json 「말」. 없으면 한마음 말 그대로
   function 말(키) { var 기본 = { 정하실것: '정하실 것', 내할일: '하실 것', 구성원할일: '원장님이 하실 것', 받은것카드: '원장님 쪽' }; return (설정 && 설정.말 && 설정.말[키]) || 기본[키]; }
   // 대표 것 중 「정할 것」과 「할 일」을 가른다 — 항목의 구분 칸(없으면 종전대로 정할 것). GN 은 my_actions 의 kind 로 어댑터가 적는다
@@ -682,8 +699,10 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   function 구성원있나() { return !!((자료 && 자료.사람들 && 자료.사람들.length) || (설정 && 설정.탭 && !Array.isArray(설정.탭) && 설정.탭['원장'])); }
   // 폰 아래 탭 — 설정 「폰탭」[역할](최대 4) + 「더보기」. 없으면 탭목록의 앞 넷(2026-09-22 재검토 — 탭 7개가 55px 칸에 붙어 보였다)
   function 폰탭목록() {
-    var 전부 = 탭목록(), t = 설정 && 설정.폰탭; if (t && !Array.isArray(t)) t = t[역할()] || t['원장'] || t[Object.keys(t)[0]];
-    var 앞 = (Array.isArray(t) && t.length ? t : 전부).filter(function (k) { return 전부.indexOf(k) >= 0; }).slice(0, 전부.length > 5 ? 4 : 5);
+    var 전부 = 탭목록(), 사람 = 순서목록('폰탭'), t = 설정 && 설정.폰탭;
+    if (t && !Array.isArray(t)) t = t[역할()] || t['원장'] || t[Object.keys(t)[0]];
+    var 고른것 = 사람.length ? 사람 : (Array.isArray(t) && t.length ? t : 전부);       // 사람이 바꾼 차례가 설정을 이긴다
+    var 앞 = 고른것.filter(function (k) { return 전부.indexOf(k) >= 0; }).slice(0, 전부.length > 5 ? 4 : 5);
     if (앞.length < 전부.length) 앞 = 앞.concat(['더보기']);
     return 앞;
   }
@@ -731,8 +750,21 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
         var 속성 = a.알림 ? 'data-가="알림"' : a.탭 ? 'data-가="' + a.탭 + '"' : 'data-가="' + 항.키 + '"' + (a.구역 ? ' data-스크롤="' + esc(a.구역) + '"' : '') + (a.고객보기 ? ' data-고객보기="' + esc(a.고객보기) + '"' : '');
         return '<button ' + 속성 + ' class="' + (이켬 ? '켬' : '') + '">' + esc(a.이름) + (a.수 !== undefined ? '<span class="수">' + a.수 + '</span>' : '') + '</button>';
       }).join('') + '</div>';
-      return h;
+      return '<div class="메뉴항" data-차례무엇="메뉴" data-차례키="' + esc(항.키) + '">' + h + '</div>';
     }).join('');
+  }
+  // 폰 아래 탭 차례 — 탭을 길게 누르면 열린다(2026-09-24). 위에서 몇 개가 아래 탭, 나머지는 「더보기」.
+  function 탭차례그리기() {
+    var 전부 = 탭목록(), 몇 = 전부.length > 5 ? 4 : 5;
+    $('알림목록').innerHTML = '<div class="한줄" style="color:var(--보조);margin-bottom:10px;padding-left:0;border:0">줄을 길게 눌러 위아래로 끌면 차례가 바뀌어요. 위에서 ' + Math.min(몇, 전부.length) + '개가 아래 탭에 나오고 나머지는 「더보기」에 들어가요.</div>'
+      + 전부.map(function (k, i) {
+        return '<div class="탭차례줄" data-차례무엇="폰탭" data-차례키="' + esc(k) + '">'
+          + '<span class="아이">' + (탭아이콘[k] || '') + '</span>'
+          + '<span class="제목">' + esc(탭이름[k] || k) + '</span>'
+          + '<span class="자리">' + (i < 몇 ? '아래 탭' : '더보기') + '</span></div>';
+      }).join('');
+    $('알림시트').querySelector('h2').textContent = '탭 차례';
+    $('푸시칸').classList.add('숨김'); $('알림시트').classList.add('보임');
   }
   function 더보기열기() {
     var 들 = 더보기탭들();
@@ -796,6 +828,18 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var 위치 = {}; 차례.forEach(function (k, i) { 위치[k] = i; });
     return 목록.slice().sort(function (a, b) { var ia = 위치[키뽑기(a)], ib = 위치[키뽑기(b)]; if (ia === undefined && ib === undefined) return 0; if (ia === undefined) return 1; if (ib === undefined) return -1; return ia - ib; });
   }
+  // 메뉴에서 끈 차례를 탭 키 차례로 펼친다 — 메뉴의 「운영」은 재고·장부 묶음이고 「메일」은 받은 것 아래에 있어,
+  // 화면에 보이는 줄 수와 탭 수가 다르다. 펼쳐 두지 않으면 묶인 탭들이 차례 밖으로 밀린다.
+  function 메뉴차례펼치기(줄들) {
+    var 전부 = 탭목록(), 결과 = [];
+    줄들.forEach(function (k) {
+      if (k === '운영') { ['재고', '장부'].forEach(function (g) { if (전부.indexOf(g) >= 0) 결과.push(g); }); return; }
+      if (전부.indexOf(k) >= 0) 결과.push(k);
+      if (k === '받은것' && 전부.indexOf('메일') >= 0) 결과.push('메일');
+    });
+    전부.forEach(function (k) { if (결과.indexOf(k) < 0) 결과.push(k); });   // 줄로 안 나온 것은 뒤에 그대로
+    return 결과;
+  }
   var 손잡이 = '<span class="손잡이" data-손잡이="1" title="끌어서 차례 바꾸기" aria-label="끌어서 차례 바꾸기"><svg viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>';
   function 정렬머리(무엇, 안내) { if (보기) return ''; return '<div class="정렬머리" style="text-align:right;margin:-4px 0 6px"><button class="정렬단추' + (정렬모드[무엇] ? ' 켬' : '') + '" data-정렬켜기="' + 무엇 + '">' + (정렬모드[무엇] ? '순서 바꾸기 끝' : '순서 바꾸기') + '</button>' + (정렬모드[무엇] ? '<div class="정렬안내" style="text-align:left">' + 안내 + ' 바꾼 차례는 그대로 남아요.</div>' : '') + '</div>'; }
   function 차례달기(html, 무엇, 키, 손잡이보임) {
@@ -856,24 +900,49 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     방금끌었음 = Date.now();
     if (취소) { 그리기(); return; }
     var 목록 = Array.prototype.map.call(document.querySelectorAll('[data-차례무엇="' + 무엇 + '"]'), function (c) { return c.getAttribute('data-차례키'); });
+    if (무엇 === '메뉴') 목록 = 메뉴차례펼치기(목록);
     var 전 = 순서목록(무엇);
     if (전.length === 목록.length && 전.every(function (k, i) { return k === 목록[i]; })) { 그리기(); return; }
     차례저장(무엇, 목록);
+    if (무엇 === '폰탭') setTimeout(탭차례그리기, 0);
   }
   function 끌대기해제() { if (끌대기) { clearTimeout(끌대기.시계); 끌대기 = null; } }
-  $('본문').addEventListener('pointerdown', function (e) {
+  function 끌기누름(e) {
     if (e.button && e.button !== 0) return;
     if (보기) return;                                                       // 남의 화면을 볼 때는 못 끈다
     var 손 = e.target.closest('[data-손잡이]');
     var 항 = 끌기항목(손 || e.target); if (!항) return;
     if (손) { e.preventDefault(); 끌기시작(항, e); return; }
-    if (e.target.closest('button, a, input, textarea, select, [data-결정], [data-끝], [data-고정]')) return;
-    // 길게 누르기 자리 — 카드는 제목(h2)만, 할 일 줄은 줄 전체
-    var 자리 = 항.classList.contains('줄') ? 항 : e.target.closest('h2');
+    // 메뉴 한 줄과 「탭 차례」 줄은 줄 전체가 길게 누르는 자리다 — 버튼으로 만들어져 있어 아래 거르개에 걸린다
+    var 메뉴류 = 항.classList.contains('메뉴항') || 항.classList.contains('탭차례줄');
+    if (!메뉴류 && e.target.closest('button, a, input, textarea, select, [data-결정], [data-끝], [data-고정]')) return;
+    // 길게 누르기 자리 — 카드는 제목(h2)만, 할 일 줄·메뉴 줄은 줄 전체
+    var 자리 = (메뉴류 || 항.classList.contains('줄')) ? 항 : e.target.closest('h2');
     if (!자리 || !항.contains(자리)) return;
     끌대기해제();
     끌대기 = { 항: 항, x: e.clientX, y: e.clientY, 시계: setTimeout(function () { var yy = 끌대기 ? 끌대기.y : e.clientY; 끌기시작(항, { clientY: yy }); }, 400) };
+  }
+  $('본문').addEventListener('pointerdown', 끌기누름);
+  $('알림목록').addEventListener('pointerdown', 끌기누름);                     // 「탭 차례」 시트
+  // 왼쪽 메뉴(PC)는 그 자리에서 끌고, 폰 아래 탭은 60px 칸이라 길게 누르면 「탭 차례」 시트를 연다
+  var 폰탭대기 = null;
+  function 폰탭대기해제() { if (폰탭대기) { clearTimeout(폰탭대기.시계); 폰탭대기 = null; } }
+  $('탭').addEventListener('pointerdown', function (e) {
+    if (PC인가()) { 끌기누름(e); return; }
+    if (보기 || (e.button && e.button !== 0)) return;
+    if (!e.target.closest('button[data-탭]')) return;
+    폰탭대기해제();
+    폰탭대기 = { x: e.clientX, y: e.clientY, 시계: setTimeout(function () {
+      폰탭대기 = null; 방금끌었음 = Date.now();
+      try { if (navigator.vibrate) navigator.vibrate(20); } catch (x) {}
+      탭차례그리기();
+    }, 500) };
   });
+  $('탭').addEventListener('pointermove', function (e) {
+    if (폰탭대기 && (Math.abs(e.clientX - 폰탭대기.x) > 8 || Math.abs(e.clientY - 폰탭대기.y) > 8)) 폰탭대기해제();
+  });
+  $('탭').addEventListener('pointerup', 폰탭대기해제);
+  $('탭').addEventListener('pointercancel', 폰탭대기해제);
   document.addEventListener('pointermove', function (e) {
     if (끌대기) { if (Math.abs(e.clientX - 끌대기.x) > 8 || Math.abs(e.clientY - 끌대기.y) > 8) 끌대기해제(); else 끌대기.y = e.clientY; }
     if (끌) { e.preventDefault(); 끌기옮기기(e.clientY); }
@@ -1339,7 +1408,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
       if (단 === '썼어요') return '<b>' + esc(제 || '글') + '</b> 올렸어요(썼어요)';
       return (제 ? '<b>' + esc(제) + '</b> ' : '') + esc(단) + (사유 ? ' · ' + esc(사유) : '');
     }
-    if (무.indexOf('순서:') === 0) return { 홈: '홈 카드', 할일: '할 일', 재고: '재고 묶음' }[무.slice(3)] ? { 홈: '홈 카드', 할일: '할 일', 재고: '재고 묶음' }[무.slice(3)] + ' 차례를 바꿨어요' : '차례를 바꿨어요';
+    if (무.indexOf('순서:') === 0) return { 홈: '홈 카드', 할일: '할 일', 재고: '재고 묶음', 메뉴: '메뉴', 폰탭: '아래 탭' }[무.slice(3)] ? { 홈: '홈 카드', 할일: '할 일', 재고: '재고 묶음', 메뉴: '메뉴', 폰탭: '아래 탭' }[무.slice(3)] + ' 차례를 바꿨어요' : '차례를 바꿨어요';
     if (무 === '고정') return (제 ? '<b>' + esc(제) + '</b> ' : '') + '늘 쓰는 것에 고정했어요';
     if (무 === '고정풀기') return (제 ? '<b>' + esc(제) + '</b> ' : '') + '늘 쓰는 것에서 내렸어요';
     if (무 === '스타일' || 무.indexOf('스타일') === 0) return '화면 스타일을 바꿨어요';
@@ -1760,6 +1829,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 
   // ── 누르기 ──
   $('탭').addEventListener('click', function (e) {
+    if (Date.now() - 방금끌었음 < 400) { e.preventDefault(); e.stopPropagation(); return; }   // 끌어다 놓거나 길게 눌러 시트를 연 직후
     var b = e.target.closest('button'); if (!b) return;
     if (b.getAttribute('data-가')) {   // 2단 — 구역·알림·고객 보기로 바로
       if (b.getAttribute('data-고객보기')) { 고객보기 = b.getAttribute('data-고객보기'); 고객검색 = ''; 열린고객 = ''; }
