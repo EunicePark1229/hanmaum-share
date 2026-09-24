@@ -466,7 +466,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-24d';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-24e';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -583,7 +583,32 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   function 배지그리기() { var n = 안읽은것().length; var b = $('배지'); b.textContent = n ? String(n) : ''; b.setAttribute('data-n', n); }
   function 끝난할일(id) { var 체크 = (자료 && 자료.체크) || ''; return 체크.indexOf('"' + id + '"') >= 0 || 저장.get('끝_' + id) === '1'; }
   // 기본 차례 — 기한 있는 것부터 기한 순, 그다음 최근 것부터(2026-09-21 · GN 원장 36줄이 yaml 차례로 나와 지난 것이 묻혔다). 사람이 끌어 바꾼 차례(순서정렬)가 있으면 그것이 이긴다
-  function 기한차례(a, b) { var ka = a.기한 || '9999-99-99', kb = b.기한 || '9999-99-99'; if (ka !== kb) return ka < kb ? -1 : 1; return (b.시각 || '') < (a.시각 || '') ? -1 : ((b.시각 || '') > (a.시각 || '') ? 1 : 0); }
+  // ⛔ 2026-09-24 — 「기한」 한 칸에 두 가지가 담겨 있었다. 밖에서 온 **마감**(안 지키면 일이 난다)과
+  //    우리가 스스로 정한 **목표일**(안 지켜도 아무 일도 안 난다). 둘을 같은 줄로 세우니 차례가 뒤집혔다.
+  //    실측 — 한마음 열린 12건 중 기한 붙은 10건이 전부 우리 목표일이고, 재구매를 원하시는 손님이 그 아래 계셨다.
+  function 우리가정한날(x) { return String((x && (x.출처 || x.어디서)) || '').indexOf('기한대장') >= 0; }
+  // 밖에서 온 것인가 — 손님·거래처·관공서처럼 상대가 있는 일. 우리가 만든 숙제보다 앞에 둔다.
+  function 밖에서온것(x) {
+    var 출 = String((x && (x.출처 || x.어디서)) || '');
+    if (우리가정한날(x)) return false;
+    return /입력창|_받은것|받은것|메일|방|고객|원장님|손님/.test(출) || !!x.상대;
+  }
+  // 차례 — 0 밖에서 온 마감 · 1 밖에서 온 것(기한 없어도) · 2 우리 목표일 · 3 그 밖
+  function 급한칸(x) {
+    var 마감 = x.기한 && !우리가정한날(x);
+    if (마감) return 0;
+    if (밖에서온것(x)) return 1;
+    if (x.기한) return 2;
+    return 3;
+  }
+  function 기한차례(a, b) {
+    var ca = 급한칸(a), cb = 급한칸(b);
+    if (ca !== cb) return ca - cb;
+    var ka = a.기한 || '', kb = b.기한 || '';
+    if (ka && kb && ka !== kb) return ka < kb ? -1 : 1;
+    if (ka !== kb) return ka ? -1 : 1;                  // 같은 칸이면 기한 있는 쪽이 먼저
+    return (b.시각 || '') < (a.시각 || '') ? -1 : ((b.시각 || '') > (a.시각 || '') ? 1 : 0);
+  }
   function 미룬할일인가(x) { return x.단계 === '보류'; }   // 「나중에」 — 열린 목록에서 내려가 맨 아래 「나중에」 칸에(2026-09-22 유니스)
   function 답한할일인가(x) { return x.단계 === '결정' && x.구분 !== '할일'; }   // 정할 것에 답했으면 끝난 것 — 열린 목록에 남아 보이던 것(대장 14 · 2026-09-22)
   function 닫힌할일인가(x) { return x.단계 === '완료' || 끝난할일(x.id) || 답한할일인가(x); }
