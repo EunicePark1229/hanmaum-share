@@ -474,7 +474,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-24h';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-24i';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -2056,6 +2056,30 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   function 닫고돌아가기() { var st = history.state; if (st && (st.할일 || st.블로그 || st.고객 || st.알림)) { history.back(); return true; } return false; }
   try { history.replaceState(역사상태(), ''); } catch (e) {}
 
+  // ── 알림을 누르면 그 줄까지 연다 (2026-09-24 유니스) ──
+  //    「알람이 떠서 클릭을 하면 그냥 데스크 홈 화면으로 가. 제대로 못 보고 클릭한 경우에는 의미가 없다」
+  //    종전에는 푸시 짐에 탭만 있었고(항목 id 가 없었다) 창이 이미 떠 있으면 앞으로 가져오기만 했다.
+  function 항목으로(탭이름, id) {
+    if (!id) { if (탭이름) 가기(탭이름); return; }
+    var 있나 = function (칸) { return (자료 && (자료[칸] || []).some(function (x) { return x.id === id; })); };
+    if (id.indexOf('n-') === 0 || 있나('안내')) { 가기('알림', id); return; }        // 안내는 종 시트에서 펼쳐 읽는다
+    if (있나('받은것')) { 열린블로그 = id; 가기('받은것', id); return; }              // 문자·블로그·당근은 상세를 펼친다
+    if (있나('할일')) { 열린할일id = id; 가기('할일', id); return; }
+    가기(탭이름 || '홈', id);
+  }
+  function 알림항목열기() {
+    var q = decodeURIComponent(location.search || '');
+    var m = q.match(/[?&]항목=([^&]+)/);
+    if (!m) return;
+    var t = q.match(/[?&]탭=([^&]+)/);
+    항목으로(t ? t[1] : '', m[1]);
+    history.replaceState(null, '', location.pathname);            // 한 번만 연다 — 새로고침하면 또 튀지 않게
+  }
+  if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', function (e) {
+    var d = (e && e.data) || {};                                  // 창이 이미 떠 있을 때 — 서비스워커가 어디로 갈지 알려 준다
+    if (d.종류 === '알림열기') 항목으로(d.탭, d.항목);
+  });
+
   function 가기(어디, 초점, 펼칠것, 구역) {
     if (어디 === '알림') { 알림열기(초점); return; }
     if (펼칠것) 펼침[펼칠것] = true;
@@ -2296,7 +2320,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     if (보기) { 보기전 = { 자료: 자료, 방: 방, 탭: 탭 }; 방 = ''; 자료 = null; }   // ?보기=원장님 — 내 자료는 되돌아올 때 쓰려고 들고 있는다
     그리기();
     if (!열쇠) { $('본문').innerHTML = '<div class="카드"><div class="제목">대표님께 받은 링크로 열어 주세요.</div><div class="한줄" style="color:var(--보조)">링크에 열쇠가 들어 있어요. 한 번 열면 이 폰에 남아요.</div></div>'; return; }
-    받아오기();
+    받아오기().then(알림항목열기).catch(알림항목열기);   // 자료가 온 뒤라야 그 줄을 찾을 수 있다
     try { 보내기짐({ 종류: '기록', 무엇: '열림', 상세: '판 ' + 판 + (location.search.indexOf('%EC%95%8C%EB%A6%BC') >= 0 || location.search.indexOf('알림') >= 0 ? ' · 알림으로 열림' : ' · 손으로 열림') + ' · sw ' + ((navigator.serviceWorker && navigator.serviceWorker.controller) ? '있음' : '없음') + ' · ' + (navigator.userAgent || '').slice(0, 80) }).catch(function () {}); } catch (e) {}
     setInterval(function () { if (!document.hidden) 받아오기(); }, 30000);
     document.addEventListener('visibilitychange', function () { if (!document.hidden) 받아오기(); });
