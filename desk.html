@@ -415,7 +415,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-24a';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-24b';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -440,6 +440,7 @@ a { color: var(--강조); }
   }
   아이콘맞추기();
   // 실시간 방(2026-09-20 유니스 「사내 메신저처럼 · 확장까지 미리」) — 워커 Durable Object(src/room.js)에 웹소켓으로 붙는다
+  var 지난것보기 = false;                                   // 「지난 것 N개 보기」를 눌렀나 (2026-09-24)
   var 방 = 저장.get('데스크방') || '', 소켓 = null, 소켓방 = '', 소켓켜짐 = false, 여기들 = [], 입력중들 = {}, 방읽은때 = {}, 다시붙기 = null, 입력중보낸때 = 0, 읽음보낸때 = 0;
   function 현재방() { var 나 = 누구 || (자료 && 자료.누구) || ''; return 방 || (나 ? 'me-' + 나 : 'all'); }
 
@@ -752,11 +753,22 @@ a { color: var(--강조); }
   function 고정된것() { var ids = (자료 && 자료.고정) || [], 전부 = (자료 && 자료.피드.받은것) || []; return ids.map(function (id) { return 전부.filter(function (x) { return x.id === id; })[0]; }).filter(Boolean); }
   // 받은 것의 상태 — 문자는 컨펌·답, 블로그·당근은 썼어요·안 쓰기로. 끝난 것은 홈에서 뺀다(2026-09-22 재검토 4-4 · 원장님 홈에 끝난 「보내도 될까요」 셋)
   function 받은것상태(x) {
-    if (x.갈래 === '문자') return x.단계 === '완료' ? 신호('좋음', '컨펌함') : x.단계 === '결정' ? 신호('좋음', '답함') : x.단계 === '보류' ? 신호('모름', '나중에') : 신호('살핌', '답 기다림');
+    if (x.갈래 === '문자') return 문자상태(x);
     if (x.갈래 === '블로그' || x.갈래 === '당근') return x.단계 === '썼어요' ? 신호('좋음', '썼어요') : x.단계 === '보류' ? 신호('모름', '안 쓰기로') : 신호('살핌', '초안');
     return '';
   }
-  function 받은것끝났나(x) { return (x.갈래 === '문자' && (x.단계 === '완료' || x.단계 === '결정' || x.단계 === '보류')) || ((x.갈래 === '블로그' || x.갈래 === '당근') && (x.단계 === '썼어요' || x.단계 === '보류')); }
+  // 대체됨 — 기계가 판을 바꿔 닫은 것. 단계(사람이 누른 것)와 따로 둔다 (2026-09-24 유니스).
+  //   「완료」 한 낱말에 ⓐ 컨펌해서 끝남 ⓑ 새 판으로 바뀜 두 뜻을 담았더니, 닫힌 옛 판이 「컨펌함」(초록)으로 보였다.
+  function 대체됐나(x) { return !!(x && x.대체됨); }
+  function 받은것끝났나(x) { return 대체됐나(x) || (x.갈래 === '문자' && (x.단계 === '완료' || x.단계 === '결정' || x.단계 === '보류')) || ((x.갈래 === '블로그' || x.갈래 === '당근') && (x.단계 === '썼어요' || x.단계 === '보류')); }
+  // 문자 한 묶음의 상태 — 한 자리에서만 만든다(홈 카드·받은 것 탭·상세가 같은 말을 쓰게).
+  function 문자상태(x) {
+    if (대체됐나(x)) return 신호('모름', '지난 판 — ' + (x.대체된왜 || '새 묶음으로 바뀜').slice(0, 30));
+    if (x.단계 === '완료') return 신호('좋음', '보냈어요');
+    if (x.단계 === '결정') return 신호('좋음', '답하셨어요 · ' + (x.사유 || '').slice(0, 24));
+    if (x.단계 === '보류') return 신호('모름', '나중에');
+    return 신호('살핌', '답 기다림');
+  }
   function 받은것줄(x, 고정칸) {
     var 상 = 받은것상태(x);
     var 몸 = (x.갈래 === '블로그' || x.갈래 === '당근' || x.갈래 === '문자') ? '<div class="줄 고정있음" data-가="받은것" data-블로그열기="' + esc(x.id) + '"><span class="칩">' + esc(x.갈래) + '</span>' + esc(x.제목) + '<div class="때">' + (상 ? 상 + ' · ' : '') + 때글(x.시각) + '</div>'
@@ -1532,12 +1544,14 @@ a { color: var(--강조); }
     var 갈래들 = (설정.받은것갈래 || []);
     var h = 늘쓰는것카드('받은것');
     h += '<div class="갈래줄"><button class="' + (갈래 ? '' : '켬') + '" data-갈래="">전부</button>' + 갈래들.map(function (g) { return '<button class="' + (갈래 === g ? '켬' : '') + '" data-갈래="' + esc(g) + '">' + esc(g) + '</button>'; }).join('') + '</div>';
-    var 골 = 갈래 ? 목록.filter(function (x) { return x.갈래 === 갈래; }) : 목록;
+    var 골전부 = 갈래 ? 목록.filter(function (x) { return x.갈래 === 갈래; }) : 목록;
+    // 대체된 것(구버전)은 목록에서 뺀다 — 「지난 것 N개 보기」를 눌러야 나온다 (2026-09-24 유니스).
+    var 골 = 지난것보기 ? 골전부 : 골전부.filter(function (x) { return !대체됐나(x); });
+    var 지난수 = 골전부.filter(대체됐나).length;
     var 문자 = 골.filter(function (x) { return x.갈래 === '문자'; });
     if (문자.length) {
-      h += '<section class="카드"><h2>고객 문자</h2>' + 문자.slice().sort(function (a, b) { return (a.단계 === '초안' ? 0 : 1) - (b.단계 === '초안' ? 0 : 1); }).map(function (x) {
-        var 급 = x.단계 === '완료' ? 신호('좋음', '컨펌함') : x.단계 === '결정' ? 신호('좋음', '답함 · ' + (x.사유 || '').slice(0, 24)) : x.단계 === '보류' ? 신호('모름', '나중에') : 신호('살핌', '답 기다림');
-        return '<div class="줄" data-문자="' + esc(x.id) + '"><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄 || '') + '</div><div class="때">' + 급 + ' · ' + 때글(x.시각) + ' · <span style="color:var(--강조)">열어 보기 ›</span></div></div>';
+      h += '<section class="카드"><h2>고객 문자</h2>' + 문자.slice().sort(function (a, b) { return (대체됐나(a) ? 2 : a.단계 === '초안' ? 0 : 1) - (대체됐나(b) ? 2 : b.단계 === '초안' ? 0 : 1); }).map(function (x) {
+        return '<div class="줄" data-문자="' + esc(x.id) + '"><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄 || '') + '</div><div class="때">' + 문자상태(x) + ' · ' + 때글(x.시각) + ' · <span style="color:var(--강조)">열어 보기 ›</span></div></div>';
       }).join('') + '</section>';
     }
     var 블로그 = 골.filter(function (x) { return x.갈래 === '블로그'; }), 당근 = 골.filter(function (x) { return x.갈래 === '당근'; }), 나머지 = 골.filter(function (x) { return x.갈래 !== '블로그' && x.갈래 !== '문자' && x.갈래 !== '당근'; });
@@ -1557,6 +1571,8 @@ a { color: var(--강조); }
     // 20건 넘으면 「더 보기」(2026-09-22 — GN 받은 것 82건이 폰 15,520px 였다)
     var 나머지보임 = 펼침더['받은것'] ? 나머지 : 나머지.slice(0, 20);
     if (나머지.length || (!블로그.length && !당근.length)) h += '<section class="카드">' + (나머지.length ? 나머지보임.map(function (x) { return 받은것줄(x); }).join('') + (나머지.length > 나머지보임.length ? '<div class="더보기줄"><button data-더보기="받은것">' + (나머지.length - 나머지보임.length) + '개 더 보기</button></div>' : '') : '<div class="빈">아직 없어요. 블로그 초안·문자 문안·명단·자료가 오면 여기에 모여요.</div>') + '</section>';
+    // 구버전(대체된 것)은 접어 둔다 — 아주 없애지는 않는다. 「어제 그거 어디 갔지」를 위해 한 번에 펼친다 (2026-09-24 유니스)
+    if (지난수 || 지난것보기) h += '<div class="더보기줄"><button data-지난것="' + (지난것보기 ? '0' : '1') + '">' + (지난것보기 ? '지난 것 접기' : '지난 것 ' + 지난수 + '개 보기') + '</button></div>';
     return h;
   }
   function 그리기() {
@@ -1660,6 +1676,7 @@ a { color: var(--강조); }
     var 할 = e.target.closest('[data-할일]'); if (할 && !e.target.closest('button')) { var hx = ((자료 && 자료.피드.할일) || []).filter(function (y) { return y.id === 할.getAttribute('data-할일'); })[0]; if (hx && (hx.배경 || hx.할일전문 || 대표것인가(hx))) { 열린할일id = hx.id; 탭 = '할일'; 그리기(); window.scrollTo(0, 0); } return; }
     var 블 = e.target.closest('[data-블로그],[data-문자]'); if (블) { 열린블로그 = 블.getAttribute('data-블로그') || 블.getAttribute('data-문자'); 소식꼴선택 = ''; 탭 = '받은것'; 그리기(); window.scrollTo(0, 0); return; }
     if (e.target.closest('[data-블로그닫기]')) { if (!닫고돌아가기()) { 열린블로그 = ''; 그리기(); } return; }
+    var 지 = e.target.closest('[data-지난것]'); if (지) { 지난것보기 = 지.getAttribute('data-지난것') === '1'; 그리기(); return; }
     var 복 = e.target.closest('[data-복사]'); if (복) { var id = 복.getAttribute('data-복사'), x = ((자료 && 자료.피드.받은것) || []).filter(function (y) { return y.id === id; })[0]; if (x) { var 꼴k = (x.갈래 === '당근' && 소식꼴선택) ? 소식꼴선택 : ''; var t = 꼴k ? 꼴본문(x, 꼴k) : 복사용글(x); var 안 = 꼴k && 설정.소식꼴 && 설정.소식꼴[꼴k] && 설정.소식꼴[꼴k].안내; (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { 토스트('본문을 복사했어요. ' + (안 || (x.갈래 === '당근' ? '당근 「소식」 글쓰기에 붙여 넣으세요.' : '블로그 글쓰기에 붙여 넣으세요.'))); }, function () { 토스트('복사가 안 돼요. 글을 길게 눌러 복사해 주세요.'); }); } return; }
     var 꼴단 = e.target.closest('[data-소식꼴]'); if (꼴단) { 소식꼴선택 = 꼴단.getAttribute('data-소식꼴'); 그리기(); return; }
     if (e.target.closest('[data-전화]')) { e.stopPropagation(); return; }                                              // 전화·문자 링크는 줄을 열지 않고 그대로 간다
