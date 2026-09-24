@@ -313,7 +313,11 @@ nav.탭 svg { width: 24px; height: 24px; fill: none; stroke: currentColor; strok
 .말.남 { align-self: flex-start; background: #F3F1EC; border-bottom-left-radius: 4px; }   /* 대표 화면에서 다른 사람이 보낸 것 */
 .말 .이름 { font-size: 12px; color: var(--보조); margin-bottom: 4px; }
 /* 실시간 방(2026-09-20) — 방 고르기 줄 · 지금 여기 · 입력 중 · 읽음 */
-.방줄 { padding-top: 4px; }
+/* 방 고르기 줄은 위에 붙는다 — 2026-09-24 유니스 「스크롤 다운 되면 돌아올 수 없어 위에나 아래에 고정」.
+   머리(.위 sticky top:0 · 69px)와 보기 띠(있을 때 +45px) 아래에 선다. 띠는 대표가 남의 화면을 볼 때만 뜬다. */
+.방줄 { position: sticky; top: var(--방줄위, 69px); z-index: 4; padding: 8px 0 10px;
+        background: var(--바탕); border-bottom: 1px solid var(--선); margin: 0 -16px 10px; padding-left: 16px; padding-right: 16px; }
+body.띠있음 { --방줄위: 114px; }
 .여기줄 { font-size: 13px; color: var(--보조); padding: 2px 4px 8px; min-height: 18px; }
 .여기줄 .점 { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #2EAD6B; margin-right: 4px; vertical-align: middle; }
 .여기줄 .점.끊김 { background: #C9B8A8; }
@@ -466,7 +470,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-24e';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-24f';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -562,8 +566,8 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   function 보기띠그리기() {
     var 띠 = $('보기띠'), 눈 = $('눈');
     document.body.classList.toggle('보기중', !!보기);
-    if (보기) { 띠.innerHTML = '<span><b>' + esc(보기) + '</b> 화면으로 보는 중 — 그분이 보시는 그대로예요. 여기서는 보기만 돼요.</span><button data-보기끝="1">내 화면으로</button>'; 띠.classList.add('보임'); 눈.classList.add('숨김'); return; }
-    띠.classList.remove('보임');
+    if (보기) { 띠.innerHTML = '<span><b>' + esc(보기) + '</b> 화면으로 보는 중 — 그분이 보시는 그대로예요. 여기서는 보기만 돼요.</span><button data-보기끝="1">내 화면으로</button>'; 띠.classList.add('보임'); document.body.classList.add('띠있음'); 눈.classList.add('숨김'); return; }
+    띠.classList.remove('보임'); document.body.classList.remove('띠있음');
     var 들 = (자료 && 자료.사람들) || [];
     눈.classList.toggle('숨김', !들.length);
     if (들.length) { 눈.setAttribute('data-보기', 들.length === 1 ? 들[0].이름 : '고르기'); $('눈글').textContent = 들.length === 1 ? 들[0].이름 + ' 화면' : '다른 화면'; }
