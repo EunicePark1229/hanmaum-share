@@ -485,7 +485,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-24j';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-24k';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -755,7 +755,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   }
   // 폰 아래 탭 차례 — 탭을 길게 누르면 열린다(2026-09-24). 위에서 몇 개가 아래 탭, 나머지는 「더보기」.
   function 탭차례그리기() {
-    var 전부 = 탭목록(), 몇 = 전부.length > 5 ? 4 : 5;
+    var 전부 = 순서정렬(탭목록(), '폰탭', function (k) { return k; }), 몇 = 전부.length > 5 ? 4 : 5;
     $('알림목록').innerHTML = '<div class="한줄" style="color:var(--보조);margin-bottom:10px;padding-left:0;border:0">줄을 길게 눌러 위아래로 끌면 차례가 바뀌어요. 위에서 ' + Math.min(몇, 전부.length) + '개가 아래 탭에 나오고 나머지는 「더보기」에 들어가요.</div>'
       + 전부.map(function (k, i) {
         return '<div class="탭차례줄" data-차례무엇="폰탭" data-차례키="' + esc(k) + '">'
