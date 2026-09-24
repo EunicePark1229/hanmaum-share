@@ -432,6 +432,10 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   .오늘줄 .항 { flex-direction: column; align-items: stretch; gap: 4px; }
   .오늘줄 .항 input[type=date] { width: 100%; }
 }
+
+/* 오늘 못 하는 일(기다림·막힘·선행 안 끝남)은 흐리게 — 목록에서 빼지는 않는다(2026-09-24 AI 팀 4-4) */
+.줄.쉬는줄 .제목 { color: var(--보조); font-weight: 600; }
+.칩.쉼 { background: var(--바탕); color: var(--보조); border: 1px solid var(--선); font-weight: 600; }
 </style>
 </head>
 <body>
@@ -470,7 +474,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-24f';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-24h';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -590,7 +594,35 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   // ⛔ 2026-09-24 — 「기한」 한 칸에 두 가지가 담겨 있었다. 밖에서 온 **마감**(안 지키면 일이 난다)과
   //    우리가 스스로 정한 **목표일**(안 지켜도 아무 일도 안 난다). 둘을 같은 줄로 세우니 차례가 뒤집혔다.
   //    실측 — 한마음 열린 12건 중 기한 붙은 10건이 전부 우리 목표일이고, 재구매를 원하시는 손님이 그 아래 계셨다.
-  function 우리가정한날(x) { return String((x && (x.출처 || x.어디서)) || '').indexOf('기한대장') >= 0; }
+  function 우리가정한날(x) { return !!(x && x.언제부터) || String((x && (x.출처 || x.어디서)) || '').indexOf('기한대장') >= 0; }
+  // 일의 종류 — 유니스 2026-09-24 「그냥 액션만 하면 되는 것 / 논의가 먼저인 것 / 앞엣것이 끝나야 하는 것」.
+  //   칸이 없는 옛 항목은 「함」으로 본다. 「기다림」·「막힘」은 지금 내가 못 하는 일이라 빨간 지남을 안 단다.
+  var 종류말 = { 함: '', 정함: '정할 것', 얘기함: '얘기 먼저', 기다림: '기다리는 중', 막힘: '막힘' };
+  function 일종류(x) { var k = (x && x.종류) || ''; return 종류말.hasOwnProperty(k) ? k : '함'; }
+  function 지금못하나(x) { var k = 일종류(x); return k === '기다림' || k === '막힘' || 막는것남았나(x); }
+  // 선행이 안 끝났나 — 막는것에 적힌 id 중 아직 안 닫힌 것이 있나
+  function 막는것남았나(x) {
+    var 목 = (x && x.막는것) || [];
+    if (!목.length) return false;
+    var 전 = (자료 && 자료.피드.할일) || [];
+    return 목.some(function (id) {
+      var y = 전.filter(function (z) { return z.id === id; })[0];
+      return y && !닫힌할일인가(y);
+    });
+  }
+  function 막는것이름(x) {
+    var 목 = (x && x.막는것) || [], 전 = (자료 && 자료.피드.할일) || [];
+    var 남 = 목.map(function (id) { return 전.filter(function (z) { return z.id === id; })[0]; })
+              .filter(function (y) { return y && !닫힌할일인가(y); });
+    return 남.length ? (남[0].제목 || '') : '';
+  }
+  // 이 일 하나가 몇 개를 막고 있나 — 여럿을 막으면 맨 위로 올린다
+  function 몇개를막나(x) {
+    var 전 = (자료 && 자료.피드.할일) || [];
+    return 전.filter(function (y) { return !닫힌할일인가(y) && (y.막는것 || []).indexOf(x.id) >= 0; }).length;
+  }
+  // 아직 시작할 때가 아닌가 — 우리가 정한 착수일이 아직 안 왔다
+  function 아직때아닌가(x) { return !!(x && x.언제부터 && x.언제부터 > 지금iso().slice(0, 10)); }
   // 밖에서 온 것인가 — 손님·거래처·관공서처럼 상대가 있는 일. 우리가 만든 숙제보다 앞에 둔다.
   function 밖에서온것(x) {
     var 출 = String((x && (x.출처 || x.어디서)) || '');
@@ -599,16 +631,18 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   }
   // 차례 — 0 밖에서 온 마감 · 1 밖에서 온 것(기한 없어도) · 2 우리 목표일 · 3 그 밖
   function 급한칸(x) {
-    var 마감 = x.기한 && !우리가정한날(x);
-    if (마감) return 0;
-    if (밖에서온것(x)) return 1;
-    if (x.기한) return 2;
-    return 3;
+    if (몇개를막나(x) >= 2) return 0;                    // 하나가 여럿을 막고 있으면 그것부터 (Theory of Constraints)
+    if (지금못하나(x)) return 4;                          // 기다림·막힘·선행 안 끝남 — 오늘 할 수 없다
+    var 마감 = (x.마감 || x.기한) && !우리가정한날(x);
+    if (마감) return 1;
+    if (밖에서온것(x)) return 2;
+    if (x.마감 || x.기한) return 3;
+    return 3.5;
   }
   function 기한차례(a, b) {
     var ca = 급한칸(a), cb = 급한칸(b);
     if (ca !== cb) return ca - cb;
-    var ka = a.기한 || '', kb = b.기한 || '';
+    var ka = a.마감 || a.기한 || '', kb = b.마감 || b.기한 || '';
     if (ka && kb && ka !== kb) return ka < kb ? -1 : 1;
     if (ka !== kb) return ka ? -1 : 1;                  // 같은 칸이면 기한 있는 쪽이 먼저
     return (b.시각 || '') < (a.시각 || '') ? -1 : ((b.시각 || '') > (a.시각 || '') ? 1 : 0);
@@ -731,9 +765,27 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     if (할일상대 && 할일상대 !== '__없음') h += '<div style="display:flex;justify-content:space-between;align-items:center;margin:-2px 0 8px;gap:8px"><span class="한줄" style="padding:0;border:0;color:var(--보조)">' + esc(할일상대) + '과(와) 얘기할 때 한 번에 — 아래가 그 목록이에요.</span><span style="display:flex;gap:6px"><button class="단추 테" data-상대복사="' + esc(할일상대) + '" style="height:36px;font-size:14px;white-space:nowrap">복사</button>' + (구성원있나() && !보기 ? '<button class="단추 테" data-상대보내기="' + esc(할일상대) + '" style="height:36px;font-size:14px;white-space:nowrap">대화로 보내기</button>' : '') + '</span></div>';
     return h;
   }
+  // 왜 이 자리에 있는지 한 줄 — 「지금 이것 · 왜냐하면」(받은 지침 18절). 사람이 납득해야 따른다.
+  function 왜이차례(x) {
+    var 막 = 몇개를막나(x);
+    if (막 >= 2) return { 급: '살핌', 말: '이것 하나가 ' + 막 + '개를 막고 있어요' };
+    var 종 = 일종류(x);
+    if (막는것남았나(x)) { var 앞 = 막는것이름(x); return { 급: '모름', 말: 앞 ? '「' + 앞.slice(0, 18) + '」 끝나야 시작' : '앞엣것이 끝나야 시작' }; }
+    if (종 === '기다림') return { 급: '모름', 말: (며칠째(x.단계때 || x.시각) || '') + ' 기다리는 중' };
+    if (종 === '막힘') return { 급: '모름', 말: '막힘' + (x.왜 ? ' — ' + String(x.왜).slice(0, 24) : '') };
+    if (종 === '얘기함') return { 급: '살핌', 말: '얘기 먼저' };
+    if (종 === '정함') return { 급: '살핌', 말: '정할 것' };
+    if (아직때아닌가(x)) return { 급: '모름', 말: esc(x.언제부터) + ' 부터' };
+    var 마감 = x.마감 || (x.기한 && !우리가정한날(x) ? x.기한 : '');
+    if (마감) return { 급: '살핌', 말: 마감 + ' 까지' };
+    if (밖에서온것(x)) return { 급: '살핌', 말: '밖에서 온 것' };
+    if (x.기한) return { 급: '', 말: esc(x.기한) + ' 목표 (우리가 정한 날)' };
+    return { 급: '', 말: '' };
+  }
   function 할일줄(x, 덧있나) {
-    var 며 = 며칠째(x.시각);
-    return '<div class="줄" data-가="할일" data-초점="' + esc(x.id) + '" data-할일열기="' + esc(x.id) + '"><div class="제목">' + esc(x.제목) + '</div><div class="한줄 접힘">' + esc(x.한줄 || '') + (덧있나 && x.덧 ? ' · ' + esc(x.덧) : '') + '</div><div class="때">' + (x.기한 ? esc(x.기한) + ' 까지 · ' : '') + (며 ? 며 + ' · ' : '') + 때글(x.시각) + '</div></div>';
+    var 며 = 며칠째(x.시각), 왜 = 왜이차례(x);
+    var 앞 = 지금못하나(x) ? '<span class="칩 쉼">' + esc(일종류(x) === '막힘' ? '막힘' : 일종류(x) === '기다림' ? '기다림' : '대기') + '</span> ' : '';
+    return '<div class="줄' + (지금못하나(x) ? ' 쉬는줄' : '') + '" data-가="할일" data-초점="' + esc(x.id) + '" data-할일열기="' + esc(x.id) + '"><div class="제목">' + 앞 + esc(x.제목) + '</div><div class="한줄 접힘">' + esc(x.한줄 || '') + (덧있나 && x.덧 ? ' · ' + esc(x.덧) : '') + '</div><div class="때">' + (왜.말 ? (왜.급 ? 신호(왜.급, 왜.말) : '<span style="color:var(--보조)">' + 왜.말 + '</span>') + ' · ' : '') + (며 ? 며 + ' · ' : '') + 때글(x.시각) + '</div></div>';
   }
   function 신호(급, 말) { return '<span class="신호 ' + 급 + '">' + esc(말) + '</span>'; }
   // ── 차례(순서) — 사람마다. 워커가 준 자료.순서 { 할일:[id…], 홈:[카드키…], 재고:[갈래…] } ──
@@ -995,7 +1047,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     if (!줄들.length) return 방줄() + '<div class="카드"><div class="빈">아래에 적어 보내시면 됩니다. 사진과 음성도 돼요.</div></div>';
     return 방줄() + '<div class="대화">' + 줄들.map(function (x) {
       if (x.누가 === '나' || x.누가 === '남') {
-        var 몸 = x.종류 === '사진' ? '<div>사진 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '음성' ? '<div>음성 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '파일' ? '<div>파일 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '장부입력' ? 장부한줄(x.글) : esc(x.글);
+        var 몸 = x.종류 === '사진' ? '<div>사진 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '음성' ? '<div>음성 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '파일' ? '<div>파일 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '장부입력' ? 장부한줄(x.글) : esc(x.글);   // 장부입력은 2026-09-24 부터 대화로 안 온다 — 옛 줄만 보인다
         if (x.미리보기) 몸 = '<img class="썸" src="' + x.미리보기 + '" alt="보낸 사진">';
         else if (x.종류 === '사진' && x.id && 설정 && 설정.뒷단.indexOf('script.google') < 0) 몸 = '<img class="썸" loading="lazy" src="' + 뒷단주소('p=file&id=' + encodeURIComponent(x.id)) + '" alt="보낸 사진">';
         if ((x.종류 === '사진' || x.종류 === '파일') && (x.글 || '').indexOf('[영수증') === 0) 몸 = '<div><span class="칩">영수증</span> ' + esc((x.글 || '').replace('[영수증]', '').trim()) + '</div>' + 몸;
@@ -1386,6 +1438,24 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   var 입력구분 = '판매', 자세히 = false;
   function 고르기(id, 목록, 첫말) { return '<select id="' + id + '"><option value="">' + (첫말 || '고르기') + '</option>' + (목록 || []).map(function (v) { return '<option value="' + esc(v) + '">' + esc(v) + '</option>'; }).join('') + '</select>'; }
   function 칸(id, 이름, 자리, 종류) { return '<label>' + 이름 + '<input id="' + id + '" ' + (종류 || '') + ' placeholder="' + esc(자리 || '') + '"></label>'; }
+  // 오늘 이 폰에서 넣은 것 — 장부 탭 안에만 보인다. 대화에 안 남긴다(2026-09-24 유니스).
+  function 넣은것들() { try { return JSON.parse(저장.get('넣은것') || '[]'); } catch (e) { return []; } }
+  function 넣은것쌓기(x) { var 목 = 넣은것들(); 목.push(x); 저장.set('넣은것', JSON.stringify(목.slice(-12))); }
+  function 넣은것고치기(한줄, 상태) {
+    var 목 = 넣은것들().map(function (y) { return y.한줄 === 한줄 ? Object.assign({}, y, { 상태: 상태 }) : y; });
+    저장.set('넣은것', JSON.stringify(목)); 그리기();
+  }
+  function 입력칸비우기() {
+    ['입_상대', '입_내용', '입_금액', '입_모델', '입_시리얼', '입_메모'].forEach(function (id) { var e = $(id); if (e) e.value = ''; });
+  }
+  function 넣은것카드() {
+    var 목 = 넣은것들().filter(function (x) { return (x.시각 || '').slice(0, 10) === 지금iso().slice(0, 10); });
+    if (!목.length) return '';
+    return '<section class="카드"><h2>오늘 넣으신 것 ' + 목.length + '</h2>' + 목.slice().reverse().map(function (x) {
+      var 상 = x.상태 === '들어감' ? 신호('좋음', '들어갔어요') : x.상태 === '못 보냄' ? 신호('모름', '못 보냄') : 신호('살핌', '보내는 중');
+      return '<div class="줄"><div class="제목">' + esc(x.구분) + ' · ' + esc(x.한줄) + '</div><div class="때">' + 상 + ' · ' + 때글(x.시각) + '</div></div>';
+    }).join('') + '</section>';
+  }
   function 입력칸() {
     if (대표인가()) return '';
     var L = (설정 && 설정.장부입력) || {};
@@ -1524,7 +1594,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   }
   function 장부() {
     var 장 = 장부항목();
-    if (!장) return 입력칸() + '<div class="카드"><div class="빈">아직 장부가 안 왔어요.</div></div>';
+    if (!장) return 입력칸() + 넣은것카드() + '<div class="카드"><div class="빈">아직 장부가 안 왔어요.</div></div>';
     var 상세 = 장.상세 || {};
     function 줄(키, 이름, 건수, 금액, 굵게) {
       var 있음 = (상세[키] || []).length > 0, 열 = 펼침[키] ? ' 열림' : '';
@@ -1533,7 +1603,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
       return h;
     }
     var 급 = 대표인가() ? ((장.손익 || 0) >= 0 ? 신호('좋음', '이번 달 남음') : 신호('살핌', '이번 달 모자람')) : ((장.미지급 || []).length ? '<span data-가="장부" data-스크롤="미지급">' + 신호('살핌', '미지급 ' + 장.미지급.length + '곳') + '</span>' : 신호('좋음', '미지급 없음'));
-    var h = 입력칸() + '<section class="카드"><h2>' + esc(장.연월) + ' ' + esc(장.제목) + '</h2>' + 급 + '<div class="한줄" style="color:var(--보조);margin-top:8px">' + esc(장.한줄 || '') + ' · 총액을 누르면 줄이 펼쳐져요</div>';
+    var h = 입력칸() + 넣은것카드() + '<section class="카드"><h2>' + esc(장.연월) + ' ' + esc(장.제목) + '</h2>' + 급 + '<div class="한줄" style="color:var(--보조);margin-top:8px">' + esc(장.한줄 || '') + ' · 총액을 누르면 줄이 펼쳐져요</div>';
     h += '<table class="표" style="margin-top:12px"><tr><th></th><th style="text-align:right">건수</th><th style="text-align:right">금액</th></tr>';
     h += 줄('판매', '판매', (장.판매 && 장.판매.건수) || 0, 장.판매 && 장.판매.금액);
     h += 줄('매입', '매입', (장.매입 && 장.매입.건수) || 0, 장.매입 && 장.매입.금액);
@@ -1853,10 +1923,19 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
                   수단: 값('입_수단'), 과목: 값('입_과목'), 브랜드: 값('입_브랜드'), 모델: 값('입_모델'), 시리얼: 값('입_시리얼'), 수량: Number(값('입_수량') || 1), 경로: 값('입_경로'), 메모: 값('입_메모') };
       if (!항목.금액) { 토스트('금액을 적어 주세요.'); var g = $('입_금액'); if (g) g.focus(); return; }
       if (!항목.상대 && !항목.내용) { 토스트((입력구분 === '판매' ? '고객' : 입력구분 === '매입' ? '거래처' : '어디에') + '나 내용 중 하나는 적어 주세요.'); return; }
-      var 글 = JSON.stringify(항목);
-      var 한줄 = '[장부 ' + 입력구분 + '] ' + 항목.날짜 + ' · ' + (항목.상대 || '') + ' · ' + (항목.내용 || '') + ' · ' + 항목.금액.toLocaleString('ko-KR') + '원';
-      보내기({ 종류: '장부입력', 글: 글 }, { 누가: '나', 종류: '장부입력', 글: 한줄, 시각: 지금iso(), 임시: Date.now() });
-      토스트('장부에 넣었어요. 1분 안에 숫자에 반영돼요.');
+      // ⛔ 2026-09-24 유니스 — 대화는 사람이 주고받는 자리다. 장부는 「입력」 길로 보낸다.
+      var 한줄 = 항목.날짜 + ' · ' + (항목.상대 || '') + ' · ' + (항목.내용 || '') + ' · ' + 항목.금액.toLocaleString('ko-KR') + '원';
+      넣은것쌓기({ 구분: 입력구분, 한줄: 한줄, 시각: 지금iso(), 상태: '보내는중' });
+      그리기();
+      보내기짐({ 종류: '입력', 갈래: '장부', 짐: 항목 }).then(function (j) {
+        if (!j || !j.됨) throw new Error(j && j.왜 || '');
+        넣은것고치기(한줄, '들어감');
+        토스트('장부에 넣었어요. 바로 반영돼요.');
+      }).catch(function () {
+        넣은것고치기(한줄, '못 보냄');
+        토스트('지금은 안 보내졌어요. 잠시 뒤 다시 눌러 주세요.');
+      });
+      입력칸비우기();
       return;
     }
     var 상정 = e.target.closest('[data-상세정렬]'); if (상정) { var pr = 상정.getAttribute('data-상세정렬').split('|'), 정 = 상세정렬[pr[0]] || { 키: '일자', 방향: 1 }; if (정.키 === pr[1]) 정.방향 = -정.방향; else { 정.키 = pr[1]; 정.방향 = pr[1] === '금액' ? -1 : 1; } 상세정렬[pr[0]] = 정; 그리기(); return; }
