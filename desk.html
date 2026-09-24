@@ -377,6 +377,57 @@ nav.탭 svg { width: 24px; height: 24px; fill: none; stroke: currentColor; strok
 a { color: var(--강조); }
 .숨김 { display: none !important; }
 /* (옛 PC 틀은 2026-09-18 위의 @media 900px 블록으로 합쳤다 — 둘이 겹쳐 메뉴가 머리 밑으로 밀리고 조직 이름이 홈 단추 위에 겹쳤다) */
+
+/* ── 2026-09-24 폰·접근성 검토 반영 (AI 팀 실측 · 엣지 108장) ────────────── */
+
+/* 종 — 숫자를 아이콘 옆으로. 배지가 종을 58% 덮어 「23 이라 적힌 덩어리」로 보였다 */
+.종 { width: auto; min-width: 48px; height: 48px; display: flex; align-items: center;
+      justify-content: center; gap: 5px; padding: 0 10px 0 8px; }
+.종 svg { width: 26px; height: 26px; }
+.배지 { position: static; min-width: 22px; height: 22px; padding: 0 7px;
+        font-size: 14px; line-height: 22px; font-weight: 700; }
+
+/* 한글은 낱말 사이에서만 끊는다 — 「알/려」·「녹/음」·「2026-04-/23」으로 잘렸다 */
+.줄 .제목, .줄 .한줄, .카드 h2, .고객줄 .이름, .고객줄 .이유,
+.일정줄 .제목, .메일줄 .제목, .메일줄 .보낸이, .말 .제목,
+.빈, .고정힌트 { word-break: keep-all; overflow-wrap: anywhere; }
+
+/* 누르는 자리 44px — 글자 크기는 그대로 둔다 */
+.카드 h2 .더 { min-height: 44px; display: inline-flex; align-items: center;
+               padding: 0 4px; margin: -12px -4px; }
+.전화단추 { height: 48px; padding: 0 16px; }
+.갈래줄 button, .정렬단추, .보기띠 button { height: 44px; }
+.오늘줄 .항 { padding: 11px 0; }
+
+/* 키보드로 다닐 때 어디 있는지 · 지금 탭을 색 말고도 (적록 색각) */
+:focus-visible { outline: 3px solid var(--강조); outline-offset: 2px; border-radius: 8px; }
+nav.탭 button { position: relative; }
+nav.탭 button.켬 { font-weight: 700; }
+nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; right: 22%;
+                          height: 3px; border-radius: 0 0 3px 3px; background: var(--강조); }
+
+/* 대화 시각·접속 줄 — 원장님이 보시는 화면이라 14px 밑으로 안 내림 */
+.말 .때, .여기줄 { font-size: 14px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .차례옮김 { transition: none; }
+}
+@media (min-width: 900px) {
+  nav.탭 button.켬::after { display: none; }
+}
+
+/* 3440 모니터 — 오른쪽 47%가 비었다. 네 단으로 늘린다 */
+@media (min-width: 2200px) {
+  main { max-width: none; padding-right: 48px; }
+  main.홈격자 { column-count: 4; column-gap: 20px; }
+  .대화 { max-width: 900px; }
+}
+
+/* 장부 「오늘 입력」 날짜 칸이 360px 에서 잘렸다(139px → 「2026-09-2」까지만) */
+@media (max-width: 400px) {
+  .오늘줄 .항 { flex-direction: column; align-items: stretch; gap: 4px; }
+  .오늘줄 .항 input[type=date] { width: 100%; }
+}
 </style>
 </head>
 <body>
@@ -415,7 +466,7 @@ a { color: var(--강조); }
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-24c';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-24d';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
