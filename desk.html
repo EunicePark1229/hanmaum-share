@@ -297,6 +297,11 @@ body.보기중 .입력줄 { display: none !important }
 .단추:disabled { opacity: .5; }
 .칩 { display: inline-block; padding: 2px 10px; border-radius: 999px; background: var(--강조연); color: var(--강조); font-size: 14px; margin-right: 6px; }
 .칩.끝 { background: #EEF2F3; color: var(--흐림); }
+  .댓글칸 { margin-top:10px; border-top:1px solid var(--선); padding-top:8px }
+  .댓글 { font-size:13px; color:var(--보조); margin:6px 0; padding-left:8px; border-left:2px solid var(--선) }
+  .댓글 b { color:var(--글); font-weight:600 }
+  .댓글 .때 { font-size:11px; opacity:.7; margin-left:4px }
+  .댓글남기기 { font-size:13px; color:var(--강조); background:none; border:0; padding:4px 0; cursor:pointer }
 .점 { display: inline-block; width: 10px; height: 10px; border-radius: 999px; background: var(--강조); margin-right: 8px; vertical-align: middle; }
 .힌트 { display: none; position: fixed; left: 0; right: 0; bottom: 132px; text-align: center; font-size: 14px; color: var(--흐림); pointer-events: none; }
 @media (hover: hover) and (pointer: fine) { body.대화중 .힌트 { display: block; } }
@@ -485,7 +490,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-24k';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-25a';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -915,7 +920,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     if (손) { e.preventDefault(); 끌기시작(항, e); return; }
     // 메뉴 한 줄과 「탭 차례」 줄은 줄 전체가 길게 누르는 자리다 — 버튼으로 만들어져 있어 아래 거르개에 걸린다
     var 메뉴류 = 항.classList.contains('메뉴항') || 항.classList.contains('탭차례줄');
-    if (!메뉴류 && e.target.closest('button, a, input, textarea, select, [data-결정], [data-끝], [data-고정]')) return;
+    if (!메뉴류 && e.target.closest('button, a, input, textarea, select, [data-결정], [data-끝], [data-고정], [data-댓글]')) return;
     // 길게 누르기 자리 — 카드는 제목(h2)만, 할 일 줄·메뉴 줄은 줄 전체
     var 자리 = (메뉴류 || 항.classList.contains('줄')) ? 항 : e.target.closest('h2');
     if (!자리 || !항.contains(자리)) return;
@@ -957,6 +962,19 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   function 고정단추(id) { var 켬 = 고정됐나(id); return '<button class="고정단추' + (켬 ? ' 켬' : '') + '" data-고정="' + esc(id) + '" data-켬="' + (켬 ? '1' : '0') + '" title="' + (켬 ? '맨 위 “늘 쓰는 것”에서 내려요' : '맨 위 “늘 쓰는 것”에 두어요') + '">' + (켬 ? '고정됨' : '고정') + '</button>'; }
   function 고정된것() { var ids = (자료 && 자료.고정) || [], 전부 = (자료 && 자료.피드.받은것) || []; return ids.map(function (id) { return 전부.filter(function (x) { return x.id === id; })[0]; }).filter(Boolean); }
   // 받은 것의 상태 — 문자는 컨펌·답, 블로그·당근은 썼어요·안 쓰기로. 끝난 것은 홈에서 뺀다(2026-09-22 재검토 4-4 · 원장님 홈에 끝난 「보내도 될까요」 셋)
+  // ⛔ 2026-09-25. 앱에서 할 수 있는 말이 단추뿐이었다. 유니스가 항공권을 예매하시고도
+  //    예약번호가 저장소로 안 왔다 — 사흘 뒤 캡처로 겨우 들어왔다. 그래서 어디에나 한 줄 남긴다.
+  function 댓글칸(x) {
+    var 것 = (x && x.댓글) || [];
+    var h = '<div class="댓글칸">';
+    것.forEach(function (c) {
+      h += '<div class="댓글"><b>' + esc(c.누가 || '') + '</b><span class="때">' + esc(때글(c.때)) + '</span>'
+        + '<div>' + esc(c.글 || '') + '</div></div>';
+    });
+    h += '<button class="댓글남기기" data-댓글="' + esc(x.id) + '">'
+      + (것.length ? '+ 한 줄 더' : '+ 한 줄 남기기') + '</button></div>';
+    return h;
+  }
   function 받은것상태(x) {
     if (x.갈래 === '문자') return 문자상태(x);
     if (x.갈래 === '블로그' || x.갈래 === '당근') return x.단계 === '썼어요' ? 신호('좋음', '썼어요') : x.단계 === '보류' ? 신호('모름', '안 쓰기로') : 신호('살핌', '초안');
@@ -987,7 +1005,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var 상 = 받은것상태(x);
     var 몸 = (x.갈래 === '블로그' || x.갈래 === '당근' || x.갈래 === '문자') ? '<div class="줄 고정있음" data-가="받은것" data-블로그열기="' + esc(x.id) + '"><span class="칩">' + esc(x.갈래) + '</span>' + esc(x.제목) + '<div class="때">' + (상 ? 상 + ' · ' : '') + 때글(x.시각) + '</div>'
       : '<div class="줄 고정있음"><span class="칩">' + esc(x.갈래) + '</span><a href="' + esc(x.주소) + '" target="_blank" rel="noopener">' + esc(x.제목) + '</a>' + (x.한줄 ? '<div class="한줄 접힘">' + esc(x.한줄) + '</div>' : '') + '<div class="때">' + 때글(x.시각) + '</div>';
-    return 몸 + (고정칸 === false ? '' : 고정단추(x.id)) + '</div>';
+    return 몸 + (고정칸 === false ? '' : 고정단추(x.id)) + 댓글칸(x) + '</div>';
   }
   function 늘쓰는것카드(어디) {
     var 것 = 고정된것();
@@ -1276,7 +1294,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
       // 보낼 수 없는 조직에서는 단추를 안 그리고 왜인지 적는다 — 없는 기능을 있는 것처럼 보이지 않는다(2026-09-24)
       if (!메일보낼수있나()) h += '<div class="한줄" style="color:var(--보조);margin-top:6px">여기서는 읽기만 돼요. 답장과 지우기는 「지메일에서 열기」로 하시면 됩니다.</div>';
     }
-    return h + '</div>';
+    return h + 댓글칸(x) + '</div>';
   }
   function 메일카드() {
     if (!설정 || !(자료 && 자료.피드.메일 && 자료.피드.메일.length)) return '';
@@ -1351,7 +1369,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     h += '<table class="고객표">' + 칸.filter(function (r) { return r[1]; }).map(function (r) { return '<tr><th>' + esc(r[0]) + '</th><td>' + esc(r[1]) + '</td></tr>'; }).join('') + '</table>';
     // 앞으로 연락 안 할 분(2026-09-21 유니스 「돌아가시거나 진상고객이었다거나 다시 연락하지 않을 분 옵션」) — 누르면 다음 주부터 명단에서 빠진다
     if (!제외) h += '<div class="제외줄"><div class="한줄" style="padding-left:0;border:0;color:var(--보조)">앞으로 연락 안 할 분이면 이유를 하나 눌러 주세요. 명단에서 계속 빠져요(고객 정보는 남아요).</div><div class="결과줄">' + 제외이유들.map(function (r) { return '<button data-연락제외="' + esc(r) + '" data-id="' + esc(x.id) + '">' + esc(r) + '</button>'; }).join('') + '</div></div>';
-    return h + '</section>';
+    return h + 댓글칸(x) + '</section>';
   }
   function 고객거르기() {
     var 전부 = 고객목록(), q = 고객검색.trim().replace(/-/g, '');
@@ -1452,7 +1470,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
       var 상태 = x.단계 === '결정' ? 신호('좋음', '정함' + (x.사유 ? ' · ' + x.사유.slice(0, 30) : '')) : x.단계 === '보류' ? 신호('모름', '나중에') : x.단계 === '얘기중' ? 신호('살핌', '얘기 중') : '';
       return '<div class="줄 할일줄" data-할일="' + esc(x.id) + '" data-id="' + esc(x.id) + '"><div class="제목">' + esc(x.제목) + '</div><div class="한줄 접힘">' + esc(x.한줄 || '') + '</div>' +
         '<div class="때">' + (상태 ? 상태 + ' · ' : '') + (x.기한 ? esc(x.기한) + ' 까지 · ' : '') + 며칠째(x.시각) + (며칠째(x.시각) ? ' · ' : '') + 때글(x.시각) + (x.배경 || x.할일전문 ? ' · <span style="color:var(--강조)">열어 보기 ›</span>' : '') + '</div>' +
-        (끝났나 ? '<div style="margin-top:8px"><span class="칩 끝">' + (답한할일인가(x) ? '답함' + (x.사유 ? ' · ' + esc(x.사유.slice(0, 30)) : '') : '끝냈어요') + '</span></div>' : (결정인가(x) ? '' : '<div style="margin-top:10px"><button class="단추 테" data-끝="' + esc(x.id) + '">끝냈어요</button></div>')) + '</div>';
+        (끝났나 ? '<div style="margin-top:8px"><span class="칩 끝">' + (답한할일인가(x) ? '답함' + (x.사유 ? ' · ' + esc(x.사유.slice(0, 30)) : '') : '끝냈어요') + '</span></div>' : (결정인가(x) ? '' : '<div style="margin-top:10px"><button class="단추 테" data-끝="' + esc(x.id) + '">끝냈어요</button></div>')) + 댓글칸(x) + '</div>';
     }
     if (열린할일id) { var 하나 = 목록.filter(function (y) { return y.id === 열린할일id; })[0]; if (하나) return 할일상세(하나); if (자료) 열린할일id = ''; }
     var 열림전부 = 순서정렬(목록.filter(function (x) { return !닫힌할일인가(x) && !미룬할일인가(x); }).sort(기한차례), '할일', function (x) { return x.id; });
@@ -1714,7 +1732,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
       h += '</div><div class="한줄" style="color:var(--보조)">「이렇게 바꿔서」·「더 얘기하자」·「나중에」는 한 줄 적는 칸이 떠요. 적으신 건 제가 읽고 앱 대화에 답을 남깁니다.</div>';
     }
     if (x.출처) h += '<div class="한줄" style="margin-top:12px;color:var(--흐림)">출처 · ' + esc(x.출처) + '</div>';
-    return h + '</section>';
+    return h + 댓글칸(x) + '</section>';
   }
   var 열린블로그 = '';
   (function () { var m = decodeURIComponent(location.search || '').match(/[?&]블로그=([^&]+)/); if (m) { 열린블로그 = m[1]; 탭 = '받은것'; } })();   // 알림·링크로 초안 하나를 바로 열 때
@@ -1747,7 +1765,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   function 블로그카드(x) {
     var 급 = x.단계 === '썼어요' ? 신호('좋음', '썼어요') : x.단계 === '보류' ? 신호('모름', '안 쓸래요') : 신호('살핌', '초안');
     var 썸 = (x.사진 && x.사진[0]) ? '<img class="썸작" src="' + esc(x.사진[0].주소) + '" loading="lazy" alt="">' : '';
-    return '<div class="줄 블로그줄 고정있음" data-블로그="' + esc(x.id) + '">' + 썸 + '<div><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄 || '') + '</div><div class="때">' + 급 + ' · ' + 때글(x.시각) + (x.사유 ? ' · ' + esc(x.사유) : '') + '</div></div>' + 고정단추(x.id) + '</div>';
+    return '<div class="줄 블로그줄 고정있음" data-블로그="' + esc(x.id) + '">' + 썸 + '<div><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄 || '') + '</div>' + (x.순위 && (x.단계 || '초안') === '초안' ? '<div class="한줄" style="color:var(--강조)">' + (x.순위 === 1 ? '지금 먼저 올리시면 좋아요 · ' : x.순위 + '번째 추천 · ') + esc(x.순위이유 || '') + '</div>' : '') + '<div class="때">' + 급 + ' · ' + 때글(x.시각) + (x.사유 ? ' · ' + esc(x.사유) : '') + (x.글주소 ? ' · <a href="' + esc(x.글주소) + '" target="_blank" rel="noopener">올라간 글 보기</a>' : '') + '</div></div>' + 고정단추(x.id) + '</div>';
   }
   function 블로그상세(x) {
     var h = '<section class="카드 블로그상세"><button class="더" data-블로그닫기="1">‹ 목록으로</button><h2 style="margin-top:8px">' + esc(x.제목) + '</h2>';
@@ -1790,8 +1808,8 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     }
     var 블로그 = 골.filter(function (x) { return x.갈래 === '블로그'; }), 당근 = 골.filter(function (x) { return x.갈래 === '당근'; }), 나머지 = 골.filter(function (x) { return x.갈래 !== '블로그' && x.갈래 !== '문자' && x.갈래 !== '당근'; });
     if (블로그.length) {
-      var 초안 = 블로그.filter(function (x) { return (x.단계 || '초안') === '초안'; }), 쓴 = 블로그.filter(function (x) { return x.단계 === '썼어요'; }), 보류 = 블로그.filter(function (x) { return x.단계 === '보류'; });
-      h += '<section class="카드"><h2>블로그 초안 ' + 초안.length + '</h2><div class="한줄" style="color:var(--보조);margin-bottom:8px">골라 쓰시고, 올리신 뒤 「썼어요」를 눌러 주세요. 그러면 저희가 다음 글을 채워 둡니다.</div>' + (초안.length ? 초안.map(블로그카드).join('') : '<div class="빈">새 초안을 만드는 중이에요.</div>') + '</section>';
+      var 초안 = 블로그.filter(function (x) { return (x.단계 || '초안') === '초안'; }).sort(function (a, b) { var ra = a.순위 || 999, rb = b.순위 || 999; return ra !== rb ? ra - rb : (a.시각 < b.시각 ? 1 : -1); }), 쓴 = 블로그.filter(function (x) { return x.단계 === '썼어요'; }), 보류 = 블로그.filter(function (x) { return x.단계 === '보류'; });
+      h += '<section class="카드"><h2>블로그 초안 ' + 초안.length + '</h2><div class="한줄" style="color:var(--보조);margin-bottom:8px">위에 있는 글부터 올리시면 좋아요. 올리시면 저희가 블로그에서 확인해 「쓴 글」로 옮기고 다음 글을 채워 둡니다.</div>' + (초안.length ? 초안.map(블로그카드).join('') : '<div class="빈">새 초안을 만드는 중이에요.</div>') + '</section>';
       if (보류.length) h += '<section class="카드"><h2>안 쓰기로 한 글 ' + 보류.length + '</h2>' + 보류.map(블로그카드).join('') + '</section>';
       if (쓴.length) h += '<section class="카드"><h2>쓴 글 ' + 쓴.length + '</h2>' + 쓴.map(블로그카드).join('') + '</section>';
     }
@@ -1983,6 +2001,17 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var 날 = e.target.closest('[data-일정날]'); if (날) { 일정골 = 날.getAttribute('data-일정날'); 그리기(); return; }
     var 방단 = e.target.closest('[data-방]'); if (방단) { 방 = 방단.getAttribute('data-방'); if (!보기) 저장.set('데스크방', 방); 소켓닫기(); 그리기(); 받아오기(); return; }
     var g = e.target.closest('[data-갈래]'); if (g) { 갈래 = g.getAttribute('data-갈래'); 그리기(); return; }
+    var 댓 = e.target.closest('[data-댓글]');
+    if (댓) {
+      var 글 = window.prompt('한 줄 남기기 — 결과든 메모든 편하게 적으세요.\n(예: 예약번호 BHY3XK · 통화했는데 다음 주에 다시)', '');
+      if (글 === null) return;
+      글 = (글 || '').trim(); if (!글) return;
+      댓.disabled = true;
+      보내기짐({ 종류: '댓글', id: 댓.getAttribute('data-댓글'), 글: 글 })
+        .then(function (j) { if (!j || !j.됨) throw new Error(); 토스트('적어 두었어요.'); 받아오기().then(그리기); })
+        .catch(function (e2) { 댓.disabled = false; 못했어요(e2, '댓글'); });
+      return;
+    }
     var 끝 = e.target.closest('[data-끝]'); if (끝) { 끝내기(끝.getAttribute('data-끝'), 끝, 끝.getAttribute('data-끝글')); return; }
     var 정 = e.target.closest('[data-정렬]'); if (정) { var k = 정.getAttribute('data-정렬'); if (재고정렬.키 === k) 재고정렬.방향 = -재고정렬.방향; else { 재고정렬.키 = k; 재고정렬.방향 = k === '남음' ? -1 : 1; } 그리기(); return; }
     var 입구 = e.target.closest('[data-입력구분]'); if (입구) { 입력구분 = 입구.getAttribute('data-입력구분'); 그리기(); return; }
@@ -2014,8 +2043,12 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var 달 = e.target.closest('[data-손익달]'); if (달) { var mm = 달.getAttribute('data-손익달'); 펼친달 = (펼친달 === mm) ? '' : mm; 그리기(); return; }
   });
   function 끝내기(id, b, 말) {
+    // 끝내면서 결과를 한 줄 — 안 적으셔도 되고(빈칸 확인), 취소하면 끝내지도 않는다.
+    var 글 = window.prompt('끝내셨군요. 결과를 한 줄 남기시겠어요?\n(예: 예약번호 BHY3XK · 15만원 입금 · 다음 주에 다시)\n안 적으실 거면 그냥 확인을 누르세요.', '');
+    if (글 === null) return;
+    글 = (글 || '').trim();
     var 원글 = b.textContent; b.disabled = true; b.textContent = '보내는 중';
-    보내기짐({ 종류: '끝냈어요', id: id }).then(function (j) { if (!j || !j.됨) throw new Error(); 저장.set('끝_' + id, '1'); 토스트(말 || '끝낸 것으로 적었어요.'); 받아오기().then(그리기); })
+    보내기짐({ 종류: '끝냈어요', id: id, 글: 글 }).then(function (j) { if (!j || !j.됨) throw new Error(); 저장.set('끝_' + id, '1'); 토스트(말 || '끝낸 것으로 적었어요.'); 받아오기().then(그리기); })
       .catch(function (e) { b.disabled = false; b.textContent = 원글 || '끝냈어요'; 못했어요(e, '끝냈어요 · ' + id); });
   }
   function 알림목록전부() {
