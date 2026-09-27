@@ -490,7 +490,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-27b';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-27c';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -1061,7 +1061,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     내것.filter(function (x) { return 급한일.indexOf(x) < 0; }).forEach(function (x) { 할.push({ 가: '할일', 속: 'data-할일열기="' + esc(x.id) + '"', 제목: x.제목, 한줄: x.한줄 || '' }); });
     h += '<section class="카드"><h2>오늘 우선 할 일</h2>';
     h += 할.length ? 할.slice(0, 3).map(function (t, i) {
-      return '<div class="줄" data-가="' + t.가 + '" ' + t.속 + ' style="cursor:pointer"><div class="제목">' + (i + 1) + '. ' + esc(t.제목) + '</div>' + (t.한줄 ? '<div class="한줄">' + esc(t.한줄) + '</div>' : '') + '<div class="때"><span style="color:var(--강조)">바로 가기 ›</span></div></div>';
+      return '<div class="줄" data-가="' + t.가 + '" ' + t.속 + ' style="cursor:pointer"><div class="제목">' + (i + 1) + '. ' + esc(t.제목) + '</div>' + (t.한줄 ? '<div class="한줄">' + esc(String(t.한줄).split(String.fromCharCode(10))[0]) + '</div>' : '') + '<div class="때"><span style="color:var(--강조)">바로 가기 ›</span></div></div>';
     }).join('') : '<div class="빈">오늘은 따로 하실 일이 없어요.</div>';
     h += '</section>';
     h += 바로가기카드();
