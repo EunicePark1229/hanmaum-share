@@ -490,7 +490,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-27a';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-27b';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -1035,13 +1035,18 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     if (!새.length && !오늘일.length && !기한.length && !내일일.length) h += '<div class="빈">새로 온 것도, 오늘·내일 잡힌 것도 없어요.</div>';
     return h + '</section>';
   }
+  var 펼친진행 = {};
   function 원장님홈(내것) {
     var 피 = (자료 && 자료.피드) || {};
     var 진행 = (피.안내 || []).filter(function (x) { return x.갈래 === '진행'; }).sort(function (a, b) { return a.시각 < b.시각 ? 1 : -1; });
     var h = '<section class="카드"><h2>진행된 일</h2>';
+    // 제목을 누르면 펼쳐서 무엇을·왜 했는지 전부 보인다(2026-09-27 유니스 「왜 이걸 했는지를 조금 더 알 수 있게」)
     h += 진행.length ? 진행.slice(0, 3).map(function (x) {
-      var 몸 = '<div class="제목">' + esc(x.제목) + '</div>' + (x.글 ? '<div class="한줄">' + esc(String(x.글).split('\n')[0]) + '</div>' : '') + '<div class="때">' + 때글(x.시각) + (x.주소 ? ' · <span style="color:var(--강조)">열어 보기 ›</span>' : '') + '</div>';
-      return x.주소 ? '<a class="줄" href="' + esc(x.주소) + '" target="_blank" rel="noopener" style="display:block;color:inherit;text-decoration:none">' + 몸 + '</a>' : '<div class="줄">' + 몸 + '</div>';
+      var 펼 = !!펼친진행[x.id], 줄들 = String(x.글 || '').split('\n').filter(function (l) { return l.trim(); });
+      var 몸 = '<div class="제목">' + esc(x.제목) + ' <span style="color:var(--보조);font-weight:400">' + (펼 ? '접기 ▲' : '자세히 ▼') + '</span></div>';
+      몸 += 펼 ? 줄들.map(function (l) { return '<div class="한줄" style="white-space:normal">' + esc(l) + '</div>'; }).join('') : (줄들.length ? '<div class="한줄">' + esc(줄들[0]) + '</div>' : '');
+      몸 += '<div class="때">' + 때글(x.시각) + (x.주소 ? ' · <a href="' + esc(x.주소) + '" target="_blank" rel="noopener" style="color:var(--강조)">열어 보기 ›</a>' : '') + '</div>';
+      return '<div class="줄" data-진행펼침="' + esc(x.id) + '" style="cursor:pointer">' + 몸 + '</div>';
     }).join('') : '<div class="빈">새로 해 드린 것이 생기면 여기에 알려 드릴게요.</div>';
     h += '</section>';
     // 오늘 우선 할 일 — ① 기한이 오늘이거나 지난 일 ② 블로그 추천 1순위 초안 ③ 답을 기다리는 문자 문안 ④ 남은 할 일. 셋까지.
@@ -2002,6 +2007,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var 단 = e.target.closest('[data-단계]'); if (단) { var 단계 = 단.getAttribute('data-단계'), 사유 = ''; if (단계 === '보류') { 사유 = window.prompt('안 쓰시는 이유를 한 줄 적어 주시면 다음 글에 반영해요(안 적어도 돼요)', '') || ''; } 단.disabled = true; 보내기짐({ 종류: '단계', id: 단.getAttribute('data-id'), 단계: 단계, 사유: 사유 }).then(function (j) { if (!j || !j.됨) throw new Error(); 토스트(단계 === '썼어요' ? '고마워요. 다음 글을 채워 둘게요.' : 단계 === '보류' ? '적어 두었어요.' : '다시 초안으로 두었어요.'); 받아오기(); }).catch(function (e) { 단.disabled = false; 못했어요(e, '블로그 단계'); }); return; }
     var 더보 = e.target.closest('[data-더보기]'); if (더보) { 펼침더[더보.getAttribute('data-더보기')] = true; 그리기(); return; }
     var 더 = e.target.closest('[data-가]'); if (더) { if (더.getAttribute('data-할일상대')) { 할일상대 = 더.getAttribute('data-할일상대'); 열린할일id = ''; } if (더.getAttribute('data-고객보기')) { 고객보기 = 더.getAttribute('data-고객보기'); 고객검색 = ''; 열린고객 = ''; } if (더.getAttribute('data-블로그열기')) 열린블로그 = 더.getAttribute('data-블로그열기'); if (더.getAttribute('data-할일열기')) 열린할일id = 더.getAttribute('data-할일열기'); 가기(더.getAttribute('data-가'), 더.getAttribute('data-초점'), 더.getAttribute('data-펼침열기'), 더.getAttribute('data-스크롤')); return; }
+    var 진펼 = e.target.closest('[data-진행펼침]'); if (진펼 && !e.target.closest('a')) { var jid = 진펼.getAttribute('data-진행펼침'); 펼친진행[jid] = !펼친진행[jid]; 그리기(); return; }
     if (e.target.closest('[data-참고토글]')) { 참고보기 = !참고보기; 그리기(); return; }
     var 메열 = e.target.closest('[data-메일열기]'); if (메열) { var mi = 메열.getAttribute('data-메일열기'); 열린메일 = (열린메일 === mi) ? '' : mi; 그리기(); return; }
     var 답 = e.target.closest('[data-답장]'); if (답) { 답장쓰는id = 답.getAttribute('data-답장'); 열린메일 = 답장쓰는id; 그리기(); setTimeout(function () { var t = $('답장글'); if (t) t.focus(); }, 60); return; }
