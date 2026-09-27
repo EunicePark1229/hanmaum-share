@@ -490,7 +490,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-25a';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-27a';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -1035,6 +1035,33 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     if (!새.length && !오늘일.length && !기한.length && !내일일.length) h += '<div class="빈">새로 온 것도, 오늘·내일 잡힌 것도 없어요.</div>';
     return h + '</section>';
   }
+  function 원장님홈(내것) {
+    var 피 = (자료 && 자료.피드) || {};
+    var 진행 = (피.안내 || []).filter(function (x) { return x.갈래 === '진행'; }).sort(function (a, b) { return a.시각 < b.시각 ? 1 : -1; });
+    var h = '<section class="카드"><h2>진행된 일</h2>';
+    h += 진행.length ? 진행.slice(0, 3).map(function (x) {
+      var 몸 = '<div class="제목">' + esc(x.제목) + '</div>' + (x.글 ? '<div class="한줄">' + esc(String(x.글).split('\n')[0]) + '</div>' : '') + '<div class="때">' + 때글(x.시각) + (x.주소 ? ' · <span style="color:var(--강조)">열어 보기 ›</span>' : '') + '</div>';
+      return x.주소 ? '<a class="줄" href="' + esc(x.주소) + '" target="_blank" rel="noopener" style="display:block;color:inherit;text-decoration:none">' + 몸 + '</a>' : '<div class="줄">' + 몸 + '</div>';
+    }).join('') : '<div class="빈">새로 해 드린 것이 생기면 여기에 알려 드릴게요.</div>';
+    h += '</section>';
+    // 오늘 우선 할 일 — ① 기한이 오늘이거나 지난 일 ② 블로그 추천 1순위 초안 ③ 답을 기다리는 문자 문안 ④ 남은 할 일. 셋까지.
+    var 오늘 = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    var 할 = [];
+    var 급한일 = 내것.filter(function (x) { return x.기한 && x.기한 <= 오늘; });
+    급한일.forEach(function (x) { 할.push({ 가: '할일', 속: 'data-할일열기="' + esc(x.id) + '"', 제목: x.제목, 한줄: '기한 ' + x.기한 }); });
+    var 받 = 피.받은것 || [];
+    var 초안 = 받.filter(function (x) { return x.갈래 === '블로그' && (x.단계 || '초안') === '초안' && !대체됐나(x); }).sort(function (a, b) { return (a.순위 || 999) - (b.순위 || 999); });
+    if (초안.length) 할.push({ 가: '받은것', 속: 'data-블로그열기="' + esc(초안[0].id) + '"', 제목: '블로그 글 올리기 — ' + 초안[0].제목, 한줄: 초안[0].순위이유 || '본문을 복사해서 블로그에 붙여 넣으시면 돼요' });
+    받.filter(function (x) { return x.갈래 === '문자' && (x.단계 || '초안') === '초안' && !대체됐나(x); }).forEach(function (x) { 할.push({ 가: '받은것', 속: '', 제목: '문자 문안 보고 답해 주기 — ' + x.제목, 한줄: x.한줄 || '' }); });
+    내것.filter(function (x) { return 급한일.indexOf(x) < 0; }).forEach(function (x) { 할.push({ 가: '할일', 속: 'data-할일열기="' + esc(x.id) + '"', 제목: x.제목, 한줄: x.한줄 || '' }); });
+    h += '<section class="카드"><h2>오늘 우선 할 일</h2>';
+    h += 할.length ? 할.slice(0, 3).map(function (t, i) {
+      return '<div class="줄" data-가="' + t.가 + '" ' + t.속 + ' style="cursor:pointer"><div class="제목">' + (i + 1) + '. ' + esc(t.제목) + '</div>' + (t.한줄 ? '<div class="한줄">' + esc(t.한줄) + '</div>' : '') + '<div class="때"><span style="color:var(--강조)">바로 가기 ›</span></div></div>';
+    }).join('') : '<div class="빈">오늘은 따로 하실 일이 없어요.</div>';
+    h += '</section>';
+    h += 바로가기카드();
+    return h;
+  }
   function 홈() {
     var 열린 = 열린할일();
     var 내것 = 열린.filter(function (x) { return !x.대상 || x.대상 === '모두' || x.대상 === (자료 && 자료.누구); });
@@ -1058,9 +1085,12 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
         h += '<div class="큰수">' + 내할일.length + '</div>' + 내할일.slice(0, 3).map(function (x) { return 할일줄(x, true); }).join('') + '</section>';
       }
     } else {
-      h += '<section class="카드"><h2>하실 것 <button class="더" data-가="할일" data-스크롤="하실것">전부 보기</button></h2>';
-      h += 내것.length ? 내것.slice(0, 3).map(function (x) { return 할일줄(x, false); }).join('') : '<div class="빈">하실 것이 없어요.</div>';
-      h += '</section>';
+      // 원장님 홈 — 셋만(2026-09-27 유니스 「원장님이 지금 화면이 버거우신 것 같아」 · 「홈 화면은 이렇게만 남겨줘」)
+      //   1. 진행된 일 — 유니스·저희가 원장님 가게를 위해 해 둔 것(피드 안내 중 갈래 「진행」 · 데스크.py --진행)
+      //   2. 오늘 우선 할 일 — 하루 셋까지, 누르면 그 글·그 일로 바로
+      //   3. 바로가기
+      //   나머지(연락·메일·장부·받은 것)는 아래 탭에 그대로 있다. 첫 화면에만 안 싣는다(앱 피드백 48).
+      return 원장님홈(내것);
     }
     h += 연락카드();           // 이번 주 연락(2026-09-21 · 고객 명단이 있는 조직만)
     h += 메일카드();           // 메일 — 봐야 할 것(2026-09-21 · 피드에 메일이 있는 조직만)
