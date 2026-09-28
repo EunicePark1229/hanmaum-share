@@ -242,6 +242,56 @@ body.끌기중 * { cursor: grabbing !important }
 .바로 .바로아이콘 b { font-size: 20px; font-weight: 700; }
 @media (hover: hover) { .바로:hover { background: var(--강조연); } }
 /* 메일(2026-09-21 유니스 「이메일 확인 기능도 하나로」) — 봐야 할 것만 홈에, 전부는 「메일」 화면에서 */
+/* 메일함 — 아웃룩처럼(2026-09-28 유니스 「GN 데스크에서 아웃룩에서처럼 보고 싶어」)
+   폴더 칩 · 검색 · 날짜로 묶은 목록 · 읽기 창. 노트북은 목록|읽기 두 칸, 폰은 목록 → 누르면 읽기 */
+.메일위 { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+.메일위 .갈래줄 { margin: 0; padding: 0; }
+.메일위 input { flex: 1 1 220px; height: 40px; border: 1px solid var(--선); border-radius: 10px; padding: 0 12px; font-size: 15px; background: var(--카드); color: var(--글); }
+.메일틀 { background: var(--카드); border: 1px solid var(--선); border-radius: 14px; overflow: hidden; }
+.메일목록 .날묶음 { font-size: 13px; color: var(--흐림); padding: 10px 14px 4px; background: var(--바탕); border-top: 1px solid var(--선); }
+.메일목록 .날묶음:first-child { border-top: 0; }
+.메일행 { padding: 10px 14px 11px; border-top: 1px solid var(--선); cursor: pointer; border-left: 3px solid transparent; }
+.메일목록 .날묶음 + .메일행 { border-top: 0; }
+.메일행 .행1 { display: flex; gap: 8px; align-items: baseline; }
+.메일행 .누구 { flex: 1; min-width: 0; font-size: 15px; color: var(--글); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.메일행 .시각 { flex: 0 0 auto; font-size: 13px; color: var(--흐림); }
+.메일행 .행2 { display: flex; gap: 6px; align-items: center; font-size: 14px; color: var(--글); margin-top: 2px; }
+.메일행 .행2 .글 { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.메일행 .행3 { font-size: 13px; color: var(--흐림); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.메일행 .클립 { flex: 0 0 auto; width: 14px; height: 14px; stroke: var(--흐림); fill: none; stroke-width: 2; }
+.메일행.봐야 .누구, .메일행.봐야 .행2 .글 { font-weight: 700; }
+.메일행.봐야 { border-left-color: var(--강조); }
+.메일행.고름 { background: var(--강조연); border-left-color: var(--강조); }
+.메일행.흐림 .누구, .메일행.흐림 .행2 { color: var(--보조); }
+.읽기창 { padding: 18px 22px 24px; }
+.읽기창 .뒤로 { background: none; border: 0; color: var(--강조); font-size: 15px; padding: 0 0 10px; }
+.읽기창 h2 { font-size: 20px; line-height: 1.35; margin: 0 0 12px; color: var(--글); overflow-wrap: anywhere; }
+.읽기창 .머리 { display: flex; gap: 12px; align-items: flex-start; padding-bottom: 12px; border-bottom: 1px solid var(--선); }
+.읽기창 .동그라미 { flex: 0 0 40px; height: 40px; border-radius: 50%; background: var(--강조연); color: var(--강조); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; }
+.읽기창 .머리글 { flex: 1; min-width: 0; font-size: 14px; color: var(--보조); line-height: 1.55; overflow-wrap: anywhere; }
+.읽기창 .머리글 b { color: var(--글); font-size: 15px; font-weight: 600; }
+.읽기창 .메일도구 { margin: 12px 0 0; }
+.읽기창 .첨부들 { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 0; }
+.읽기창 .첨부칩 { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--선); border-radius: 8px; padding: 6px 10px; font-size: 13px; color: var(--글); background: var(--바탕); max-width: 100%; overflow-wrap: anywhere; }
+.읽기창 .첨부칩 svg { width: 14px; height: 14px; stroke: var(--흐림); fill: none; stroke-width: 2; flex: 0 0 auto; }
+.읽기창 .메일본문 { max-height: none; background: transparent; padding: 14px 0 6px; margin: 0; }
+.읽기창 .같은대화 { margin-top: 14px; border-top: 1px solid var(--선); padding-top: 10px; }
+.읽기창 .같은대화 .제 { font-size: 13px; color: var(--흐림); margin-bottom: 4px; }
+.읽기창 .같은대화 div[data-메일고름] { font-size: 14px; padding: 6px 0; cursor: pointer; color: var(--보조); }
+.읽기창 .같은대화 div[data-메일고름] b { color: var(--글); font-weight: 600; }
+.읽기빈 { padding: 60px 20px; text-align: center; color: var(--흐림); }
+@media (min-width: 900px) {
+  .메일틀 { display: grid; grid-template-columns: minmax(320px, 420px) 1fr; height: calc(100vh - 170px); min-height: 480px; }
+  .메일목록 { overflow-y: auto; border-right: 1px solid var(--선); }
+  .읽기창, .읽기빈 { overflow-y: auto; }
+  .읽기창 .뒤로 { display: none; }
+}
+@media (max-width: 899px) {
+  .메일틀.읽는중 .메일목록 { display: none; }
+  .메일틀:not(.읽는중) .읽기창, .메일틀:not(.읽는중) .읽기빈 { display: none; }
+  .읽기창 { padding: 14px 16px 20px; }
+}
+@media (hover: hover) { .메일행:hover { background: var(--바탕); } .메일행.고름:hover { background: var(--강조연); } }
 .메일줄 .보낸이 { font-weight: 600; color: var(--글); }
 .메일줄 .제목 { font-weight: 400; margin-top: 2px; }
 .메일줄.접힘 { opacity: .62; }
@@ -490,7 +540,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-28a';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-28b';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -1296,7 +1346,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   // ── 메일(2026-09-21) — 피드 「메일」(데스크_메일.py · 10분마다). 봐야함 = 사람이 봐야 할 것 · 처리했어요 = 끝냈어요(체크 csv) ──
   function 메일목록() { return ((자료 && 자료.피드.메일) || []).slice().sort(function (a, b) { return a.시각 < b.시각 ? 1 : -1; }); }
   function 봐야할메일() { return 메일목록().filter(function (x) { return x.봐야함 && !끝난할일(x.id); }); }
-  var 메일보기 = '봐야', 열린메일 = '', 답장쓰는id = '';
+  var 열린메일 = '', 답장쓰는id = '';
   // 본문 안의 주소를 누를 수 있게 — 메일은 링크가 본론일 때가 많다(2026-09-23 유니스 「메일 본문에 링크가 있는 거면 그것도 살려야」).
   //   <http://…> 꼴(구글 비즈니스 메일)의 꺾쇠는 떼고, 긴 주소는 작은 글씨로 줄바꿈해 가로 스크롤이 안 나게 한다.
   function 링크살리기(글) {
@@ -1338,16 +1388,112 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     h += 봐.length ? 봐.slice(0, 3).map(function (x) { return '<div data-가="메일" data-초점="' + esc(x.id) + '">' + 메일줄(x, false) + '</div>'; }).join('') : '<div class="빈">봐야 할 메일이 없어요. 광고·자동 메일은 「전부 보기」에 접혀 있어요.</div>';
     return h + '</section>';
   }
+  // ── 메일함(2026-09-28 유니스 「GN 데스크에서 아웃룩에서처럼 보고 싶어」) ──
+  //   폴더(봐야 할 것 · 받은편지함 · 보낸편지함) · 검색 · 날짜로 묶은 목록 · 읽기 창. 한마음(지메일)과 GN(아웃룩) 같은 틀이다.
+  var 메일폴더 = '받은', 메일검색 = '', 메일보일수 = 150;
+  var 클립 = '<svg class="클립" viewBox="0 0 24 24"><path d="M21 11l-8.5 8.5a5 5 0 01-7-7L14 4a3.5 3.5 0 015 5l-8.5 8.5a2 2 0 01-3-3L15 7"/></svg>';
+  function 첨부들(x) { var a = (x.첨부 || '').trim(); if (!a || a === '(없음)') return []; return a.split(/\s*,\s*/).filter(function (t) { return t; }); }
+  function 제목뿌리(t) { t = String(t || ''); for (var i = 0; i < 8; i++) { var n = t.replace(/^\s*(re|fw|fwd|답장|회신|전달)\s*[:：]\s*/i, ''); if (n === t) break; t = n; } return t.replace(/\s+/g, ' ').trim().toLowerCase(); }
+  function 메일폴더것(폴더) {
+    var 전부 = 메일목록();
+    if (폴더 === '봐야') return 봐야할메일();
+    if (폴더 === '보낸') return 전부.filter(function (x) { return x.보낸것; });
+    return 전부.filter(function (x) { return !x.보낸것; });
+  }
+  function 메일거르기() {
+    var 목 = 메일폴더것(메일폴더), q = 메일검색.trim().toLowerCase();
+    if (!q) return 목;
+    var 말들 = q.split(/\s+/);
+    return 메일목록().filter(function (x) {   // 찾을 때는 폴더를 가리지 않는다 — 아웃룩 「모든 사서함」처럼
+      var 바닥 = ((x.보낸이 || '') + ' ' + (x.주소 || '') + ' ' + (x.받는이 || '') + ' ' + (x.제목 || '') + ' ' + (x.첨부 || '') + ' ' + (x.본문 || '')).toLowerCase();
+      return 말들.every(function (w) { return 바닥.indexOf(w) >= 0; });
+    });
+  }
+  function 두자(n) { return ('0' + n).slice(-2); }
+  function 짧은때(iso) {
+    var d = new Date(iso); if (isNaN(d)) return ''; var 오늘 = new Date();
+    if (d.toDateString() === 오늘.toDateString()) return 두자(d.getHours()) + ':' + 두자(d.getMinutes());
+    var 주 = ['일', '월', '화', '수', '목', '금', '토'];
+    if ((오늘 - d) < 6 * 864e5) return 주[d.getDay()] + ' ' + 두자(d.getHours()) + ':' + 두자(d.getMinutes());
+    return (d.getFullYear() === 오늘.getFullYear() ? '' : String(d.getFullYear()).slice(2) + '. ') + (d.getMonth() + 1) + '/' + d.getDate();
+  }
+  function 긴때(iso) {
+    var d = new Date(iso); if (isNaN(d)) return iso || ''; var 주 = ['일', '월', '화', '수', '목', '금', '토'];
+    return d.getFullYear() + '-' + 두자(d.getMonth() + 1) + '-' + 두자(d.getDate()) + ' (' + 주[d.getDay()] + ') ' + 두자(d.getHours()) + ':' + 두자(d.getMinutes());
+  }
+  function 날묶음이름(iso) {
+    var d = new Date(iso), 오늘 = new Date(); 오늘.setHours(0, 0, 0, 0);
+    var 날 = new Date(d); 날.setHours(0, 0, 0, 0); var 차 = Math.round((오늘 - 날) / 864e5);
+    if (차 <= 0) return '오늘'; if (차 === 1) return '어제';
+    var 이번주첫날 = new Date(오늘); 이번주첫날.setDate(오늘.getDate() - ((오늘.getDay() + 6) % 7));
+    if (날 >= 이번주첫날) return '이번 주';
+    var 지난주첫날 = new Date(이번주첫날); 지난주첫날.setDate(이번주첫날.getDate() - 7);
+    if (날 >= 지난주첫날) return '지난주';
+    if (날.getFullYear() === 오늘.getFullYear() && 날.getMonth() === 오늘.getMonth()) return '이번 달';
+    return (날.getFullYear() === 오늘.getFullYear() ? '' : 날.getFullYear() + '년 ') + (날.getMonth() + 1) + '월';
+  }
+  function 메일행(x) {
+    var 끝 = 끝난할일(x.id), 봐 = x.봐야함 && !끝;
+    var 누구 = x.보낸것 ? '받는 분: ' + (x.받는이 || '') : (x.보낸이 || '');
+    var 흐림 = !x.보낸것 && (x.갈래 === '자동' || x.갈래 === '장부');
+    return '<div class="메일행' + (봐 ? ' 봐야' : '') + (흐림 ? ' 흐림' : '') + (열린메일 === x.id ? ' 고름' : '') + '" data-메일고름="' + esc(x.id) + '" data-id="' + esc(x.id) + '">' +
+      '<div class="행1"><span class="누구">' + esc(누구) + '</span><span class="시각">' + 짧은때(x.시각) + '</span></div>' +
+      '<div class="행2">' + (첨부들(x).length ? 클립 : '') + '<span class="글">' + esc(x.제목 || '(제목 없음)') + '</span></div>' +
+      '<div class="행3">' + esc(x.한줄 || '') + '</div></div>';
+  }
+  function 읽기창(x) {
+    var 끝 = 끝난할일(x.id), 첨 = 첨부들(x);
+    var 머리글자 = (x.보낸것 ? '나' : (x.보낸이 || '?').replace(/^[^A-Za-z가-힣]+/, '').charAt(0)).toUpperCase();
+    var h = '<div class="읽기창"><button class="뒤로" data-메일닫기="1">‹ 목록으로</button><h2>' + esc(x.제목 || '(제목 없음)') + '</h2>';
+    h += '<div class="머리"><div class="동그라미">' + esc(머리글자) + '</div><div class="머리글"><b>' + esc(x.보낸것 ? '나' : (x.보낸이 || '')) + '</b>' + (x.주소 && !x.보낸것 ? ' &lt;' + esc(x.주소) + '&gt;' : '') +
+         (x.받는이 ? '<br>받는 분: ' + esc(x.받는이) : '') + (x.참조 ? '<br>참조: ' + esc(x.참조) : '') + '<br>' + 긴때(x.시각) +
+         (x.갈래 && !x.보낸것 ? ' · ' + esc(끝 ? '처리함' : x.갈래) : '') + '</div></div>';
+    var 단추 = (x.열기 ? '<a class="단추 테" href="' + esc(x.열기) + '" target="_blank" rel="noopener">메일함에서 열기</a>' : '') +
+         ((메일보낼수있나() && x.주소 && 답장쓰는id !== x.id && x.단계 !== '답장') ? '<button class="단추" data-답장="' + esc(x.id) + '">답장</button>' : '') +
+         ((x.봐야함 && !끝) ? '<button class="단추 테" data-끝="' + esc(x.id) + '" data-끝글="처리한 것으로 적었어요.">처리했어요</button>' : '') +
+         ((메일보낼수있나() && x.메일id) ? '<button class="단추 테" data-메일지움="' + esc(x.id) + '">지우기</button>' : '');
+    if (단추) h += '<div class="단추줄 메일도구">' + 단추 + '</div>';   // 처리했어요·답장은 위에(2026-09-28 유니스 「아래 있으니 스크롤 다운을 다 해야」)
+    if (!메일보낼수있나()) h += '<div class="한줄" style="color:var(--흐림);font-size:13px;margin-top:6px;padding:0;border:0">여기서는 읽기만 돼요. 답장·전달은 ' + (x.열기 ? '「메일함에서 열기」로' : '원래 메일 프로그램에서') + ' 하시면 됩니다.</div>';
+    if (답장쓰는id === x.id) {
+      h += '<div class="답장칸"><textarea id="답장글" placeholder="' + esc((x.보낸이 || '') + '님께 보낼 답장을 적어 주세요. 그대로 나가요.') + '"></textarea>' +
+           '<div class="줄"><button class="단추" data-답장보내기="' + esc(x.id) + '">답장 보내기</button><button class="단추 테" data-답장취소="1">그만두기</button></div></div>';
+    }
+    if (첨.length) {
+      h += '<div class="첨부들">' + 첨.map(function (n) { return '<span class="첨부칩"><svg viewBox="0 0 24 24"><path d="M21 11l-8.5 8.5a5 5 0 01-7-7L14 4a3.5 3.5 0 015 5l-8.5 8.5a2 2 0 01-3-3L15 7"/></svg>' + esc(n) + '</span>'; }).join('') + '</div>';
+      if (!x.열기) h += '<div class="한줄" style="color:var(--흐림);font-size:13px;margin-top:6px;padding:0;border:0">첨부 파일은 원본 메일에 그대로 있어요. 필요한 파일은 대화에 이름을 적어 주시면 꺼내 드려요.</div>';
+    }
+    h += '<div class="메일본문">' + (x.본문 ? 링크살리기(x.본문) : '<span style="color:var(--흐림)">' + (x.열기 ? '광고·자동 메일은 본문을 안 실어 와요. 「메일함에서 열기」로 보실 수 있어요.' : '본문이 없어요.') + '</span>') + '</div>';
+    if (x.본문 && x.본문.length >= 6000) h += '<div class="한줄" style="color:var(--흐림);font-size:13px;padding:0;border:0">긴 메일이라 앞부분만 보여요. 뒤쪽 이전 메일 인용은 잘렸어요.</div>';
+    if (x.답장) h += '<div class="보낸답장"><b>보낸 답장</b> · ' + 때글(x.답장때 || '') + String.fromCharCode(10) + esc(x.답장) + '</div>';
+    if (x.단계 === '답장') h += '<div class="때">' + 신호('살핌', '답장 보내는 중 — 10분 안에 나가요') + '</div>';
+    if (x.단계 === '막힘') h += '<div class="때">' + 신호('막힘', esc(x.사유 || '못 했어요')) + '</div>';
+    var 뿌리 = 제목뿌리(x.제목), 같은 = 뿌리.length >= 4 ? 메일목록().filter(function (y) { return y.id !== x.id && 제목뿌리(y.제목) === 뿌리; }) : [];
+    if (같은.length) {
+      h += '<div class="같은대화"><div class="제">같은 대화 ' + 같은.length + '통</div>' + 같은.slice(0, 12).map(function (y) {
+        return '<div data-메일고름="' + esc(y.id) + '"><b>' + esc(y.보낸것 ? '나' : y.보낸이) + '</b> · ' + 짧은때(y.시각) + ' — ' + esc((y.한줄 || '').slice(0, 60)) + '</div>';
+      }).join('') + '</div>';
+    }
+    return h + 댓글칸(x) + '</div>';
+  }
+  function 메일목록그리기() {
+    var 목 = 메일거르기(), 보일 = 목.slice(0, 메일보일수), h = '', 전묶음 = '';
+    if (!목.length) return '<div class="빈" style="padding:24px 14px">' + (메일검색.trim() ? '「' + esc(메일검색.trim()) + '」로 찾은 메일이 없어요.' : 메일폴더 === '봐야' ? '봐야 할 메일이 없어요.' : '메일이 없어요.') + '</div>';
+    보일.forEach(function (x) { var 묶 = 날묶음이름(x.시각); if (묶 !== 전묶음) { h += '<div class="날묶음">' + 묶 + '</div>'; 전묶음 = 묶; } h += 메일행(x); });
+    if (목.length > 보일.length) h += '<div class="더보기줄" style="padding:12px 0"><button data-메일더="1">' + (목.length - 보일.length) + '통 더 보기</button></div>';
+    return h;
+  }
   function 메일화면() {
     var 전부 = 메일목록();
-    if (!전부.length) return '<div class="카드"><div class="빈">아직 읽어 온 메일이 없어요. 10분마다 받은편지함을 봐서 여기에 채워요.</div></div>';
-    var 봐 = 봐야할메일(), 나머지 = 전부.filter(function (x) { return !(x.봐야함 && !끝난할일(x.id)); });
-    var h = '<div class="갈래줄"><button class="' + (메일보기 === '봐야' ? '켬' : '') + '" data-메일보기="봐야">봐야 할 것 ' + 봐.length + '</button><button class="' + (메일보기 === '전부' ? '켬' : '') + '" data-메일보기="전부">전부 ' + 전부.length + '</button></div>';
-    if (메일보기 === '봐야') {
-      h += '<section class="카드"><h2>봐야 할 것 ' + 봐.length + '</h2><div class="한줄" style="color:var(--보조);margin-bottom:8px">사람이 보낸 것·거래처·공공기관·플랫폼이 물은 것만 골랐어요. 「전문 보기」로 읽고 여기서 바로 「답장」하실 수 있어요. 끝난 것은 「처리했어요」, 안 볼 것은 「지우기」.</div>' + (봐.length ? 봐.map(function (x) { return 메일줄(x, true); }).join('') : '<div class="빈">봐야 할 메일이 없어요.</div>') + '</section>';
-    } else {
-      h += '<section class="카드"><h2>지난 2주 메일 ' + 전부.length + '</h2><div class="한줄" style="color:var(--보조);margin-bottom:8px">장부로 간 것(세금계산서·명세)과 자동 메일은 흐리게 보여요.</div>' + 전부.map(function (x) { return 메일줄(x, true); }).join('') + '</section>';
-    }
+    if (!전부.length) return '<div class="카드"><div class="빈">아직 읽어 온 메일이 없어요.</div></div>';
+    var 수 = { 봐야: 봐야할메일().length, 받은: 메일폴더것('받은').length, 보낸: 메일폴더것('보낸').length };
+    var 칩 = function (k, 이름) { return '<button class="' + (메일폴더 === k && !메일검색.trim() ? '켬' : '') + '" data-메일폴더="' + k + '">' + 이름 + ' ' + 수[k] + '</button>'; };
+    var h = '<div class="메일위"><div class="갈래줄">' + 칩('봐야', '봐야 할 것') + 칩('받은', '받은편지함') + (수.보낸 ? 칩('보낸', '보낸편지함') : '') + '</div>' +
+            '<input id="메일검색" type="search" placeholder="보낸 분·제목·본문·첨부 이름으로 찾기" value="' + esc(메일검색) + '" autocomplete="off"></div>';
+    var 열린 = 열린메일 ? 전부.filter(function (x) { return x.id === 열린메일; })[0] : null;
+    h += '<div class="메일틀' + (열린 ? ' 읽는중' : '') + '"><div class="메일목록" id="메일목록">' + 메일목록그리기() + '</div>' +
+         (열린 ? 읽기창(열린) : '<div class="읽기빈">왼쪽에서 메일을 고르면 여기에 열려요.</div>') + '</div>';
+    var 가장옛 = 전부[전부.length - 1].시각;
+    h += '<div class="한줄" style="color:var(--흐림);font-size:13px;margin-top:8px;padding:0;border:0">여기 있는 것은 최근 ' + 전부.length + '통(' + 긴때(가장옛).slice(0, 10) + '부터)이에요.</div>';
     return h;
   }
   // ── 소식 다섯 꼴(2026-09-21 · 원장님 09-16 「곳마다 맞는 꼴로」 약속) — desk-org.json 「소식꼴」 {당근:{꼬리}, 블로그:{머리,꼬리,안내}, …} ──
@@ -2003,12 +2149,15 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
       return;
     }
     var 고객줄el = e.target.closest('[data-고객]'); if (고객줄el) { 열린고객 = 고객줄el.getAttribute('data-고객'); 탭 = '고객'; 그리기(); window.scrollTo(0, 0); return; }
-    var 메보 = e.target.closest('[data-메일보기]'); if (메보) { 메일보기 = 메보.getAttribute('data-메일보기'); 그리기(); return; }
     var 단 = e.target.closest('[data-단계]'); if (단) { var 단계 = 단.getAttribute('data-단계'), 사유 = ''; if (단계 === '보류') { 사유 = window.prompt('안 쓰시는 이유를 한 줄 적어 주시면 다음 글에 반영해요(안 적어도 돼요)', '') || ''; } 단.disabled = true; 보내기짐({ 종류: '단계', id: 단.getAttribute('data-id'), 단계: 단계, 사유: 사유 }).then(function (j) { if (!j || !j.됨) throw new Error(); 토스트(단계 === '썼어요' ? '고마워요. 다음 글을 채워 둘게요.' : 단계 === '보류' ? '적어 두었어요.' : '다시 초안으로 두었어요.'); 받아오기(); }).catch(function (e) { 단.disabled = false; 못했어요(e, '블로그 단계'); }); return; }
     var 더보 = e.target.closest('[data-더보기]'); if (더보) { 펼침더[더보.getAttribute('data-더보기')] = true; 그리기(); return; }
-    var 더 = e.target.closest('[data-가]'); if (더) { if (더.getAttribute('data-할일상대')) { 할일상대 = 더.getAttribute('data-할일상대'); 열린할일id = ''; } if (더.getAttribute('data-고객보기')) { 고객보기 = 더.getAttribute('data-고객보기'); 고객검색 = ''; 열린고객 = ''; } if (더.getAttribute('data-블로그열기')) 열린블로그 = 더.getAttribute('data-블로그열기'); if (더.getAttribute('data-할일열기')) 열린할일id = 더.getAttribute('data-할일열기'); 가기(더.getAttribute('data-가'), 더.getAttribute('data-초점'), 더.getAttribute('data-펼침열기'), 더.getAttribute('data-스크롤')); return; }
+    var 더 = e.target.closest('[data-가]'); if (더) { if (더.getAttribute('data-할일상대')) { 할일상대 = 더.getAttribute('data-할일상대'); 열린할일id = ''; } if (더.getAttribute('data-고객보기')) { 고객보기 = 더.getAttribute('data-고객보기'); 고객검색 = ''; 열린고객 = ''; } if (더.getAttribute('data-블로그열기')) 열린블로그 = 더.getAttribute('data-블로그열기'); if (더.getAttribute('data-할일열기')) 열린할일id = 더.getAttribute('data-할일열기'); if (더.getAttribute('data-가') === '메일' && 더.getAttribute('data-초점')) 열린메일 = 더.getAttribute('data-초점'); 가기(더.getAttribute('data-가'), 더.getAttribute('data-초점'), 더.getAttribute('data-펼침열기'), 더.getAttribute('data-스크롤')); return; }
     var 진펼 = e.target.closest('[data-진행펼침]'); if (진펼 && !e.target.closest('a')) { var jid = 진펼.getAttribute('data-진행펼침'); 펼친진행[jid] = !펼친진행[jid]; 그리기(); return; }
     if (e.target.closest('[data-참고토글]')) { 참고보기 = !참고보기; 그리기(); return; }
+    var 메고 = e.target.closest('[data-메일고름]'); if (메고) { 열린메일 = 메고.getAttribute('data-메일고름'); 답장쓰는id = ''; 그리기(); var 창 = document.querySelector('.읽기창'); if (창) 창.scrollTop = 0; if (window.innerWidth < 900) window.scrollTo(0, 0); return; }
+    var 메폴 = e.target.closest('[data-메일폴더]'); if (메폴) { 메일폴더 = 메폴.getAttribute('data-메일폴더'); 메일검색 = ''; 메일보일수 = 150; 그리기(); return; }
+    if (e.target.closest('[data-메일닫기]')) { if (!닫고돌아가기()) { 열린메일 = ''; 그리기(); } return; }
+    if (e.target.closest('[data-메일더]')) { 메일보일수 += 150; var 목록칸 = $('메일목록'); if (목록칸) 목록칸.innerHTML = 메일목록그리기(); return; }
     var 메열 = e.target.closest('[data-메일열기]'); if (메열) { var mi = 메열.getAttribute('data-메일열기'); 열린메일 = (열린메일 === mi) ? '' : mi; 그리기(); return; }
     var 답 = e.target.closest('[data-답장]'); if (답) { 답장쓰는id = 답.getAttribute('data-답장'); 열린메일 = 답장쓰는id; 그리기(); setTimeout(function () { var t = $('답장글'); if (t) t.focus(); }, 60); return; }
     if (e.target.closest('[data-답장취소]')) { 답장쓰는id = ''; 그리기(); return; }
@@ -2175,8 +2324,8 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   // ── 뒤로 가기(2026-09-20 유니스 「항목 열고 코멘트 뒤 뒤로 가기를 누르면 화면이 아예 꺼져」) ──
   //    홈 화면 앱은 브라우저 뒤로 가기가 곧 앱 닫기다. 상세·알림 시트·탭을 열 때 역사에 한 칸 넣어 두면 뒤로 가기가 그 칸을 빼고 목록으로 돌아온다.
   var 역사적용중 = false;
-  function 역사상태() { return { 탭: 탭, 할일: 열린할일id || '', 블로그: 열린블로그 || '', 고객: 열린고객 || '', 알림: $('알림시트').classList.contains('보임'), 보기: 보기 || '' }; }
-  function 역사넣기() { if (역사적용중) return; try { var 지금 = 역사상태(), 전 = history.state || {}; if (전.탭 === 지금.탭 && (전.할일 || '') === 지금.할일 && (전.블로그 || '') === 지금.블로그 && (전.고객 || '') === 지금.고객 && !!전.알림 === 지금.알림 && (전.보기 || '') === 지금.보기) return; history.pushState(지금, ''); } catch (e) {} }
+  function 역사상태() { return { 탭: 탭, 할일: 열린할일id || '', 블로그: 열린블로그 || '', 고객: 열린고객 || '', 메일: 열린메일 || '', 알림: $('알림시트').classList.contains('보임'), 보기: 보기 || '' }; }
+  function 역사넣기() { if (역사적용중) return; try { var 지금 = 역사상태(), 전 = history.state || {}; if (전.탭 === 지금.탭 && (전.할일 || '') === 지금.할일 && (전.블로그 || '') === 지금.블로그 && (전.고객 || '') === 지금.고객 && (전.메일 || '') === 지금.메일 && !!전.알림 === 지금.알림 && (전.보기 || '') === 지금.보기) return; history.pushState(지금, ''); } catch (e) {} }
   window.addEventListener('popstate', function (e) {
     // 같은 주소의 링크(#k=…)를 열린 채로 다시 탄 것 — 알림·즐겨찾기·다른 창의 링크. 브라우저는 새로 안 열고 조각(#)만 바꿔 여기로 오므로
     // 새로 여는 것과 같게 한다: ?탭= 을 다시 읽고 열쇠는 저장 뒤 주소에서 지운다. 안 그러면 「홈」으로 튀었다(2026-09-22 시험 「나중에」에서 잡음)
@@ -2189,10 +2338,10 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     }
     var st = e.state || { 탭: '홈', 할일: '', 블로그: '', 알림: false };
     역사적용중 = true;
-    try { if ((st.보기 || '') !== 보기) { if (st.보기) 보기시작(st.보기); else 보기끝(); } 열린할일id = st.할일 || ''; 열린블로그 = st.블로그 || ''; 열린고객 = st.고객 || ''; 탭 = st.탭 || '홈'; if (!st.알림) $('알림시트').classList.remove('보임'); 그리기(); if (st.알림) 알림열기(); }
+    try { if ((st.보기 || '') !== 보기) { if (st.보기) 보기시작(st.보기); else 보기끝(); } 열린할일id = st.할일 || ''; 열린블로그 = st.블로그 || ''; 열린고객 = st.고객 || ''; 열린메일 = st.메일 || ''; 탭 = st.탭 || '홈'; if (!st.알림) $('알림시트').classList.remove('보임'); 그리기(); if (st.알림) 알림열기(); }
     finally { 역사적용중 = false; }
   });
-  function 닫고돌아가기() { var st = history.state; if (st && (st.할일 || st.블로그 || st.고객 || st.알림)) { history.back(); return true; } return false; }
+  function 닫고돌아가기() { var st = history.state; if (st && (st.할일 || st.블로그 || st.고객 || st.메일 || st.알림)) { history.back(); return true; } return false; }
   try { history.replaceState(역사상태(), ''); } catch (e) {}
 
   // ── 알림을 누르면 그 줄까지 연다 (2026-09-24 유니스) ──
@@ -2296,7 +2445,8 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     if (!window.matchMedia || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
     e.preventDefault(); 글보내기();
   });
-  $('본문').addEventListener('input', function (e) { if (e.target && e.target.id === '고객검색') { 고객검색 = e.target.value; var 목 = $('고객목록'); if (목) 목.innerHTML = 고객목록그리기(); } });
+  $('본문').addEventListener('input', function (e) { if (e.target && e.target.id === '메일검색') { 메일검색 = e.target.value; 메일보일수 = 150; var 목록칸 = $('메일목록'); if (목록칸) 목록칸.innerHTML = 메일목록그리기(); document.querySelectorAll('[data-메일폴더]').forEach(function (b) { b.classList.toggle('켬', !메일검색.trim() && b.getAttribute('data-메일폴더') === 메일폴더); }); return; }
+    if (e.target && e.target.id === '고객검색') { 고객검색 = e.target.value; var 목 = $('고객목록'); if (목) 목.innerHTML = 고객목록그리기(); } });
   $('글').addEventListener('input', function () { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 140) + 'px'; var t = Date.now(); if (t - 입력중보낸때 > 2500) { 입력중보낸때 = t; 소켓으로({ 종류: '입력중', 켬: true }); } });
   $('글').addEventListener('blur', function () { 소켓으로({ 종류: '입력중', 켬: false }); });
   $('사진단추').addEventListener('click', function () { $('사진파일').click(); });
