@@ -579,7 +579,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-28q';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-28r';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -689,7 +689,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     (자료.피드.답 || []).forEach(function (x) { 목록.push({ 종류: '답', id: x.id, 시각: x.시각, 제목: x.제목, 탭: '대화' }); });
     (자료.피드.할일 || []).forEach(function (x) { if (x.단계 !== '완료') 목록.push({ 종류: '할 일', id: x.id, 시각: x.시각, 제목: x.제목, 탭: '할일' }); });
     (자료.피드.안내 || []).forEach(function (x) { 목록.push({ 종류: '안내', id: x.id, 시각: x.시각, 제목: x.제목, 글: x.글, 탭: '알림' }); });
-    봐야할메일().forEach(function (x) { 목록.push({ 종류: '메일', id: x.id, 시각: x.시각, 제목: x.보낸이 + ' · ' + x.제목, 탭: '메일' }); });
+    if (!메일따로()) 봐야할메일().forEach(function (x) { 목록.push({ 종류: '메일', id: x.id, 시각: x.시각, 제목: x.보낸이 + ' · ' + x.제목, 탭: '메일' }); });
     (자료.피드.받은것 || []).forEach(function (x) { if (답기다리나(x)) 목록.push({ 종류: 답기다림이름(x), id: x.id, 시각: x.시각, 제목: x.제목, 탭: '받은것' }); });
     return 목록.filter(function (x) { return 새것인가(x.시각); }).sort(function (a, b) { return a.시각 < b.시각 ? 1 : -1; });
   }
@@ -822,8 +822,9 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
       if (k === '재고' || k === '장부') return;   // 운영 묶음으로
       var 항 = { 키: k, 이름: 탭이름[k] || k, 아래: [] };
       if (k === '할일') 항.아래 = 아래할일;
-      if (k === '받은것') { 항.아래 = [{ 구역: '', 이름: '받은 것', 수: ((자료 && 자료.피드.받은것) || []).length }]; if (전부.indexOf('메일') >= 0) 항.아래.push({ 탭: '메일', 이름: '메일', 수: 봐야할메일().length }); 항.아래.push({ 알림: true, 이름: '알림', 수: 안읽은것().length }); }
-      if (k === '메일') return;   // 받은 것 아래로
+      if (k === '받은것') { 항.아래 = [{ 구역: '', 이름: '받은 것', 수: ((자료 && 자료.피드.받은것) || []).length }]; if (전부.indexOf('메일') >= 0 && !메일따로()) 항.아래.push({ 탭: '메일', 이름: '메일', 수: 봐야할메일().length }); 항.아래.push({ 알림: true, 이름: '알림', 수: 안읽은것().length }); }
+      if (k === '메일' && !메일따로()) return;   // 받은 것 아래로(한마음)
+      if (k === '메일') { var 폴 = 메일폴더수(); 항.아래 = [{ 탭: '메일', 메일폴더: '봐야', 이름: '봐야 할 것', 수: 폴.봐야[0] }, { 탭: '메일', 메일폴더: '받은', 이름: '받은편지함', 수: 폴.받은[1] || 폴.받은[0] }, { 탭: '메일', 메일폴더: '보낸', 이름: '보낸편지함', 수: 폴.보낸[0] }, { 탭: '메일', 메일폴더: '받은', 메일거름: '깃발', 이름: '깃발' }]; }
       if (k === '고객' && 고객목록().length) 항.아래 = [{ 구역: '', 이름: '명단', 수: 고객목록().length, 고객보기: '전부' }, { 구역: '', 이름: '이번 주 연락', 수: 연락남은().length, 고객보기: '연락' }, { 구역: '', 이름: '연락 안 함', 수: 고객목록().filter(제외됐나).length, 고객보기: '제외' }];
       목.push(항);
     });
@@ -838,14 +839,14 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
       }).join('');
       return;
     }
-    var 현재 = 부모탭[탭] || 탭;
+    var 현재 = (탭 === '메일' && 메일따로()) ? '메일' : (부모탭[탭] || 탭);
     $('탭').innerHTML = 메뉴구조().map(function (항) {
       var 켬 = 항.키 === 현재 || (항.묶음 && 항.아래.some(function (a) { return a.탭 === 탭; }));
       var 펼침 = 항.아래.length && (켬 || 접힌메뉴[항.키] === false) && 접힌메뉴[항.키] !== true;
       var h = '<button data-탭="' + (항.묶음 ? '' : 항.키) + '" data-묶음="' + (항.묶음 ? 항.키 : '') + '" class="' + (켬 && !항.묶음 ? '켬' : '') + (항.묶음 ? ' 묶음' : '') + '">' + (탭아이콘[항.키] || '') + esc(항.이름) + (항.아래.length ? '<span class="접이">' + (펼침 ? '▾' : '▸') + '</span>' : '') + '</button>';
       if (펼침) h += '<div class="아래">' + 항.아래.map(function (a) {
-        var 이켬 = a.탭 ? a.탭 === 탭 : a.고객보기 ? (탭 === '고객' && 고객보기 === a.고객보기) : a.알림 ? false : (탭 === 항.키 && !a.구역 && !a.탭);
-        var 속성 = a.알림 ? 'data-가="알림"' : a.탭 ? 'data-가="' + a.탭 + '"' : 'data-가="' + 항.키 + '"' + (a.구역 ? ' data-스크롤="' + esc(a.구역) + '"' : '') + (a.고객보기 ? ' data-고객보기="' + esc(a.고객보기) + '"' : '');
+        var 이켬 = a.메일폴더 ? (탭 === '메일' && 메일폴더 === a.메일폴더 && (a.메일거름 || '') === (메일거름 || '') && !메일검색.trim()) : a.탭 ? a.탭 === 탭 : a.고객보기 ? (탭 === '고객' && 고객보기 === a.고객보기) : a.알림 ? false : (탭 === 항.키 && !a.구역 && !a.탭);
+        var 속성 = a.알림 ? 'data-가="알림"' : a.탭 ? 'data-가="' + a.탭 + '"' + (a.메일폴더 ? ' data-메일폴더열기="' + a.메일폴더 + '" data-메일거름열기="' + (a.메일거름 || '') + '"' : '') : 'data-가="' + 항.키 + '"' + (a.구역 ? ' data-스크롤="' + esc(a.구역) + '"' : '') + (a.고객보기 ? ' data-고객보기="' + esc(a.고객보기) + '"' : '');
         return '<button ' + 속성 + ' class="' + (이켬 ? '켬' : '') + '">' + esc(a.이름) + (a.수 !== undefined ? '<span class="수">' + a.수 + '</span>' : '') + '</button>';
       }).join('') + '</div>';
       return '<div class="메뉴항" data-차례무엇="메뉴" data-차례키="' + esc(항.키) + '">' + h + '</div>';
@@ -1213,7 +1214,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     한줄('하실 것', 내것전부.length, '할일', (지난 ? '기한 지난 것 ' + 지난 + ' · ' : '') + '이번 주 ' + 급한.length + ' · 그 뒤 ' + 그뒤);
     if (구성원있나() && 원장할일.length) 한줄(말('구성원할일'), 원장할일.length, '할일', '', '원장님');
     if (탭.indexOf('받은것') >= 0) 한줄('받은 것', ((자료 && 자료.피드.받은것) || []).filter(function (x) { return !받은것끝났나(x) && x.갈래 !== '참고'; }).length, '받은것');
-    if (자료 && 자료.피드.메일 && 자료.피드.메일.length) 한줄('메일 — 봐야 할 것', 봐야할메일().length, '메일');
+    if (자료 && 자료.피드.메일 && 자료.피드.메일.length && !메일따로()) 한줄('메일 — 봐야 할 것', 봐야할메일().length, '메일');
     if (탭.indexOf('초안') >= 0) 한줄('초안 — 안 보낸 것', 초안목록().filter(function (x) { return !초안보냈나(x); }).length, '초안');
     if (고객목록().length && 이번주연락().length) 한줄('이번 주 연락', 연락남은().length, '고객');   // 대표 탭엔 고객이 없어도 수와 링크는 보인다
     if (탭.indexOf('일정') >= 0) {
@@ -1475,6 +1476,8 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   var 클립 = '<svg class="클립" viewBox="0 0 24 24"><path d="M21 11l-8.5 8.5a5 5 0 01-7-7L14 4a3.5 3.5 0 015 5l-8.5 8.5a2 2 0 01-3-3L15 7"/></svg>';
   var 깃발그림 = '<svg class="깃발" viewBox="0 0 24 24"><path d="M5 21V4h11l-1.5 4L16 12H5"/></svg>';
   function 서버메일인가() { return !!(설정 && 설정.메일함 === '서버'); }
+  // 메일은 홈에 안 싣고 왼쪽 메뉴에서 폴더로 연다(2026-09-28 유니스 「GN데스크에서 이메일은 홈화면에 보이지 않게 하고 왼쪽에 트리를 통해」)
+  function 메일따로() { return !!(설정 && 설정.메일따로); }
   function 첨부들(x) { var a = (x.첨부 || '').trim(); if (!a || a === '(없음)') return []; return a.split(/\s*,\s*/).filter(function (t) { return t; }); }
   function 제목뿌리(t) { t = String(t || ''); for (var i = 0; i < 8; i++) { var n = t.replace(/^\s*(re|fw|fwd|답장|회신|전달)\s*[:：]\s*/i, ''); if (n === t) break; t = n; } return t.replace(/\s+/g, ' ').trim().toLowerCase(); }
   function 메일상태(x) {
@@ -1679,15 +1682,16 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     if (안읽은것.length > 1) h += '<div class="더보기줄" style="padding:4px 0 14px"><button data-모두읽음="1">보이는 ' + 안읽은것.length + '통 모두 읽음으로</button></div>';
     return h;
   }
-  function 메일칩들() {
-    var 수;
+  function 메일폴더수() {   // { 폴더: [전부, 안읽음] } — 메일 화면의 칩과 왼쪽 메뉴가 같이 쓴다
     if (서버메일인가()) {
       var s = 서버.수 || {}, 받 = s['받은'] || {}, 보 = s['보낸'] || {};
-      수 = { 봐야: [(받.봐야 || 0) + (보.봐야 || 0), 0], 받은: [받.전부 || 0, 받.안읽음 || 0], 보낸: [보.전부 || 0, 0] };
-    } else {
-      var 안 = function (목) { return 목.filter(function (x) { return !읽었나(x); }).length; };
-      수 = { 봐야: [봐야할메일().length, 0], 받은: [메일폴더것('받은').length, 안(메일폴더것('받은'))], 보낸: [메일폴더것('보낸').length, 0] };
+      return { 봐야: [(받.봐야 || 0) + (보.봐야 || 0), 0], 받은: [받.전부 || 0, 받.안읽음 || 0], 보낸: [보.전부 || 0, 0] };
     }
+    var 안 = function (목) { return 목.filter(function (x) { return !읽었나(x); }).length; };
+    return { 봐야: [봐야할메일().length, 0], 받은: [메일폴더것('받은').length, 안(메일폴더것('받은'))], 보낸: [메일폴더것('보낸').length, 0] };
+  }
+  function 메일칩들() {
+    var 수 = 메일폴더수();
     var 칩 = function (k, 이름) { return '<button class="' + (메일폴더 === k && !메일검색.trim() ? '켬' : '') + '" data-메일폴더="' + k + '">' + 이름 + ' ' + (수[k][1] ? '<b>' + 수[k][1] + '</b> / ' : '') + 수[k][0] + '</button>'; };
     var 거 = function (k, 이름) { return '<button class="거름' + (메일거름 === k ? ' 켬' : '') + '" data-메일거름="' + k + '">' + 이름 + '</button>'; };
     return 칩('봐야', '봐야 할 것') + 칩('받은', '받은편지함') + (수.보낸[0] ? 칩('보낸', '보낸편지함') : '') + '<span class="칸막이"></span>' + 거('안읽음', '안 읽은 것만') + 거('깃발', '깃발') + 거('첨부', '첨부 있는 것');
@@ -2376,6 +2380,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var b = e.target.closest('button'); if (!b) return;
     if (b.getAttribute('data-가')) {   // 2단 — 구역·알림·고객 보기로 바로
       if (b.getAttribute('data-고객보기')) { 고객보기 = b.getAttribute('data-고객보기'); 고객검색 = ''; 열린고객 = ''; }
+      if (b.hasAttribute('data-메일폴더열기')) { 메일폴더 = b.getAttribute('data-메일폴더열기'); 메일거름 = b.getAttribute('data-메일거름열기') || ''; 메일검색 = ''; 메일보일수 = 150; }   // 왼쪽 메뉴의 메일 폴더(2026-09-28)
       열린할일id = ''; 열린블로그 = '';
       가기(b.getAttribute('data-가'), null, null, b.getAttribute('data-스크롤')); return;
     }
@@ -2496,7 +2501,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var 고객줄el = e.target.closest('[data-고객]'); if (고객줄el) { 열린고객 = 고객줄el.getAttribute('data-고객'); 탭 = '고객'; 그리기(); window.scrollTo(0, 0); return; }
     var 단 = e.target.closest('[data-단계]'); if (단) { var 단계 = 단.getAttribute('data-단계'), 사유 = ''; if (단계 === '보류') { 사유 = window.prompt('안 쓰시는 이유를 한 줄 적어 주시면 다음 글에 반영해요(안 적어도 돼요)', '') || ''; } 단.disabled = true; 보내기짐({ 종류: '단계', id: 단.getAttribute('data-id'), 단계: 단계, 사유: 사유 }).then(function (j) { if (!j || !j.됨) throw new Error(); 토스트(단계 === '썼어요' ? '고마워요. 다음 글을 채워 둘게요.' : 단계 === '보류' ? '적어 두었어요.' : '다시 초안으로 두었어요.'); 받아오기(); }).catch(function (e) { 단.disabled = false; 못했어요(e, '블로그 단계'); }); return; }
     var 더보 = e.target.closest('[data-더보기]'); if (더보) { 펼침더[더보.getAttribute('data-더보기')] = true; 그리기(); return; }
-    var 더 = e.target.closest('[data-가]'); if (더) { if (더.getAttribute('data-할일상대')) { 할일상대 = 더.getAttribute('data-할일상대'); 열린할일id = ''; } if (더.getAttribute('data-고객보기')) { 고객보기 = 더.getAttribute('data-고객보기'); 고객검색 = ''; 열린고객 = ''; } if (더.getAttribute('data-블로그열기')) 열린블로그 = 더.getAttribute('data-블로그열기'); if (더.getAttribute('data-할일열기')) 열린할일id = 더.getAttribute('data-할일열기'); if (더.getAttribute('data-가') === '메일' && 더.getAttribute('data-초점')) 메일열기(더.getAttribute('data-초점')); 가기(더.getAttribute('data-가'), 더.getAttribute('data-초점'), 더.getAttribute('data-펼침열기'), 더.getAttribute('data-스크롤')); return; }
+    var 더 = e.target.closest('[data-가]'); if (더) { if (더.getAttribute('data-할일상대')) { 할일상대 = 더.getAttribute('data-할일상대'); 열린할일id = ''; } if (더.getAttribute('data-고객보기')) { 고객보기 = 더.getAttribute('data-고객보기'); 고객검색 = ''; 열린고객 = ''; } if (더.getAttribute('data-블로그열기')) 열린블로그 = 더.getAttribute('data-블로그열기'); if (더.getAttribute('data-할일열기')) 열린할일id = 더.getAttribute('data-할일열기'); if (더.getAttribute('data-가') === '메일' && 더.getAttribute('data-초점')) 메일열기(더.getAttribute('data-초점')); if (더.hasAttribute('data-메일폴더열기')) { 메일폴더 = 더.getAttribute('data-메일폴더열기'); 메일거름 = 더.getAttribute('data-메일거름열기') || ''; 메일검색 = ''; 메일보일수 = 150; } 가기(더.getAttribute('data-가'), 더.getAttribute('data-초점'), 더.getAttribute('data-펼침열기'), 더.getAttribute('data-스크롤')); return; }
     var 진펼 = e.target.closest('[data-진행펼침]'); if (진펼 && !e.target.closest('a')) { var jid = 진펼.getAttribute('data-진행펼침'); 펼친진행[jid] = !펼친진행[jid]; 그리기(); return; }
     if (e.target.closest('[data-참고토글]')) { 참고보기 = !참고보기; 그리기(); return; }
     var 적기 = e.target.closest('[data-할일적기]'); if (적기) { 적기열림 = 적기.getAttribute('data-할일적기') === '1'; 그리기(); if (적기열림) setTimeout(function () { var t = $('적기_제목'); if (t) t.focus(); }, 50); return; }
@@ -2608,7 +2613,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     (자료.피드.답 || []).forEach(function (x) { 목록.push({ 종류: '답', id: x.id, 시각: x.시각, 제목: x.제목, 탭: '대화' }); });
     (자료.피드.할일 || []).forEach(function (x) { if (x.단계 !== '완료' && !끝난할일(x.id)) 목록.push({ 종류: '할 일', id: x.id, 시각: x.시각, 제목: x.제목, 탭: '할일' }); });
     (자료.피드.안내 || []).forEach(function (x) { 목록.push({ 종류: '안내', id: x.id, 시각: x.시각, 제목: x.제목, 글: x.글, 탭: '알림' }); });
-    봐야할메일().forEach(function (x) { 목록.push({ 종류: '메일', id: x.id, 시각: x.시각, 제목: x.보낸이 + ' · ' + x.제목, 탭: '메일' }); });
+    if (!메일따로()) 봐야할메일().forEach(function (x) { 목록.push({ 종류: '메일', id: x.id, 시각: x.시각, 제목: x.보낸이 + ' · ' + x.제목, 탭: '메일' }); });
     (자료.피드.받은것 || []).forEach(function (x) { if (답기다리나(x)) 목록.push({ 종류: 답기다림이름(x), id: x.id, 시각: x.시각, 제목: x.제목, 탭: '받은것' }); });
     return 목록.sort(function (a, b) { return a.시각 < b.시각 ? 1 : -1; }).slice(0, 30);
   }
