@@ -2188,7 +2188,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     h += 소식꼴줄(x);
     h += '<div class="단추줄"><button class="단추" data-복사="' + esc(x.id) + '">본문 복사</button>' + ((x.갈래 === '블로그' && (x.사진 || []).length) ? '<button class="단추 테" data-사진저장="' + esc(x.id) + '">사진 ' + x.사진.length + '장 저장</button>' : '') + (x.단계 !== '썼어요' ? '<button class="단추 테" data-단계="썼어요" data-id="' + esc(x.id) + '">썼어요</button>' : '') + (x.단계 === '초안' ? '<button class="단추 테" data-단계="보류" data-id="' + esc(x.id) + '">안 쓸래요</button>' : '') + (x.단계 !== '초안' ? '<button class="단추 테" data-단계="초안" data-id="' + esc(x.id) + '">다시 초안으로</button>' : '') + '</div>';
     var 꼴 = (x.갈래 === '당근' && 소식꼴선택 && 소식꼴선택 !== x.갈래) ? 소식꼴선택 : '';
-    h += '<div class="본문글">' + (꼴 ? '<pre style="white-space:pre-wrap;font:inherit;margin:0">' + esc(꼴본문(x, 꼴)) + '</pre>' : 마크다운(x.본문)) + '</div>';
+    h += '<div class="본문글">' + (꼴 ? '<pre style="white-space:pre-wrap;font:inherit;margin:0">' + esc(꼴본문(x, 꼴)) + '</pre>' : (x.갈래 === '블로그' ? 복사용HTML(x) : 마크다운(x.본문))) + '</div>';
     if ((x.태그 || []).length) h += '<div class="한줄" style="margin-top:12px">' + x.태그.map(esc).join(' ') + '</div>';
     if (x.그림) h += '<h3>새로 만드실 그림(견본 + 프롬프트)</h3><div class="본문글"><pre>' + esc(x.그림) + '</pre></div>';
     if (x.확인) h += '<h3>확인해 주실 것</h3><div class="본문글">' + 마크다운(x.확인) + '</div>';
