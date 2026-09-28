@@ -564,7 +564,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-28l';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-28m';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -2126,8 +2126,23 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     return h;
   }
   // 본문 문장 안에 붙은 원장님께 드리는 메모 [원장님 …] 는 블로그로 나가면 안 된다(2026-09-28 유니스 「이렇게 그대로 나오는데?」).
-  // 복사·미리보기에서는 빼고, 상세 화면 위 「확인해 주실 것」 칸에 따로 모은다.
-  function 메모뺀본문(x) { return String(x.본문 || '').replace(/[ \t]*\[원장님[^\]]*\]/g, ''); }
+  // 줄 끝에 붙은 메모는 빼고, 문장 가운데 끼인 메모(「차상위는 [원장님 확인 — 0%]」처럼 값 자리)는 ○○ 로 남겨 채울 곳이 보이게 한다.
+  // 표(| 칸 | 칸 |)는 블로그에 세로줄이 나가지 않게 — 머리줄·구분줄은 빼고, 줄마다 「첫 칸」 다음 줄 「→ 나머지 칸」 + 빈 줄.
+  function 메모뺀본문(x) {
+    var 줄 = String(x.본문 || '').split('\n'), 나온 = [];
+    var 표인가 = function (l) { return /^\s*\|/.test(l); }, 구분인가 = function (l) { return /^\s*\|[\s:|-]+\|\s*$/.test(l); };
+    for (var i = 0; i < 줄.length; i++) {
+      var l = 줄[i];
+      if (표인가(l)) {
+        if (구분인가(l) || (i + 1 < 줄.length && 구분인가(줄[i + 1]))) continue;      // 구분줄·머리줄
+        var 칸 = l.replace(/^\s*\||\|\s*$/g, '').split('|').map(function (c) { return c.trim(); }).filter(function (c) { return c; });
+        if (칸.length) { 나온.push(칸[0]); if (칸.length > 1) 나온.push('→ ' + 칸.slice(1).join(' · ')); 나온.push(''); }
+        continue;
+      }
+      나온.push(l.replace(/[ \t]*\[원장님[^\]]*\][ \t]*$/, '').replace(/\[원장님[^\]]*\]/g, '○○'));
+    }
+    return 나온.join('\n');
+  }
   function 본문메모들(x) { return (String(x.본문 || '').match(/\[원장님[^\]]*\]/g) || []).map(function (m) { return m.replace(/^\[원장님\s*(확인)?\s*[—-]?\s*/, '').replace(/\]$/, ''); }); }
   function 굵게줄들(글) {
     // **굵게** 가 줄 나눔에 걸려 두 줄로 갈라지면 ** 가 글자로 새어 나갔다(2026-09-28 유니스 「** 이런 거 안 나오게」).
