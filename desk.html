@@ -540,7 +540,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-28d';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-28e';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -751,6 +751,9 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   function 대표것인가(x) { return x.대상 === 대표이름() || x.대상 === '유니스'; }   // 옛 항목(대상 유니스)도 그대로 읽힌다
   function 결정인가(x) { return 대표것인가(x) && x.구분 !== '할일'; }
   function 내할일인가(x) { return 대표것인가(x) && x.구분 === '할일'; }
+  // 대표 것은 한 목록 — 2026-09-28 유니스 「정할일과 할일의 차이가 뭐지? 둘 다 내 액션이 필요한 것 아닌가?」 → 「합치자」.
+  //   정할 것은 줄에 「결정」 칩만 붙이고(끝냈어요 대신 열어서 정함) 차례는 한데 섞어 끌어 바꾼다
+  var 결정칩 = '<span class="칩">결정</span> ';
   function 구성원있나() { return !!((자료 && 자료.사람들 && 자료.사람들.length) || (설정 && 설정.탭 && !Array.isArray(설정.탭) && 설정.탭['원장'])); }
   // 폰 아래 탭 — 설정 「폰탭」[역할](최대 4) + 「더보기」. 없으면 탭목록의 앞 넷(2026-09-22 재검토 — 탭 7개가 55px 칸에 붙어 보였다)
   function 폰탭목록() {
@@ -771,7 +774,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var 나중 = 할.filter(function (x) { return 미룬할일인가(x) && !끝난할일(x.id); }).length;
     var 끝 = 할.filter(닫힌할일인가).length;
     var 아래할일 = 대표인가()
-      ? [{ 구역: '정하실것', 이름: 말('정하실것'), 수: 열린.filter(결정인가).length }, { 구역: '내할일', 이름: 말('내할일'), 수: 열린.filter(내할일인가).length, 숨김: !열린.filter(내할일인가).length && !구성원있나() }, { 구역: '원장님', 이름: 말('구성원할일'), 수: 열린.filter(function (x) { return !대표것인가(x); }).length, 숨김: !구성원있나() }]
+      ? [{ 구역: '내할일', 이름: 말('내할일'), 수: 열린.filter(대표것인가).length }, { 구역: '원장님', 이름: 말('구성원할일'), 수: 열린.filter(function (x) { return !대표것인가(x); }).length, 숨김: !구성원있나() }]
       : [{ 구역: '하실것', 이름: '하실 것', 수: 열린.filter(function (x) { return !x.대상 || x.대상 === '모두' || x.대상 === 나; }).length }];
     아래할일 = 아래할일.concat([{ 구역: '나중에', 이름: '나중에', 수: 나중 }, { 구역: '끝낸것', 이름: '끝낸 것', 수: 끝 }]).filter(function (a) { return !a.숨김; });
     var 목 = [];
@@ -871,7 +874,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   }
   function 할일줄(x, 덧있나) {
     var 며 = 며칠째(x.시각), 왜 = 왜이차례(x);
-    var 앞 = 지금못하나(x) ? '<span class="칩 쉼">' + esc(일종류(x) === '막힘' ? '막힘' : 일종류(x) === '기다림' ? '기다림' : '대기') + '</span> ' : '';
+    var 앞 = (지금못하나(x) ? '<span class="칩 쉼">' + esc(일종류(x) === '막힘' ? '막힘' : 일종류(x) === '기다림' ? '기다림' : '대기') + '</span> ' : '') + (결정인가(x) ? 결정칩 : '');
     return '<div class="줄' + (지금못하나(x) ? ' 쉬는줄' : '') + '" data-가="할일" data-초점="' + esc(x.id) + '" data-할일열기="' + esc(x.id) + '"><div class="제목">' + 앞 + esc(x.제목) + '</div><div class="한줄 접힘">' + esc(x.한줄 || '') + (덧있나 && x.덧 ? ' · ' + esc(x.덧) : '') + '</div><div class="때">' + (왜.말 ? (왜.급 ? 신호(왜.급, 왜.말) : '<span style="color:var(--보조)">' + 왜.말 + '</span>') + ' · ' : '') + (며 ? 며 + ' · ' : '') + 때글(x.시각) + '</div></div>';
   }
   function 신호(급, 말) { return '<span class="신호 ' + 급 + '">' + esc(말) + '</span>'; }
@@ -1126,19 +1129,16 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var 받 = ((자료 && 자료.피드.받은것) || []).filter(function (x) { return !받은것끝났나(x); }).slice(-3).reverse();
     var h = '';
     if (대표인가()) {
+      var 내것전부 = 순서정렬(열린.filter(대표것인가), '할일', function (x) { return x.id; });
+      var 오늘글 = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+      var 지난 = 내것전부.filter(function (x) { return x.기한 && x.기한 < 오늘글; }).length;
       var 오래 = 결정.filter(function (x) { return (Date.now() - new Date(x.시각).getTime()) / 86400000 >= 7; }).length;
-      h += '<section class="카드 넓게"><h2>' + esc(말('정하실것')) + ' <button class="더" data-가="할일" data-스크롤="정하실것">전부 보기</button></h2>';
-      h += '<span data-가="할일">' + (결정.length ? 신호(오래 ? '막힘' : (결정.length > 5 ? '살핌' : '좋음'), 오래 ? '7일 넘은 것 ' + 오래 : (결정.length > 5 ? '쌓이는 중' : '정상')) : 신호('좋음', '비어 있음')) + '</span>';
-      h += 결정.length ? '<div class="큰수">' + 결정.length + '</div>' + 결정.slice(0, 3).map(function (x) { return 할일줄(x, true); }).join('') : '<div class="빈">지금 정하실 것이 없어요.</div>';
+      h += '<section class="카드 넓게"><h2>' + esc(말('내할일')) + ' <button class="더" data-가="할일" data-스크롤="내할일">전부 보기</button></h2>';
+      h += '<span data-가="할일">' + (내것전부.length ? 신호(지난 || 오래 ? '막힘' : (내것전부.length > 8 ? '살핌' : '좋음'), 지난 ? '기한 지난 것 ' + 지난 : 오래 ? '7일 넘은 결정 ' + 오래 : (내것전부.length > 8 ? '쌓이는 중' : '정상')) : 신호('좋음', '비어 있음')) + '</span>';
+      h += 내것전부.length ? '<div class="큰수">' + 내것전부.length + '</div>' + (결정.length ? '<div class="한줄" style="padding-left:0;border:0;color:var(--보조)">그중 정하실 것 ' + 결정.length + '</div>' : '') + 내것전부.slice(0, 3).map(function (x) { return 할일줄(x, true); }).join('') : '<div class="빈">지금 하실 것이 없어요.</div>';
       h += 누구와요약(열린);
       if (구성원있나()) h += '<div class="한줄" style="padding-left:0;border:0;margin-top:8px"><span data-가="할일" data-스크롤="원장님" style="color:var(--강조)">' + esc(말('구성원할일')) + ' ' + 원장할일.length + '</span></div>';
       h += '</section>';
-      if (내할일.length) {   // 대표 본인의 할 일(정할 것이 아닌 것) — GN 처럼 대표가 곧 실무자인 조직(2026-09-21)
-        var 지난 = 내할일.filter(function (x) { return x.기한 && x.기한 < new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10); }).length;
-        h += '<section class="카드"><h2>' + esc(말('내할일')) + ' <button class="더" data-가="할일" data-스크롤="내할일">전부 보기</button></h2>';
-        h += '<span data-가="할일" data-스크롤="내할일">' + 신호(지난 ? '막힘' : (내할일.length > 8 ? '살핌' : '좋음'), 지난 ? '기한 지난 것 ' + 지난 : (내할일.length > 8 ? '쌓이는 중' : '정상')) + '</span>';
-        h += '<div class="큰수">' + 내할일.length + '</div>' + 내할일.slice(0, 3).map(function (x) { return 할일줄(x, true); }).join('') + '</section>';
-      }
     } else {
       // 원장님 홈 — 셋만(2026-09-27 유니스 「원장님이 지금 화면이 버거우신 것 같아」 · 「홈 화면은 이렇게만 남겨줘」)
       //   1. 진행된 일 — 유니스·저희가 원장님 가게를 위해 해 둔 것(피드 안내 중 갈래 「진행」 · 데스크.py --진행)
@@ -1649,7 +1649,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     if (!목록.length) return '<div class="카드"><div class="빈">하실 것이 없어요. 새로 생기면 종이 켜져요.</div></div>';
     function 한줄(x, 끝났나) {
       var 상태 = x.단계 === '결정' ? 신호('좋음', '정함' + (x.사유 ? ' · ' + x.사유.slice(0, 30) : '')) : x.단계 === '보류' ? 신호('모름', '나중에') : x.단계 === '얘기중' ? 신호('살핌', '얘기 중') : '';
-      return '<div class="줄 할일줄" data-할일="' + esc(x.id) + '" data-id="' + esc(x.id) + '"><div class="제목">' + esc(x.제목) + '</div><div class="한줄 접힘">' + esc(x.한줄 || '') + '</div>' +
+      return '<div class="줄 할일줄" data-할일="' + esc(x.id) + '" data-id="' + esc(x.id) + '"><div class="제목">' + (결정인가(x) && !끝났나 ? 결정칩 : '') + esc(x.제목) + '</div><div class="한줄 접힘">' + esc(x.한줄 || '') + '</div>' +
         '<div class="때">' + (상태 ? 상태 + ' · ' : '') + (x.기한 ? esc(x.기한) + ' 까지 · ' : '') + 며칠째(x.시각) + (며칠째(x.시각) ? ' · ' : '') + 때글(x.시각) + (x.배경 || x.할일전문 ? ' · <span style="color:var(--강조)">열어 보기 ›</span>' : '') + '</div>' +
         (끝났나 ? '<div style="margin-top:8px"><span class="칩 끝">' + (답한할일인가(x) ? '답함' + (x.사유 ? ' · ' + esc(x.사유.slice(0, 30)) : '') : '끝냈어요') + '</span></div>' : (결정인가(x) ? '' : '<div style="margin-top:10px"><button class="단추 테" data-끝="' + esc(x.id) + '">끝냈어요</button></div>')) + 댓글칸(x) + '</div>';
     }
@@ -1668,9 +1668,8 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
       return 보.map(function (x) { return 한줄(x, !!끝났나); }).join('') + (목.length > 20 && !다 ? '<div class="더보기줄"><button data-더보기="' + esc(구역) + '">' + (목.length - 20) + '개 더 보기</button></div>' : '');
     }
     if (대표인가()) {
-      var 결정 = 열림.filter(결정인가), 내것들 = 열림.filter(내할일인가), 원장것 = 열림.filter(function (x) { return !대표것인가(x); });
-      h += '<section class="카드" data-구역="정하실것"><h2>' + esc(말('정하실것')) + ' ' + 결정.length + '</h2>' + (결정.length ? 줄들(결정, '정하실것') : '<div class="빈">지금 정하실 것이 없어요.</div>') + '</section>';
-      if (내것들.length) h += '<section class="카드" data-구역="내할일"><h2>' + esc(말('내할일')) + ' ' + 내것들.length + '</h2>' + 줄들(내것들, '내할일') + '</section>';
+      var 내것들 = 열림.filter(대표것인가), 결정수 = 내것들.filter(결정인가).length, 원장것 = 열림.filter(function (x) { return !대표것인가(x); });
+      h += '<section class="카드" data-구역="내할일"><h2>' + esc(말('내할일')) + ' ' + 내것들.length + '</h2>' + (결정수 ? '<div class="한줄" style="color:var(--보조);margin-bottom:8px;padding-left:0;border:0">「결정」이 붙은 ' + 결정수 + '개는 열어서 정해 주시면 돼요. 줄을 길게 누르거나 ⋮⋮ 를 잡고 끌면 차례가 바뀌어요.</div>' : '') + (내것들.length ? 줄들(내것들, '내할일') : '<div class="빈">지금 하실 것이 없어요.</div>') + '</section>';
       if (원장것.length || 구성원있나()) h += '<section class="카드" data-구역="원장님"><h2>' + esc(말('구성원할일')) + ' ' + 원장것.length + '</h2>' + (원장것.length ? 줄들(원장것, '원장님') : '<div class="빈">없어요.</div>') + '</section>';
     } else {
       h += '<section class="카드" data-구역="하실것"><h2>하실 것 ' + 열림.length + '</h2>' + (열림.length ? 줄들(열림, '하실것') : '<div class="빈">다 하셨어요.</div>') + '</section>';
