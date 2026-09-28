@@ -579,7 +579,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-28o';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-28p';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -1215,7 +1215,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     if (탭.indexOf('받은것') >= 0) 한줄('받은 것', ((자료 && 자료.피드.받은것) || []).filter(function (x) { return !받은것끝났나(x) && x.갈래 !== '참고'; }).length, '받은것');
     if (자료 && 자료.피드.메일 && 자료.피드.메일.length) 한줄('메일 — 봐야 할 것', 봐야할메일().length, '메일');
     if (탭.indexOf('초안') >= 0) 한줄('초안 — 안 보낸 것', 초안목록().filter(function (x) { return !초안보냈나(x); }).length, '초안');
-    if (탭.indexOf('고객') >= 0 && 고객목록().length) 한줄('이번 주 연락', 연락남은().length, '고객');
+    if (고객목록().length && 이번주연락().length) 한줄('이번 주 연락', 연락남은().length, '고객');   // 대표 탭엔 고객이 없어도 수와 링크는 보인다
     if (탭.indexOf('일정') >= 0) {
       var 오늘일 = 일정목록().filter(function (x) { return x.갈래 !== '참고' && x.상태 !== '취소' && 날짜키(x.시작) === 오; });
       한줄('오늘 일정', 오늘일.length, '일정', 오늘일[0] ? esc(오늘일[0].제목) + (오늘일.length > 1 ? ' 외 ' + (오늘일.length - 1) : '') : '');
