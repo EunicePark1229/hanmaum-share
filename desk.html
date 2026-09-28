@@ -579,7 +579,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-28p';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-28q';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -2256,15 +2256,19 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
       .map(function (l) { if (/^!\[/.test(l)) { n += 1; return '【사진 ' + n + '】'; } if (/^##\s+/.test(l) || !l.trim()) return l.replace(/^##\s+/, ''); return 블로그줄(l.replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*\*/g, '').replace(/^>\s?/, '')).join('\n'); }).join('\n').replace(/\n{3,}/g, '\n\n').trim();
   }
   function 복사용HTML(x) {
-    // 사진이 같이 넘어가게 — 편집기가 받아 주는 곳(PC 블로그 글쓰기 등)에서는 그림까지 붙는다. 글꼴은 블로그 편집기가 자기 것으로 바꾼다.
-    return 메모뺀본문(x).split('\n').filter(function (l) { return !/^\[(원장님 확인|사진 — )/.test(l) && l.trim() !== '---'; }).map(function (l) {
+    // 원장님이 정한 블로그 모양(2026-09-28 17:13 원장님) — 단락과 단락 사이 구분선 · 소주제는 인용구(포스트잇 모양) 안에 24 굵게 ·
+    // 기본 글은 나눔스퀘어 16 · 줄 간격 280 · 가운데 정렬. 편집기가 붙여 넣은 것을 자기 부품(구분선 2번·인용구 5번)으로
+    // 바꿀지는 편집기 몫이라, 여기서는 가장 가까운 꼴(<hr> · <blockquote>)로 넘긴다.
+    var 꼴 = 'text-align:center;font-family:NanumSquare,나눔스퀘어,sans-serif;line-height:2.8;';
+    return 메모뺀본문(x).split('\n').filter(function (l) { return !/^\[(원장님 확인|사진 — )/.test(l); }).map(function (l) {
+      if (l.trim() === '---') return '<hr>';
       var m = l.match(/^!\[([^\]]*)\]\(([^)]+)\)/);
-      // 원장님 블로그 모양 그대로(2026-09-28 실측 — 글 두 편 모든 문단 가운데 정렬 · 나눔스퀘어 16 · 큰 제목 24 · 강조는 굵게)
-      var 꼴 = 'text-align:center;font-family:NanumSquare,나눔스퀘어,sans-serif;';
       if (m) return '<p style="' + 꼴 + '"><img src="' + esc(m[2]) + '" alt="' + esc(m[1]) + '" style="max-width:100%"></p>';
       if (!l.trim()) return '<p style="' + 꼴 + '"><br></p>';
-      var t = esc(l.replace(/^##\s+/, '').replace(/^>\s?/, '')).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
-      if (/^##\s+/.test(l)) return '<p style="' + 꼴 + 'font-size:24px"><b>' + t + '</b></p>';
+      if (/^##\s+/.test(l)) {
+        var t = esc(l.replace(/^##\s+/, '')).replace(/\*\*(.+?)\*\*/g, '$1');
+        return '<blockquote style="background:#FFF6C9;border-radius:6px;padding:14px 18px;margin:18px auto;max-width:520px"><p style="' + 꼴 + 'font-size:24px"><b>' + t + '</b></p></blockquote>';
+      }
       return 굵게줄들(l.replace(/^>\s?/, '')).map(function (줄) { return '<p style="' + 꼴 + 'font-size:16px">' + 줄 + '</p>'; }).join('');
     }).join('');
   }
