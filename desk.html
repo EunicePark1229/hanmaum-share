@@ -81,6 +81,14 @@ main { padding: 16px 16px 96px; max-width: 720px; margin: 0 auto; }
 .오늘줄 .항:first-child { border-top: 0; }
 .오늘줄 .항 .때칸 { flex: 0 0 52px; font-weight: 600; color: var(--강조); font-variant-numeric: tabular-nums; }
 .오늘줄 .항 .몸 { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 대표 홈 「나머지」 — 한 줄에 수 · 이름(2026-09-28 · 앱 피드백 48). 폰에서도 세로로 쪼개지 않는다 */
+.나머지줄 .항 { display: flex; gap: 12px; align-items: baseline; padding: 10px 0; border-top: 1px solid var(--선); }
+.나머지줄 .항:first-of-type { border-top: 0; }
+.나머지줄 .항 .때칸 { flex: 0 0 40px; font-weight: 600; color: var(--강조); font-variant-numeric: tabular-nums; text-align: right; }
+.나머지줄 .항 .몸 { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.접힌카드 > summary { cursor: pointer; font-weight: 600; color: var(--보조); list-style: none; }
+.접힌카드 > summary::-webkit-details-marker { display: none; }
+.접힌카드[open] > summary { margin-bottom: 8px; }
 /* 바로가기 — 한 줄로 가로 넘김(홈이 길어 카드 11장이던 것을 줄임 · 2026-09-22) */
 .바로가기줄.가로 { display: flex; overflow-x: auto; gap: 6px; padding-bottom: 4px; scrollbar-width: thin; }
 .바로가기줄.가로 .바로 { flex: 0 0 74px; }
@@ -571,7 +579,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-28n';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-28o';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -1160,60 +1168,67 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var 장 = 장부항목(), 재 = 재고항목();
     var 받 = ((자료 && 자료.피드.받은것) || []).filter(function (x) { return !받은것끝났나(x); }).slice(-3).reverse();
     var h = '';
-    if (대표인가()) {
-      var 내것전부 = 순서정렬(열린.filter(대표것인가), '할일', function (x) { return x.id; });
-      var 오늘글 = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-      var 지난 = 내것전부.filter(function (x) { return x.기한 && x.기한 < 오늘글; }).length;
-      var 오래 = 결정.filter(function (x) { return (Date.now() - new Date(x.시각).getTime()) / 86400000 >= 7; }).length;
-      h += '<section class="카드 넓게"><h2>' + esc(말('내할일')) + ' <button class="더" data-가="할일" data-스크롤="내할일">전부 보기</button></h2>';
-      h += '<span data-가="할일">' + (내것전부.length ? 신호(지난 || 오래 ? '막힘' : (내것전부.length > 8 ? '살핌' : '좋음'), 지난 ? '기한 지난 것 ' + 지난 : 오래 ? '7일 넘은 결정 ' + 오래 : (내것전부.length > 8 ? '쌓이는 중' : '정상')) : 신호('좋음', '비어 있음')) + '</span>';
-      h += 내것전부.length ? '<div class="큰수">' + 내것전부.length + '</div>' + (결정.length ? '<div class="한줄" style="padding-left:0;border:0;color:var(--보조)">그중 정하실 것 ' + 결정.length + '</div>' : '') + 내것전부.slice(0, 3).map(function (x) { return 할일줄(x, true); }).join('') : '<div class="빈">지금 하실 것이 없어요.</div>';
-      h += 누구와요약(열린);
-      if (구성원있나()) h += '<div class="한줄" style="padding-left:0;border:0;margin-top:8px"><span data-가="할일" data-스크롤="원장님" style="color:var(--강조)">' + esc(말('구성원할일')) + ' ' + 원장할일.length + '</span></div>';
-      h += '</section>';
-    } else {
-      // 원장님 홈 — 셋만(2026-09-27 유니스 「원장님이 지금 화면이 버거우신 것 같아」 · 「홈 화면은 이렇게만 남겨줘」)
-      //   1. 진행된 일 — 유니스·저희가 원장님 가게를 위해 해 둔 것(피드 안내 중 갈래 「진행」 · 데스크.py --진행)
-      //   2. 오늘 우선 할 일 — 하루 셋까지, 누르면 그 글·그 일로 바로
-      //   3. 바로가기
-      //   나머지(연락·메일·장부·받은 것)는 아래 탭에 그대로 있다. 첫 화면에만 안 싣는다(앱 피드백 48).
-      return 원장님홈(내것);
-    }
-    h += 연락카드();           // 이번 주 연락(2026-09-21 · 고객 명단이 있는 조직만)
-    h += 메일카드();           // 메일 — 봐야 할 것(2026-09-21 · 피드에 메일이 있는 조직만)
-    h += 오늘카드();           // 오늘 한 줄 — 새로 온 것 · 일정 · 기한(2026-09-22)
-    if (장) {
-      h += '<section class="카드"><h2>' + (대표인가() ? '이번 달 장부' : '이번 달 판매·매입') + ' <button class="더" data-가="장부">자세히</button></h2><div class="숫자셋">';
-      if (대표인가()) {
-        h += '<div data-가="장부" data-펼침열기="판매"><div class="큰수">' + 만원(장.판매 && 장.판매.금액) + '</div><div class="한줄">매출</div></div>';
-        h += '<div data-가="장부" data-펼침열기="운영비"><div class="큰수" style="color:' + ((장.손익 || 0) >= 0 ? 'var(--좋음)' : 'var(--막힘)') + '">' + 만원(장.손익) + '</div><div class="한줄">손익 ' + ((장.손익 || 0) >= 0 ? '(남음)' : '(모자람)') + '</div></div>';
-        h += (탭목록().indexOf('재고') >= 0 && 재) ? '<div data-가="재고"><div class="큰수">' + ((재.합 && 재.합['보청기']) || 0) + '대</div><div class="한줄">재고 보청기</div></div>' : '<div data-가="장부" data-스크롤="최근"><div class="큰수">' + 만원(장.분기선까지) + '</div><div class="한줄">분기선까지</div></div>';
-        var 비 = 장.손익분기 ? Math.max(0, Math.min(100, Math.round(100 * ((장.판매 && 장.판매.금액) || 0) / 장.손익분기))) : 0;
-        h += '</div><div class="막대"><i style="width:' + 비 + '%"></i></div><div class="막대글"><span>이번 달 매출 ' + 비 + '%</span><span>손익분기 ' + 만원(장.손익분기) + '</span></div><div style="display:none">';
-      } else {
-        h += '<div data-가="장부" data-펼침열기="판매"><div class="큰수">' + ((장.판매 && 장.판매.건수) || 0) + '건</div><div class="한줄">판매</div></div>';
-        h += '<div data-가="장부" data-펼침열기="매입"><div class="큰수">' + ((장.매입 && 장.매입.건수) || 0) + '건</div><div class="한줄">매입</div></div>';
-        h += '<div data-가="장부" data-스크롤="미지급"><div class="큰수">' + ((장.미지급 || []).length) + '곳</div><div class="한줄">미지급 거래처</div></div>';
-      }
-      h += '</div></section>';
-    }
-    h += 바로가기카드();       // 바로가기 — 한 줄 가로(2026-09-21 · 설정에 있는 조직만)
-    h += 늘쓰는것카드('홈');   // 늘 쓰는 것 — 고정한 것이 있을 때만(2026-09-22)
-    if (받.length) {
-      h += '<section class="카드"><h2>' + esc(대표인가() ? 말('받은것카드') : '최근 받은 것') + ' <button class="더" data-가="받은것">받은 것 전부</button></h2>';
-      h += 받.map(function (x) { return 받은것줄(x, false); }).join('');
-      h += '</section>';
-    }
-    if (대표인가()) h += 한일카드();   // 원장님이 하신 것 — 대표에게만(2026-09-22)
-    // 카드마다 키를 붙여 저장된 차례로 늘어놓는다(2026-09-21 유니스). 키 = 카드 제목의 앞말
-    var 카드들 = (h.match(/<section[\s\S]*?<\/section>/g) || []).map(function (조각) {
-      var m = 조각.match(/<h2>([^<]*)/); var 제목 = (m ? m[1] : '').trim();
-      var 키 = (대표인가() && 제목.indexOf(말('내할일')) === 0) ? 말('정하실것') : 제목.indexOf('이번 달') === 0 ? '이번 달' : (제목.indexOf(말('받은것카드')) === 0 || 제목.indexOf('최근 받은 것') === 0) ? '받은 것' : 제목.indexOf('메일') === 0 ? '메일' : 제목.indexOf('이번 주 연락') === 0 ? '이번 주 연락' : 제목.indexOf('오늘') === 0 ? '오늘' : /하신 것/.test(제목) ? '하신 것' : 제목.replace(/\s+\d+$/, '');
-      return { 키: 키, 제목: 제목, html: 조각 };
+    // 원장님 홈 — 셋만(2026-09-27 유니스 「원장님이 지금 화면이 버거우신 것 같아」 · 「홈 화면은 이렇게만 남겨줘」)
+    //   진행된 일 · 오늘 우선 할 일 셋 · 바로가기. 나머지는 아래 탭에 그대로 있다(앱 피드백 48)
+    if (!대표인가()) return 원장님홈(내것);
+    return 대표홈(열린, 원장할일);
+  }
+  // ── 대표 홈 — 먼저 할 것 셋 + 나머지는 한 줄씩 수와 링크만(2026-09-28 · 앱 피드백 48 을 대표에게도) ──
+  //   유니스 09-28 「아직 9월 30일이 안 됐는데 정하실 것 맨 위에 있으면 압박만 느껴진다 · 너무 많은 list 는 아무도 안 본다 ·
+  //   한마음 검토 때 얘기한 기본적인 것은 빨리 범용 적용하자」 · 「11월 이후로 펜딩했는데 왜 위에 올라와 있어」
+  //   → 기한이 7일 넘게 남은 것은 결정이든 아니든 첫 화면에 안 올린다. 같은 급한 정도 안에서는 사람이 끈 차례를 따른다
+  function 오늘날() { return new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
+  function 급한띠(x) {
+    // 0 지난 지 이레 안 · 1 오늘·내일 · 2 이레 안 · 3 지난 지 이레 넘음·우리 답을 기다리는 것(얘기 중) · 9 그 뒤(기한 없음 포함)
+    //   오래 지난 것을 맨 위에 두면 그것도 압박이다 — 이번 주에 걸린 것 다음으로 내린다(2026-09-28)
+    if (아직때아닌가(x)) return 9;
+    var d = x.마감 || x.기한; if (!d) return 9;
+    var 오 = 오늘날(), 차 = Math.round((new Date(d + 'T00:00:00') - new Date(오 + 'T00:00:00')) / 864e5);
+    if (x.단계 === '얘기중') return 차 <= 7 ? 3 : 9;
+    if (차 < -7) return 3;
+    if (차 < 0) return 0;
+    return 차 <= 1 ? 1 : 차 <= 7 ? 2 : 9;
+  }
+  function 이번주것(목록) {
+    var 차례 = 순서목록('할일'), 위치 = {}; 차례.forEach(function (k, i) { 위치[k] = i; });
+    return 목록.filter(function (x) { return 급한띠(x) < 9; }).sort(function (a, b) {
+      var d = 급한띠(a) - 급한띠(b); if (d) return d;
+      var ia = 위치[a.id], ib = 위치[b.id];
+      if (ia !== undefined || ib !== undefined) { if (ia === undefined) return 1; if (ib === undefined) return -1; return ia - ib; }
+      return 기한차례(a, b);
     });
-    카드들 = 순서정렬(카드들, '홈', function (c) { return c.키; });
-    var 머리 = 정렬머리('홈', '카드 제목을 길게 눌러 원하는 자리로 끌어다 놓으세요(⋮⋮ 를 잡아도 돼요).');
-    return 머리 + 카드들.map(function (c) { return 차례달기(c.html, '홈', c.키, !!정렬모드['홈']); }).join('');
+  }
+  function 대표홈(열린, 원장할일) {
+    var 내것전부 = 열린.filter(대표것인가), 급한 = 이번주것(내것전부), 오 = 오늘날();
+    var 오늘날글 = 오늘날(), 지난 = 내것전부.filter(function (x) { var d = x.마감 || x.기한; return d && d < 오늘날글 && x.단계 !== '얘기중'; }).length, 그뒤 = 내것전부.length - 급한.length;
+    var h = '<section class="카드 넓게"><h2>오늘 먼저 할 것 <button class="더" data-가="할일">하실 것 전부</button></h2>';
+    h += 급한.length ? 급한.slice(0, 3).map(function (x) { return 할일줄(x, true); }).join('') : '<div class="빈">이번 주 안에 기한이 걸린 것이 없어요.</div>';
+    if (급한.length > 3) h += '<div class="한줄" style="padding-left:0;border:0;margin-top:8px"><span data-가="할일" style="color:var(--강조);cursor:pointer">이번 주 것 ' + (급한.length - 3) + '개 더 보기 ›</span></div>';
+    h += '</section>';
+    var 줄 = [];
+    function 한줄(이름, 수, 가, 덧, 스크롤) {
+      줄.push('<div class="항" data-가="' + 가 + '"' + (스크롤 ? ' data-스크롤="' + 스크롤 + '"' : '') + ' style="cursor:pointer"><span class="때칸">' + 수 + '</span><span class="몸">' + esc(이름) + (덧 ? ' <span style="color:var(--보조)">· ' + 덧 + '</span>' : '') + '</span></div>');
+    }
+    var 탭 = 탭목록();
+    한줄('하실 것', 내것전부.length, '할일', (지난 ? '기한 지난 것 ' + 지난 + ' · ' : '') + '이번 주 ' + 급한.length + ' · 그 뒤 ' + 그뒤);
+    if (구성원있나() && 원장할일.length) 한줄(말('구성원할일'), 원장할일.length, '할일', '', '원장님');
+    if (탭.indexOf('받은것') >= 0) 한줄('받은 것', ((자료 && 자료.피드.받은것) || []).filter(function (x) { return !받은것끝났나(x) && x.갈래 !== '참고'; }).length, '받은것');
+    if (자료 && 자료.피드.메일 && 자료.피드.메일.length) 한줄('메일 — 봐야 할 것', 봐야할메일().length, '메일');
+    if (탭.indexOf('초안') >= 0) 한줄('초안 — 안 보낸 것', 초안목록().filter(function (x) { return !초안보냈나(x); }).length, '초안');
+    if (탭.indexOf('고객') >= 0 && 고객목록().length) 한줄('이번 주 연락', 연락남은().length, '고객');
+    if (탭.indexOf('일정') >= 0) {
+      var 오늘일 = 일정목록().filter(function (x) { return x.갈래 !== '참고' && x.상태 !== '취소' && 날짜키(x.시작) === 오; });
+      한줄('오늘 일정', 오늘일.length, '일정', 오늘일[0] ? esc(오늘일[0].제목) + (오늘일.length > 1 ? ' 외 ' + (오늘일.length - 1) : '') : '');
+    }
+    var 장 = 장부항목();
+    if (장 && 탭.indexOf('장부') >= 0) 한줄('이번 달 매출', 만원(장.판매 && 장.판매.금액), '장부', '손익 ' + 만원(장.손익));
+    var 새 = 안읽은것(); if (새.length) 한줄('새로 온 것', 새.length, '알림');
+    h += '<section class="카드 넓게 나머지줄"><h2>나머지</h2>' + 줄.join('') + '</section>';
+    h += 바로가기카드();
+    h += 늘쓰는것카드('홈');
+    var 한 = 한일카드();                                     // 다른 분이 하신 것 — 접어 둔다(누르면 펼침)
+    if (한) { var m = 한.match(/<h2>([^<]*)/); h += '<details class="카드 넓게 접힌카드"><summary>' + esc(m ? m[1].trim() : '다른 분들이 하신 것') + ' 보기</summary>' + 한.replace(/^<section class="카드[^"]*">/, '<div>').replace(/<\/section>$/, '</div>') + '</details>'; }
+    return h;
   }
   // 방 이름은 카카오톡 꼴 — 1:1 은 상대 이름(비서), 여럿은 「<조직> 전체」(2026-09-21 유니스 「저희와 나 · 다 같이는 모호해 보인다」). 비서 이름은 desk-org.json 「비서이름」
   function 비서이름() { return (설정 && 설정.비서이름) || '비서'; }
@@ -1832,11 +1847,13 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     if (!이름들.length) return '';
     return '<div class="한줄" style="margin-top:10px;padding-left:0;border:0;color:var(--보조)">누구와 — ' + 이름들.map(function (n) { return '<span data-가="할일" data-할일상대="' + esc(n) + '" style="color:var(--강조)">' + esc(n) + ' ' + 센.수[n] + '</span>'; }).join(' · ') + '</div>';
   }
+  // 이름 뒤 조사 — 받침이 있으면 「이」, 없으면 「가」(2026-09-28 「유니스이 하신 것」)
+  function 이가(이름) { var c = String(이름 || '').slice(-1).charCodeAt(0); return (c >= 0xAC00 && c <= 0xD7A3 && (c - 0xAC00) % 28 === 0) ? '가' : '이'; }
   function 한일카드() {
     var 줄들 = (자료 && 자료.한일) || [], 마지막 = 자료 && 자료.마지막열림;
     if ((!줄들.length && !마지막) || 보기) return '';
     var 사람 = ((자료 && 자료.사람들) || []);
-    var 제목 = 사람.length === 1 ? 사람[0].이름 + '이 하신 것' : '다른 분들이 하신 것';
+    var 제목 = 사람.length === 1 ? 사람[0].이름 + 이가(사람[0].이름) + ' 하신 것' : '다른 분들이 하신 것';
     var 연때 = 마지막 ? '<div class="한줄" style="padding-left:0;border:0;color:var(--보조);margin-bottom:6px">마지막으로 앱을 연 때 · ' + 때글(마지막.때) + (사람.length > 1 ? ' (' + esc(마지막.누가) + ')' : '') + '</div>' : '';
     if (!줄들.length) return '<section class="카드"><h2>' + esc(제목) + '</h2>' + 연때 + '<div class="빈">아직 누르신 것이 없어요.</div></section>';
     // 연달아 「열림」이면 하나로(하루에 몇 번씩 열어 보신다)
@@ -1895,7 +1912,11 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     }
     if (대표인가()) {
       var 내것들 = 열림.filter(대표것인가), 결정수 = 내것들.filter(결정인가).length, 원장것 = 열림.filter(function (x) { return !대표것인가(x); });
-      h += '<section class="카드" data-구역="내할일"><h2>' + esc(말('내할일')) + ' ' + 내것들.length + '</h2>' + (결정수 ? '<div class="한줄" style="color:var(--보조);margin-bottom:8px;padding-left:0;border:0">「결정」이 붙은 ' + 결정수 + '개는 열어서 정해 주시면 돼요. 줄을 길게 누르거나 ⋮⋮ 를 잡고 끌면 차례가 바뀌어요.</div>' : '') + (내것들.length ? 줄들(내것들, '내할일') : '<div class="빈">지금 하실 것이 없어요.</div>') + '</section>';
+      // 이번 주(지남 · 이레 안)만 펼치고 그 뒤는 접는다(2026-09-28 · 앱 피드백 48)
+      var 이번주 = 이번주것(내것들), 이번주id = {}; 이번주.forEach(function (x) { 이번주id[x.id] = 1; });
+      var 뒤것 = 내것들.filter(function (x) { return !이번주id[x.id]; });
+      h += '<section class="카드" data-구역="내할일"><h2>' + esc(말('내할일')) + ' — 이번 주 ' + 이번주.length + '</h2>' + (결정수 ? '<div class="한줄" style="color:var(--보조);margin-bottom:8px;padding-left:0;border:0">「결정」이 붙은 것은 열어서 정해 주시면 돼요. 줄을 길게 누르거나 ⋮⋮ 를 잡고 끌면 차례가 바뀌어요.</div>' : '') + (이번주.length ? 줄들(이번주, '내할일') : '<div class="빈">이번 주 안에 기한이 걸린 것이 없어요.</div>') + '</section>';
+      if (뒤것.length) h += '<section class="카드" data-구역="그뒤"><h2>그 뒤 ' + 뒤것.length + '</h2>' + (펼침더['그뒤'] ? 줄들(뒤것, '그뒤') : '<div class="더보기줄"><button data-더보기="그뒤">기한이 이레 넘게 남았거나 없는 것 ' + 뒤것.length + '개 보기</button></div>') + '</section>';
       if (원장것.length || 구성원있나()) h += '<section class="카드" data-구역="원장님"><h2>' + esc(말('구성원할일')) + ' ' + 원장것.length + '</h2>' + (원장것.length ? 줄들(원장것, '원장님') : '<div class="빈">없어요.</div>') + '</section>';
     } else {
       h += '<section class="카드" data-구역="하실것"><h2>하실 것 ' + 열림.length + '</h2>' + (열림.length ? 줄들(열림, '하실것') : '<div class="빈">다 하셨어요.</div>') + '</section>';
