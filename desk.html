@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="manifest" href="desk.webmanifest">
-<link rel="apple-touch-icon" sizes="180x180" href="desk-180.png">   <!-- 홈 화면 아이콘 — 원장님 로고 시안(구름 · 클레이 캐릭터 · 귀 마크)에서 글자만 뺀 것 · 대표는 연보라(boss-*) — 아래 스크립트가 역할에 맞춰 바꾼다(2026-09-20) -->
-<link rel="icon" type="image/png" sizes="192x192" href="desk-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="desk-180.png?v=20260928">   <!-- 홈 화면 아이콘 — 원장님 로고 시안(구름 · 클레이 캐릭터 · 귀 마크)에서 글자만 뺀 것 · 대표는 연보라(boss-*) — 아래 스크립트가 역할에 맞춰 바꾼다(2026-09-20) -->
+<link rel="icon" type="image/png" sizes="192x192" href="desk-192.png?v=20260928">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- 글씨체는 Paperlogy(같은 폴더 woff2) — 2026-09-20 유니스 「바꿔」. 구글 폰트 링크는 뗐다 -->
 <title>한마음 데스크</title>
@@ -490,7 +490,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-27c';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-28a';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -509,7 +509,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var 대표 = (저장.get('데스크역할') || '') === '대표';
     var m = document.querySelector('link[rel="manifest"]'), a = document.querySelector('link[rel="apple-touch-icon"]');
     if (m && m.getAttribute('href') !== (대표 ? 'desk-boss.webmanifest' : 'desk.webmanifest')) m.setAttribute('href', 대표 ? 'desk-boss.webmanifest' : 'desk.webmanifest');
-    if (a) a.setAttribute('href', 대표 ? 'boss-180.png' : 'desk-180.png');
+    if (a) a.setAttribute('href', 대표 ? 'boss-180.png?v=20260928' : 'desk-180.png?v=20260928');
     var 표 = document.getElementById('앱표');
     if (표) { var 원 = 대표 ? 'boss-192.png' : 'desk-192.png'; if (표.getAttribute('src') !== 원) 표.setAttribute('src', 원); 표.alt = (설정 && 설정.짧은이름 ? 설정.짧은이름 : '') + ' 데스크'; }
   }
