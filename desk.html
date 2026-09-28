@@ -564,7 +564,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-28i';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-28j';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -2125,6 +2125,10 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     목록닫기();
     return h;
   }
+  // 본문 문장 안에 붙은 원장님께 드리는 메모 [원장님 …] 는 블로그로 나가면 안 된다(2026-09-28 유니스 「이렇게 그대로 나오는데?」).
+  // 복사·미리보기에서는 빼고, 상세 화면 위 「확인해 주실 것」 칸에 따로 모은다.
+  function 메모뺀본문(x) { return String(x.본문 || '').replace(/[ \t]*\[원장님[^\]]*\]/g, ''); }
+  function 본문메모들(x) { return (String(x.본문 || '').match(/\[원장님[^\]]*\]/g) || []).map(function (m) { return m.replace(/^\[원장님\s*(확인)?\s*[—-]?\s*/, '').replace(/\]$/, ''); }); }
   function 블로그줄(글, 폭) {
     // 원장님 블로그처럼 짧게 끊는다(2026-09-28 실측 — 원장님 글 두 편 한 줄 중간값 15~16자 · 가운데 정렬).
     // 문장 끝(. ? !)과 쉼표에서 먼저 끊고, 그래도 길면 띄어쓰기 자리에서 폭(18자) 안으로 접는다.
@@ -2145,12 +2149,12 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   function 복사용글(x) {
     // 네이버 블로그에 붙여 넣는 용 — 확인 표시는 빼고, 사진 자리는 【사진 1】처럼 번호로 남긴다(2026-09-28 유니스 「본문 복사했더니 그림은 안 오는데」)
     var n = 0;
-    return String(x.본문 || '').split('\n').filter(function (l) { return !/^\[(원장님 확인|사진 — )/.test(l) && l.trim() !== '---'; })
+    return 메모뺀본문(x).split('\n').filter(function (l) { return !/^\[(원장님 확인|사진 — )/.test(l) && l.trim() !== '---'; })
       .map(function (l) { if (/^!\[/.test(l)) { n += 1; return '【사진 ' + n + '】'; } if (/^##\s+/.test(l) || !l.trim()) return l.replace(/^##\s+/, ''); return 블로그줄(l.replace(/\*\*(.+?)\*\*/g, '$1').replace(/^>\s?/, '')).join('\n'); }).join('\n').replace(/\n{3,}/g, '\n\n').trim();
   }
   function 복사용HTML(x) {
     // 사진이 같이 넘어가게 — 편집기가 받아 주는 곳(PC 블로그 글쓰기 등)에서는 그림까지 붙는다. 글꼴은 블로그 편집기가 자기 것으로 바꾼다.
-    return String(x.본문 || '').split('\n').filter(function (l) { return !/^\[(원장님 확인|사진 — )/.test(l) && l.trim() !== '---'; }).map(function (l) {
+    return 메모뺀본문(x).split('\n').filter(function (l) { return !/^\[(원장님 확인|사진 — )/.test(l) && l.trim() !== '---'; }).map(function (l) {
       var m = l.match(/^!\[([^\]]*)\]\(([^)]+)\)/);
       // 원장님 블로그 모양 그대로(2026-09-28 실측 — 글 두 편 모든 문단 가운데 정렬 · 나눔스퀘어 16 · 큰 제목 24 · 강조는 굵게)
       var 꼴 = 'text-align:center;font-family:NanumSquare,나눔스퀘어,sans-serif;';
@@ -2188,7 +2192,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     h += 소식꼴줄(x);
     h += '<div class="단추줄"><button class="단추" data-복사="' + esc(x.id) + '">본문 복사</button>' + ((x.갈래 === '블로그' && (x.사진 || []).length) ? '<button class="단추 테" data-사진저장="' + esc(x.id) + '">사진 ' + x.사진.length + '장 저장</button>' : '') + (x.단계 !== '썼어요' ? '<button class="단추 테" data-단계="썼어요" data-id="' + esc(x.id) + '">썼어요</button>' : '') + (x.단계 === '초안' ? '<button class="단추 테" data-단계="보류" data-id="' + esc(x.id) + '">안 쓸래요</button>' : '') + (x.단계 !== '초안' ? '<button class="단추 테" data-단계="초안" data-id="' + esc(x.id) + '">다시 초안으로</button>' : '') + '</div>';
     var 꼴 = (x.갈래 === '당근' && 소식꼴선택 && 소식꼴선택 !== x.갈래) ? 소식꼴선택 : '';
-    h += '<div class="본문글">' + (꼴 ? '<pre style="white-space:pre-wrap;font:inherit;margin:0">' + esc(꼴본문(x, 꼴)) + '</pre>' : (x.갈래 === '블로그' ? 복사용HTML(x) : 마크다운(x.본문))) + '</div>';
+    h += '<div class="본문글">' + (꼴 ? '<pre style="white-space:pre-wrap;font:inherit;margin:0">' + esc(꼴본문(x, 꼴)) + '</pre>' : (x.갈래 === '블로그' ? ((본문메모들(x).length ? '<div class="고정힌트" style="text-align:left"><b>원장님 확인해 주실 것 ' + 본문메모들(x).length + '</b> — 글에는 안 들어가요<br>' + 본문메모들(x).map(function (m, i) { return (i + 1) + '. ' + esc(m); }).join('<br>') + '</div>' : '') + 복사용HTML(x)) : 마크다운(x.본문))) + '</div>';
     if ((x.태그 || []).length) h += '<div class="한줄" style="margin-top:12px">' + x.태그.map(esc).join(' ') + '</div>';
     if (x.그림) h += '<h3>새로 만드실 그림(견본 + 프롬프트)</h3><div class="본문글"><pre>' + esc(x.그림) + '</pre></div>';
     if (x.확인) h += '<h3>확인해 주실 것</h3><div class="본문글">' + 마크다운(x.확인) + '</div>';
