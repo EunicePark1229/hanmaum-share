@@ -564,7 +564,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-28j';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-28k';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -2129,20 +2129,47 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   // 복사·미리보기에서는 빼고, 상세 화면 위 「확인해 주실 것」 칸에 따로 모은다.
   function 메모뺀본문(x) { return String(x.본문 || '').replace(/[ \t]*\[원장님[^\]]*\]/g, ''); }
   function 본문메모들(x) { return (String(x.본문 || '').match(/\[원장님[^\]]*\]/g) || []).map(function (m) { return m.replace(/^\[원장님\s*(확인)?\s*[—-]?\s*/, '').replace(/\]$/, ''); }); }
+  function 굵게줄들(글) {
+    // **굵게** 가 줄 나눔에 걸려 두 줄로 갈라지면 ** 가 글자로 새어 나갔다(2026-09-28 유니스 「** 이런 거 안 나오게」).
+    // 줄을 나누기 전에 굵은 구간을 표시로 바꾸고, 나눈 뒤 줄마다 <b> 를 다시 여닫는다.
+    var 열림 = false;
+    return 블로그줄(String(글).replace(/\*\*(.+?)\*\*/g, '\u0001$1\u0002').replace(/\*\*/g, '')).map(function (줄) {
+      var h = (열림 ? '<b>' : '') + esc(줄).replace(/\u0001/g, '<b>').replace(/\u0002/g, '</b>');
+      var 연 = (줄.match(/\u0001/g) || []).length, 닫 = (줄.match(/\u0002/g) || []).length;
+      열림 = 열림 ? (닫 <= 연) : (연 > 닫);
+      return 열림 ? h + '</b>' : h;
+    });
+  }
   function 블로그줄(글, 폭) {
-    // 원장님 블로그처럼 짧게 끊는다(2026-09-28 실측 — 원장님 글 두 편 한 줄 중간값 15~16자 · 가운데 정렬).
-    // 문장 끝(. ? !)과 쉼표에서 먼저 끊고, 그래도 길면 띄어쓰기 자리에서 폭(18자) 안으로 접는다.
-    폭 = 폭 || 18;
-    var 조각 = String(글).replace(/([.?!。])\s+/g, '$1\n').replace(/,\s+/g, ',\n').split('\n');
-    var 줄 = [];
-    조각.forEach(function (c) {
+    // 원장님 블로그처럼 짧게, 그러나 뜻 단위로 끊는다(2026-09-28 유니스가 직접 고친 글이 기준).
+    //  ① 「1. **소제목** — 설명」 은 「1. 소제목 —」 한 줄 + 설명은 다음 줄부터
+    //  ② 문장 끝(. ? !)·쉼표에서 먼저 끊는다
+    //  ③ 그래도 길면 말 끝(~고 ~며 ~는데 ~면 ~서 ~때 ~요 ~다)에서 끊고, 꾸미는 말과 받는 말 사이(「가장 가까운 / 곳에서」)는 되도록 안 끊는다
+    폭 = 폭 || 22;
+    var 줄 = [], 글자 = String(글).trim();
+    var 번호 = 글자.match(/^(\d+\.\s*)(.+?)\s*[—–-]\s+(.+)$/);
+    if (번호 && 번호[2].length <= 30) { 줄.push(번호[1] + 번호[2] + ' —'); 글자 = 번호[3]; }
+    var 좋은끝 = /(,|\.|\?|!|다|요|고|며|데|면|서|때|니|지|죠)$/;
+    String(글자).replace(/([.?!。])\s+/g, '$1\n').replace(/,\s+/g, ',\n').split('\n').forEach(function (c) {
       c = c.trim(); if (!c) return;
-      if (c.length <= 폭 + 4) { 줄.push(c); return; }
-      var 지금 = '';
-      c.split(' ').forEach(function (w) {
-        if (지금 && (지금 + ' ' + w).length > 폭) { 줄.push(지금); 지금 = w; } else { 지금 = 지금 ? 지금 + ' ' + w : w; }
-      });
-      if (지금) 줄.push(지금);
+      if (c.length <= 폭) { 줄.push(c); return; }
+      var 말 = c.split(' '), 지금 = [];
+      for (var i = 0; i < 말.length; i++) {
+        var 붙인 = 지금.concat([말[i]]).join(' ');
+        if (지금.length && 붙인.length > 폭) {
+          // 지금 줄 안에서 좋은 끝을 뒤에서부터 찾아 거기서 끊는다(너무 짧아지면 그냥 여기서)
+          var 끊을 = -1;
+          for (var j = 지금.length - 1; j >= 1; j--) { if (좋은끝.test(지금[j]) && 지금.slice(0, j + 1).join(' ').length >= 10) { 끊을 = j; break; } }
+          if (끊을 >= 0 && 끊을 < 지금.length - 1) { 줄.push(지금.slice(0, 끊을 + 1).join(' ')); 지금 = 지금.slice(끊을 + 1); }
+          else {
+            // 줄 끝이 꾸미는 말(~한 ~는 ~의 ~을·를 …)이면 그 말은 다음 줄로 넘긴다 — 「소중한 / 귀 건강」 안 되게
+            var 넘길 = (지금.length >= 3 && /(한|는|던|의|운|인|을|를|은|적인|가장|더|잘)$/.test(지금[지금.length - 1])) ? 1 : 0;
+            줄.push(지금.slice(0, 지금.length - 넘길).join(' ')); 지금 = 지금.slice(지금.length - 넘길);
+          }
+        }
+        지금.push(말[i]);
+      }
+      if (지금.length) 줄.push(지금.join(' '));
     });
     return 줄;
   }
@@ -2150,7 +2177,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     // 네이버 블로그에 붙여 넣는 용 — 확인 표시는 빼고, 사진 자리는 【사진 1】처럼 번호로 남긴다(2026-09-28 유니스 「본문 복사했더니 그림은 안 오는데」)
     var n = 0;
     return 메모뺀본문(x).split('\n').filter(function (l) { return !/^\[(원장님 확인|사진 — )/.test(l) && l.trim() !== '---'; })
-      .map(function (l) { if (/^!\[/.test(l)) { n += 1; return '【사진 ' + n + '】'; } if (/^##\s+/.test(l) || !l.trim()) return l.replace(/^##\s+/, ''); return 블로그줄(l.replace(/\*\*(.+?)\*\*/g, '$1').replace(/^>\s?/, '')).join('\n'); }).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+      .map(function (l) { if (/^!\[/.test(l)) { n += 1; return '【사진 ' + n + '】'; } if (/^##\s+/.test(l) || !l.trim()) return l.replace(/^##\s+/, ''); return 블로그줄(l.replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*\*/g, '').replace(/^>\s?/, '')).join('\n'); }).join('\n').replace(/\n{3,}/g, '\n\n').trim();
   }
   function 복사용HTML(x) {
     // 사진이 같이 넘어가게 — 편집기가 받아 주는 곳(PC 블로그 글쓰기 등)에서는 그림까지 붙는다. 글꼴은 블로그 편집기가 자기 것으로 바꾼다.
@@ -2162,7 +2189,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
       if (!l.trim()) return '<p style="' + 꼴 + '"><br></p>';
       var t = esc(l.replace(/^##\s+/, '').replace(/^>\s?/, '')).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
       if (/^##\s+/.test(l)) return '<p style="' + 꼴 + 'font-size:24px"><b>' + t + '</b></p>';
-      return 블로그줄(l.replace(/^>\s?/, '')).map(function (줄) { return '<p style="' + 꼴 + 'font-size:16px">' + esc(줄).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>') + '</p>'; }).join('');
+      return 굵게줄들(l.replace(/^>\s?/, '')).map(function (줄) { return '<p style="' + 꼴 + 'font-size:16px">' + 줄 + '</p>'; }).join('');
     }).join('');
   }
   function 사진저장(x) {
