@@ -564,7 +564,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-28h';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-28i';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -2870,6 +2870,26 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     document.addEventListener('visibilitychange', function () { if (!document.hidden) 받아오기(); });
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('desk-sw.js').then(function () { setTimeout(푸시저절로, 1500); }).catch(function () {});
   }).catch(function () { $('본문').innerHTML = '<div class="카드"><div class="빈">설정을 못 읽었어요. 잠시 뒤 다시 열어 주세요.</div></div>'; });
+  // 새 판 알아채기(2026-09-28 유니스 「노트북이든 핸드폰이든 최종으로 세팅이 되어야」) — 켜 둔 창은 새로고침 전까지 옛 판으로 돈다.
+  // 5분마다·창으로 돌아올 때 서버의 판을 보고, 다르면 글을 쓰는 중이 아닐 때 저절로 새로고침한다. 쓰는 중이면 위에 한 줄만 띄운다.
+  (function () {
+    function 쓰는중() { var a = document.activeElement; return !!(a && (a.tagName === 'TEXTAREA' || (a.tagName === 'INPUT' && a.type !== 'button')) && a.value); }
+    function 새판보기() {
+      fetch(location.pathname + '?판확인=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) {
+        var m = t.match(/판 = '([^']+)'/);
+        if (!m || m[1] === 판) return;
+        if (!쓰는중()) { location.reload(); return; }
+        if (document.getElementById('새판띠')) return;
+        var d = document.createElement('div'); d.id = '새판띠';
+        d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:var(--강조);color:#fff;text-align:center;padding:10px;font-size:15px;cursor:pointer';
+        d.textContent = '앱이 새로 바뀌었어요 — 눌러서 새로고침';
+        d.onclick = function () { location.reload(); };
+        document.body.appendChild(d);
+      }).catch(function () {});
+    }
+    setInterval(새판보기, 5 * 60 * 1000);
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) 새판보기(); });
+  })();
 })();
 </script>
 </body>
