@@ -131,6 +131,13 @@ details { margin: 10px 0; } details summary { cursor: pointer; color: var(--강�
 .본문글 .확인말 { padding: 8px 12px; background: #FBF1E3; color: var(--살핌); border-radius: 10px; margin: 8px 0 12px; font-size: 15px; }
 .본문글 pre { white-space: pre-wrap; font: inherit; background: var(--바탕); padding: 12px; border-radius: 12px; }
 .블로그상세 { max-width: 760px; }
+/* 초안함(2026-09-28 유니스 「anna 에게 쓸 메일 초안처럼 바로 사용할 수 있도록 이미 작업이 된 것들은 한마음 블로그 글처럼 어딘가에 정리」)
+   목록 → 열면 받는 사람 · 제목 · 본문, 제목과 본문을 따로 복사해 아웃룩에 붙인다 */
+.초안상세 { max-width: 860px; }
+.초안상세 .칸이름 { font-size: 13px; color: var(--흐림); margin: 14px 0 4px; display: flex; align-items: center; gap: 8px; }
+.초안상세 .칸이름 button { margin-left: auto; }
+.초안상세 .제목칸, .초안상세 .본문칸 { background: var(--바탕); border: 1px solid var(--선); border-radius: 10px; padding: 12px 14px; font-size: 15px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--글); }
+.초안상세 .제목칸 { font-weight: 600; }
 @media (hover: hover) { span[data-가]:hover .신호 { filter: brightness(.92); text-decoration: underline; } }
 .입력줄들 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }   /* 1fr 은 minmax(auto,1fr) 라 날짜 칸의 고유 폭(약 200px)이 열을 밀어 폰(390)에서 카드가 오른쪽으로 넘쳤다 (2026-09-19) */
 .입력줄들 label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--보조); min-width: 0; }
@@ -564,7 +571,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-28m';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-28n';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -753,7 +760,8 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     일정: '<svg viewBox="0 0 24 24"><path d="M4 5h16v15H4zM4 10h16M8 3v4M16 3v4M8 14h3"/></svg>',
     고객: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>'
   };
-  var 탭이름 = { 홈: '홈', 대화: '대화', 할일: '할 일', 재고: '재고', 장부: '장부', 받은것: '받은 것', 일정: '일정', 메일: '메일', 고객: '고객', 운영: '운영', 더보기: '더보기' };
+  var 탭이름 = { 홈: '홈', 대화: '대화', 할일: '할 일', 재고: '재고', 장부: '장부', 받은것: '받은 것', 일정: '일정', 메일: '메일', 초안: '초안', 고객: '고객', 운영: '운영', 더보기: '더보기' };
+  탭아이콘.초안 = '<svg viewBox="0 0 24 24"><path d="M4 20h4l10-10-4-4L4 16v4z"/><path d="M13 7l4 4"/></svg>';
   탭아이콘.메일 = '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>';
   탭아이콘.운영 = '<svg viewBox="0 0 24 24"><path d="M4 20h16M6 20V9l6-5 6 5v11M10 20v-6h4v6"/></svg>';
   탭아이콘.더보기 = '<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>';
@@ -1411,6 +1419,36 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var h = '<section class="카드"><h2>메일 — 봐야 할 것 ' + 봐.length + ' <button class="더" data-가="메일">전부 보기</button></h2>';
     h += 봐.length ? 봐.slice(0, 3).map(function (x) { return '<div data-가="메일" data-초점="' + esc(x.id) + '">' + 메일줄(x, false) + '</div>'; }).join('') : '<div class="빈">봐야 할 메일이 없어요. 광고·자동 메일은 「전부 보기」에 접혀 있어요.</div>';
     return h + '</section>';
+  }
+  // ── 초안함(2026-09-28 · GN) — 피드 「초안」(01_Clients/gn/ops/초안함.py). 보낸편지함에서 찾으면 「보냄」, 앱의 「보냈어요」로도 닫는다 ──
+  var 열린초안 = '';
+  function 초안목록() { return ((자료 && 자료.피드.초안) || []).slice().sort(function (a, b) { return a.시각 < b.시각 ? 1 : -1; }); }
+  function 초안보냈나(x) { return x.단계 === '보냄'; }
+  function 초안줄(x) {
+    var 날 = (x.시각 || '').slice(5, 10).replace('-', '/');
+    return '<div class="줄" data-초안열기="' + esc(x.id) + '" data-id="' + esc(x.id) + '" style="cursor:pointer"><div class="제목">' + esc(x.제목) + '</div>' +
+      '<div class="한줄 접힘">' + esc(x.메일제목 || (x.본문 || '').split(String.fromCharCode(10))[0]) + '</div>' +
+      '<div class="때">' + (초안보냈나(x) ? 신호('좋음', '보냄' + (x.보낸때 ? ' ' + 때글(x.보낸때) : '')) : 신호('살핌', '안 보냄')) + (x.받는이 ? ' · ' + esc(x.받는이) : '') + ' · ' + 날 + '</div></div>';
+  }
+  function 초안상세(x) {
+    var h = '<section class="카드 초안상세"><button class="더" data-초안닫기="1">‹ 목록으로</button><h2 style="margin-top:8px">' + esc(x.제목) + '</h2>';
+    h += '<div class="한줄" style="padding:0;border:0;color:var(--보조)">' + (x.받는이 ? '받는 사람 ' + esc(x.받는이) : '') + (x.참조 ? ' · 참조 ' + esc(x.참조) : '') + '</div>';
+    h += '<div style="margin:8px 0">' + (초안보냈나(x) ? 신호('좋음', x.보낸때 ? 때글(x.보낸때) + ' 에 보낸 것으로 보여요' + (x.단계누가 ? '' : ' (보낸편지함에서 찾음)') : '보냈어요') : 신호('살핌', '아직 안 보냈어요')) + '</div>';
+    if (x.메일제목) h += '<div class="칸이름">제목<button class="단추 테" data-초안복사="제목" data-id="' + esc(x.id) + '">제목 복사</button></div><div class="제목칸">' + esc(x.메일제목) + '</div>';
+    h += '<div class="칸이름">본문<button class="단추" data-초안복사="본문" data-id="' + esc(x.id) + '">본문 복사</button></div><div class="본문칸">' + 링크살리기(x.본문 || '') + '</div>';
+    h += '<div class="단추줄" style="margin-top:12px">' + (초안보냈나(x) ? '<button class="단추 테" data-초안단계="초안" data-id="' + esc(x.id) + '">아직 안 보냈어요</button>' : '<button class="단추" data-초안단계="보냄" data-id="' + esc(x.id) + '">보냈어요</button>') + '</div>';
+    h += '<div class="한줄" style="margin-top:10px;padding:0;border:0;color:var(--흐림);font-size:13px">원본 · ' + esc(x.파일 || '') + ' · 고칠 것은 대화에 적어 주시면 초안을 고쳐 둘게요.</div>';
+    return h + 댓글칸(x) + '</section>';
+  }
+  function 초안화면() {
+    var 전부 = 초안목록();
+    if (열린초안) { var 하나 = 전부.filter(function (y) { return y.id === 열린초안; })[0]; if (하나) return 초안상세(하나); if (자료) 열린초안 = ''; }
+    if (!전부.length) return '<div class="카드"><div class="빈">보낼 초안이 없어요. 초안을 만들면 여기에 모여요.</div></div>';
+    var 안 = 전부.filter(function (x) { return !초안보냈나(x); }), 보 = 전부.filter(초안보냈나);
+    var h = '<section class="카드"><h2>보낼 초안 ' + 안.length + '</h2><div class="한줄" style="color:var(--보조);margin-bottom:8px;padding-left:0;border:0">열어서 제목과 본문을 따로 복사해 아웃룩에 붙이시면 돼요. 보내시면 「보냈어요」를 누르거나, 보낸편지함에 들어오면 저절로 옮겨 가요.</div>' +
+      (안.length ? 안.map(초안줄).join('') : '<div class="빈">보낼 것은 다 보내셨어요.</div>') + '</section>';
+    if (보.length) h += '<section class="카드"><details><summary><h2 style="display:inline">보낸 것 ' + 보.length + '</h2></summary>' + 보.map(초안줄).join('') + '</details></section>';
+    return h;
   }
   // ── 메일함(2026-09-28 유니스 「GN 데스크에서 아웃룩에서처럼 보고 싶어」) ──
   //   폴더(봐야 할 것 · 받은편지함 · 보낸편지함) · 검색 · 날짜로 묶은 목록 · 읽기 창. 한마음(지메일)과 GN(아웃룩) 같은 틀이다.
@@ -2291,7 +2329,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   }
   function 그리기() {
     var 본 = $('본문');
-    var 화면 = { 홈: 홈, 대화: 대화, 할일: 할일, 재고: 재고, 장부: 장부, 받은것: 받은것, 일정: 일정, 메일: 메일화면, 고객: 고객화면 };
+    var 화면 = { 홈: 홈, 대화: 대화, 할일: 할일, 재고: 재고, 장부: 장부, 받은것: 받은것, 일정: 일정, 메일: 메일화면, 초안: 초안화면, 고객: 고객화면 };
     if (!화면[탭]) 탭 = '홈';
     본.innerHTML = 화면[탭]() + ((탭 !== '대화' && !보기 && 자료) ? '<div class="화면꼬리">이 화면, 고칠 데 있으면 <button data-가="대화">대화</button>에 적어 주세요.</div>' : '');
     본.classList.toggle('홈격자', 탭 === '홈');
@@ -2445,6 +2483,10 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
         .catch(function (e2) { 토스트('못 적었어요 — ' + e2.message); });
       return;
     }
+    var 초열 = e.target.closest('[data-초안열기]'); if (초열) { 열린초안 = 초열.getAttribute('data-초안열기'); 그리기(); window.scrollTo(0, 0); return; }
+    if (e.target.closest('[data-초안닫기]')) { if (!닫고돌아가기()) { 열린초안 = ''; 그리기(); } return; }
+    var 초복 = e.target.closest('[data-초안복사]'); if (초복) { var 초x = 초안목록().filter(function (y) { return y.id === 초복.getAttribute('data-id'); })[0]; if (초x) { var 무엇 = 초복.getAttribute('data-초안복사'), 글 = 무엇 === '제목' ? (초x.메일제목 || '') : (초x.본문 || ''); (navigator.clipboard ? navigator.clipboard.writeText(글) : Promise.reject()).then(function () { 토스트(무엇 + '을 복사했어요. 아웃룩에 붙여 넣으세요.'); }, function () { 토스트('복사가 안 돼요. 글을 길게 눌러 복사해 주세요.'); }); } return; }
+    var 초단 = e.target.closest('[data-초안단계]'); if (초단) { var 새단계 = 초단.getAttribute('data-초안단계'); 초단.disabled = true; 보내기짐({ 종류: '단계', id: 초단.getAttribute('data-id'), 단계: 새단계 }).then(function (j) { if (!j || !j.됨) throw new Error(); 토스트(새단계 === '보냄' ? '보낸 것으로 옮겼어요.' : '보낼 초안으로 되돌렸어요.'); 받아오기(); }).catch(function (e2) { 초단.disabled = false; 못했어요(e2, '초안 단계'); }); return; }
     var 메고 = e.target.closest('[data-메일고름]'); if (메고) { 메일열기(메고.getAttribute('data-메일고름')); 그리기(); var 창 = document.querySelector('.읽기창'); if (창) 창.scrollTop = 0; if (window.innerWidth < 900) window.scrollTo(0, 0); return; }
     var 메폴 = e.target.closest('[data-메일폴더]'); if (메폴) { 메일폴더 = 메폴.getAttribute('data-메일폴더'); 메일검색 = ''; 메일보일수 = 150; 그리기(); return; }
     var 메거 = e.target.closest('[data-메일거름]'); if (메거) { var 거 = 메거.getAttribute('data-메일거름'); 메일거름 = 메일거름 === 거 ? '' : 거; 메일보일수 = 150; 그리기(); return; }
@@ -2622,8 +2664,8 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   // ── 뒤로 가기(2026-09-20 유니스 「항목 열고 코멘트 뒤 뒤로 가기를 누르면 화면이 아예 꺼져」) ──
   //    홈 화면 앱은 브라우저 뒤로 가기가 곧 앱 닫기다. 상세·알림 시트·탭을 열 때 역사에 한 칸 넣어 두면 뒤로 가기가 그 칸을 빼고 목록으로 돌아온다.
   var 역사적용중 = false;
-  function 역사상태() { return { 탭: 탭, 할일: 열린할일id || '', 블로그: 열린블로그 || '', 고객: 열린고객 || '', 메일: 열린메일 || '', 알림: $('알림시트').classList.contains('보임'), 보기: 보기 || '' }; }
-  function 역사넣기() { if (역사적용중) return; try { var 지금 = 역사상태(), 전 = history.state || {}; if (전.탭 === 지금.탭 && (전.할일 || '') === 지금.할일 && (전.블로그 || '') === 지금.블로그 && (전.고객 || '') === 지금.고객 && (전.메일 || '') === 지금.메일 && !!전.알림 === 지금.알림 && (전.보기 || '') === 지금.보기) return; history.pushState(지금, ''); } catch (e) {} }
+  function 역사상태() { return { 탭: 탭, 할일: 열린할일id || '', 블로그: 열린블로그 || '', 고객: 열린고객 || '', 메일: 열린메일 || '', 초안: 열린초안 || '', 알림: $('알림시트').classList.contains('보임'), 보기: 보기 || '' }; }
+  function 역사넣기() { if (역사적용중) return; try { var 지금 = 역사상태(), 전 = history.state || {}; if (전.탭 === 지금.탭 && (전.할일 || '') === 지금.할일 && (전.블로그 || '') === 지금.블로그 && (전.고객 || '') === 지금.고객 && (전.메일 || '') === 지금.메일 && (전.초안 || '') === 지금.초안 && !!전.알림 === 지금.알림 && (전.보기 || '') === 지금.보기) return; history.pushState(지금, ''); } catch (e) {} }
   window.addEventListener('popstate', function (e) {
     // 같은 주소의 링크(#k=…)를 열린 채로 다시 탄 것 — 알림·즐겨찾기·다른 창의 링크. 브라우저는 새로 안 열고 조각(#)만 바꿔 여기로 오므로
     // 새로 여는 것과 같게 한다: ?탭= 을 다시 읽고 열쇠는 저장 뒤 주소에서 지운다. 안 그러면 「홈」으로 튀었다(2026-09-22 시험 「나중에」에서 잡음)
@@ -2636,10 +2678,10 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     }
     var st = e.state || { 탭: '홈', 할일: '', 블로그: '', 알림: false };
     역사적용중 = true;
-    try { if ((st.보기 || '') !== 보기) { if (st.보기) 보기시작(st.보기); else 보기끝(); } 열린할일id = st.할일 || ''; 열린블로그 = st.블로그 || ''; 열린고객 = st.고객 || ''; 열린메일 = st.메일 || ''; 탭 = st.탭 || '홈'; if (!st.알림) $('알림시트').classList.remove('보임'); 그리기(); if (st.알림) 알림열기(); }
+    try { if ((st.보기 || '') !== 보기) { if (st.보기) 보기시작(st.보기); else 보기끝(); } 열린할일id = st.할일 || ''; 열린블로그 = st.블로그 || ''; 열린고객 = st.고객 || ''; 열린메일 = st.메일 || ''; 열린초안 = st.초안 || ''; 탭 = st.탭 || '홈'; if (!st.알림) $('알림시트').classList.remove('보임'); 그리기(); if (st.알림) 알림열기(); }
     finally { 역사적용중 = false; }
   });
-  function 닫고돌아가기() { var st = history.state; if (st && (st.할일 || st.블로그 || st.고객 || st.메일 || st.알림)) { history.back(); return true; } return false; }
+  function 닫고돌아가기() { var st = history.state; if (st && (st.할일 || st.블로그 || st.고객 || st.메일 || st.초안 || st.알림)) { history.back(); return true; } return false; }
   try { history.replaceState(역사상태(), ''); } catch (e) {}
 
   // ── 알림을 누르면 그 줄까지 연다 (2026-09-24 유니스) ──
