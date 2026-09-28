@@ -1939,9 +1939,35 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     return h;
   }
   function 복사용글(x) {
-    // 네이버 블로그에 붙여 넣는 용 — 그림 표시·확인 표시는 빼고 글만
-    return String(x.본문 || '').split('\n').filter(function (l) { return !/^\[(원장님 확인|사진 — )/.test(l) && !/^!\[/.test(l) && l.trim() !== '---'; })
-      .map(function (l) { return l.replace(/^##\s+/, '').replace(/\*\*(.+?)\*\*/g, '$1').replace(/^>\s?/, ''); }).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+    // 네이버 블로그에 붙여 넣는 용 — 확인 표시는 빼고, 사진 자리는 【사진 1】처럼 번호로 남긴다(2026-09-28 유니스 「본문 복사했더니 그림은 안 오는데」)
+    var n = 0;
+    return String(x.본문 || '').split('\n').filter(function (l) { return !/^\[(원장님 확인|사진 — )/.test(l) && l.trim() !== '---'; })
+      .map(function (l) { if (/^!\[/.test(l)) { n += 1; return '【사진 ' + n + '】'; } return l.replace(/^##\s+/, '').replace(/\*\*(.+?)\*\*/g, '$1').replace(/^>\s?/, ''); }).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  }
+  function 복사용HTML(x) {
+    // 사진이 같이 넘어가게 — 편집기가 받아 주는 곳(PC 블로그 글쓰기 등)에서는 그림까지 붙는다. 글꼴은 블로그 편집기가 자기 것으로 바꾼다.
+    return String(x.본문 || '').split('\n').filter(function (l) { return !/^\[(원장님 확인|사진 — )/.test(l) && l.trim() !== '---'; }).map(function (l) {
+      var m = l.match(/^!\[([^\]]*)\]\(([^)]+)\)/);
+      if (m) return '<p><img src="' + esc(m[2]) + '" alt="' + esc(m[1]) + '" style="max-width:100%"></p>';
+      if (!l.trim()) return '<p><br></p>';
+      var t = esc(l.replace(/^##\s+/, '').replace(/^>\s?/, '')).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+      return /^##\s+/.test(l) ? '<p><b>' + t + '</b></p>' : '<p>' + t + '</p>';
+    }).join('');
+  }
+  function 사진저장(x) {
+    // 사진을 폰에 한 장씩 내려받는다(같은 주소라 바로 저장된다). 블로그 앱에서 【사진 N】 자리에 순서대로 넣으시면 된다.
+    var 들 = x.사진 || [];
+    if (!들.length) { 토스트('이 글에는 넣을 사진이 없어요.'); return; }
+    var i = 0;
+    (function 다음() {
+      if (i >= 들.length) { 토스트('사진 ' + 들.length + '장을 저장했어요. 블로그에서 【사진 1】부터 순서대로 넣으시면 돼요.'); return; }
+      var p = 들[i], 번 = i + 1; i += 1;
+      fetch(p.주소).then(function (r) { return r.blob(); }).then(function (b) {
+        var a = document.createElement('a'), 끝 = (String(p.주소).split('.').pop() || 'png').split('?')[0];
+        a.href = URL.createObjectURL(b); a.download = '사진' + 번 + '.' + 끝; document.body.appendChild(a); a.click();
+        setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500); setTimeout(다음, 600);
+      }).catch(function () { window.open(p.주소, '_blank'); setTimeout(다음, 600); });
+    })();
   }
   function 블로그카드(x) {
     var 급 = x.단계 === '썼어요' ? 신호('좋음', '썼어요') : x.단계 === '보류' ? 신호('모름', '안 쓸래요') : 신호('살핌', '초안');
@@ -1953,7 +1979,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     if ((x.제목후보 || []).length > 1) h += '<div class="한줄" style="margin-bottom:8px">제목 후보 · ' + x.제목후보.slice(1).map(esc).join(' / ') + '</div>';
     h += '<div style="margin:8px 0 12px">' + (x.단계 === '썼어요' ? 신호('좋음', '썼어요' + (x.단계때 ? ' · ' + 때글(x.단계때) : '')) : x.단계 === '보류' ? 신호('모름', '안 쓸래요' + (x.사유 ? ' · ' + esc(x.사유) : '')) : 신호('살핌', '초안')) + '</div>';
     h += 소식꼴줄(x);
-    h += '<div class="단추줄"><button class="단추" data-복사="' + esc(x.id) + '">본문 복사</button>' + (x.단계 !== '썼어요' ? '<button class="단추 테" data-단계="썼어요" data-id="' + esc(x.id) + '">썼어요</button>' : '') + (x.단계 === '초안' ? '<button class="단추 테" data-단계="보류" data-id="' + esc(x.id) + '">안 쓸래요</button>' : '') + (x.단계 !== '초안' ? '<button class="단추 테" data-단계="초안" data-id="' + esc(x.id) + '">다시 초안으로</button>' : '') + '</div>';
+    h += '<div class="단추줄"><button class="단추" data-복사="' + esc(x.id) + '">본문 복사</button>' + ((x.갈래 === '블로그' && (x.사진 || []).length) ? '<button class="단추 테" data-사진저장="' + esc(x.id) + '">사진 ' + x.사진.length + '장 저장</button>' : '') + (x.단계 !== '썼어요' ? '<button class="단추 테" data-단계="썼어요" data-id="' + esc(x.id) + '">썼어요</button>' : '') + (x.단계 === '초안' ? '<button class="단추 테" data-단계="보류" data-id="' + esc(x.id) + '">안 쓸래요</button>' : '') + (x.단계 !== '초안' ? '<button class="단추 테" data-단계="초안" data-id="' + esc(x.id) + '">다시 초안으로</button>' : '') + '</div>';
     var 꼴 = (x.갈래 === '당근' && 소식꼴선택 && 소식꼴선택 !== x.갈래) ? 소식꼴선택 : '';
     h += '<div class="본문글">' + (꼴 ? '<pre style="white-space:pre-wrap;font:inherit;margin:0">' + esc(꼴본문(x, 꼴)) + '</pre>' : 마크다운(x.본문)) + '</div>';
     if ((x.태그 || []).length) h += '<div class="한줄" style="margin-top:12px">' + x.태그.map(esc).join(' ') + '</div>';
@@ -2111,7 +2137,8 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var 블 = e.target.closest('[data-블로그],[data-문자]'); if (블) { 열린블로그 = 블.getAttribute('data-블로그') || 블.getAttribute('data-문자'); 소식꼴선택 = ''; 탭 = '받은것'; 그리기(); window.scrollTo(0, 0); return; }
     if (e.target.closest('[data-블로그닫기]')) { if (!닫고돌아가기()) { 열린블로그 = ''; 그리기(); } return; }
     var 지 = e.target.closest('[data-지난것]'); if (지) { 지난것보기 = 지.getAttribute('data-지난것') === '1'; 그리기(); return; }
-    var 복 = e.target.closest('[data-복사]'); if (복) { var id = 복.getAttribute('data-복사'), x = ((자료 && 자료.피드.받은것) || []).filter(function (y) { return y.id === id; })[0]; if (x) { var 꼴k = (x.갈래 === '당근' && 소식꼴선택) ? 소식꼴선택 : ''; var t = 꼴k ? 꼴본문(x, 꼴k) : 복사용글(x); var 안 = 꼴k && 설정.소식꼴 && 설정.소식꼴[꼴k] && 설정.소식꼴[꼴k].안내; (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { 토스트('본문을 복사했어요. ' + (안 || (x.갈래 === '당근' ? '당근 「소식」 글쓰기에 붙여 넣으세요.' : '블로그 글쓰기에 붙여 넣으세요.'))); }, function () { 토스트('복사가 안 돼요. 글을 길게 눌러 복사해 주세요.'); }); } return; }
+    var 사저 = e.target.closest('[data-사진저장]'); if (사저) { var sid = 사저.getAttribute('data-사진저장'), sx = ((자료 && 자료.피드.받은것) || []).filter(function (y) { return y.id === sid; })[0]; if (sx) 사진저장(sx); return; }
+    var 복 = e.target.closest('[data-복사]'); if (복) { var id = 복.getAttribute('data-복사'), x = ((자료 && 자료.피드.받은것) || []).filter(function (y) { return y.id === id; })[0]; if (x) { var 꼴k = (x.갈래 === '당근' && 소식꼴선택) ? 소식꼴선택 : ''; var t = 꼴k ? 꼴본문(x, 꼴k) : 복사용글(x); var 안 = 꼴k && 설정.소식꼴 && 설정.소식꼴[꼴k] && 설정.소식꼴[꼴k].안내; ((!꼴k && x.갈래 === '블로그' && navigator.clipboard && window.ClipboardItem) ? navigator.clipboard.write([new ClipboardItem({ 'text/plain': new Blob([t], { type: 'text/plain' }), 'text/html': new Blob([복사용HTML(x)], { type: 'text/html' }) })]).catch(function () { return navigator.clipboard.writeText(t); }) : (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject())).then(function () { 토스트('본문을 복사했어요. ' + (안 || (x.갈래 === '당근' ? '당근 「소식」 글쓰기에 붙여 넣으세요.' : '블로그 글쓰기에 붙여 넣으세요.'))); }, function () { 토스트('복사가 안 돼요. 글을 길게 눌러 복사해 주세요.'); }); } return; }
     var 꼴단 = e.target.closest('[data-소식꼴]'); if (꼴단) { 소식꼴선택 = 꼴단.getAttribute('data-소식꼴'); 그리기(); return; }
     if (e.target.closest('[data-전화]')) { e.stopPropagation(); return; }                                              // 전화·문자 링크는 줄을 열지 않고 그대로 간다
     var 고보 = e.target.closest('[data-고객보기]'); if (고보 && !고보.getAttribute('data-가')) { 고객보기 = 고보.getAttribute('data-고객보기'); 고객검색 = ''; 그리기(); return; }
