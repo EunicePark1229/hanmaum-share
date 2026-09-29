@@ -310,6 +310,13 @@ body.끌기중 * { cursor: grabbing !important }
 .읽기창 .머리글 { flex: 1; min-width: 0; font-size: 14px; color: var(--보조); line-height: 1.55; overflow-wrap: anywhere; }
 .읽기창 .머리글 b { color: var(--글); font-size: 15px; font-weight: 600; }
 .읽기창 .메일도구 { margin: 12px 0 0; }
+.비서묻기 { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 10px 0 0; }
+.비서묻기 .제 { font-size: 13px; color: var(--흐림); margin-right: 2px; }
+.비서묻기 button { height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--강조연); background: var(--카드); color: var(--강조); font-size: 14px; cursor: pointer; }
+.메일함묻기단추 { height: 40px; flex: 0 0 auto; }
+.메일함물음 { margin: 0 0 10px; }
+.메일열기링크 { color: var(--강조); cursor: pointer; white-space: nowrap; font-size: 14px; }
+@media (hover: hover) { .비서묻기 button:hover { background: var(--강조연); } }
 .읽기창 .첨부들 { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 0; }
 .읽기창 .첨부칩 { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--선); border-radius: 8px; padding: 6px 10px; font-size: 13px; color: var(--글); background: var(--바탕); max-width: 100%; overflow-wrap: anywhere; }
 .읽기창 .첨부칩 svg { width: 14px; height: 14px; stroke: var(--흐림); fill: none; stroke-width: 2; flex: 0 0 auto; }
@@ -579,7 +586,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-28r';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-29c';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -1276,7 +1283,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
       }
       if (x.누가 === '우리' && !x.제목 && x.종류) return '<div class="말 우리" data-id="' + esc(x.id || '') + '"><div class="이름">' + esc(비서이름()) + '</div>' + esc(x.글 || '') + '<div class="때">' + 때글(x.시각) + '</div></div>';
       var 파일 = (x.파일 || []).map(function (f) { return '<div>파일 · ' + esc(f.이름) + '</div>'; }).join('');
-      return '<div class="말 우리" data-id="' + esc(x.id || '') + '">' + (x.받는이 ? '<div class="이름">' + esc(비서이름()) + ' → ' + esc(x.받는이) + '</div>' : '') + (x.제목 ? '<div class="제목">' + esc(x.제목) + '</div>' : '') + esc(x.글) + 파일 + '<div class="때">' + 때글(x.시각) + '</div></div>';
+      return '<div class="말 우리" data-id="' + esc(x.id || '') + '">' + (x.받는이 ? '<div class="이름">' + esc(비서이름()) + ' → ' + esc(x.받는이) + '</div>' : '') + (x.제목 ? '<div class="제목">' + esc(x.제목) + '</div>' : '') + 메일링크(esc(x.글)) + 파일 + '<div class="때">' + 때글(x.시각) + '</div></div>';
     }).join('') + '</div>';
   }
   // ── 일정(2026-09-20 유니스 「캘린더 기능도 만들자」) — 예약(네이버 예약 메일) · 기한(기한대장) · 참고(메일 이력의 되풀이) ──
@@ -1395,6 +1402,28 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   function 메일목록() { return ((자료 && 자료.피드.메일) || []).slice().sort(function (a, b) { return a.시각 < b.시각 ? 1 : -1; }); }
   function 봐야할메일() { return 메일목록().filter(function (x) { return x.봐야함 && !끝난할일(x.id); }); }
   var 열린메일 = '', 답장쓰는id = '';
+  // 메일 비서(2026-09-29 유니스 「온라인 아웃룩에서 하는 것처럼 너의 도움을 직접 받아서 메일 내용을 확인하거나 찾거나 정리하거나」)
+  //   읽기 창·메일함 위에서 비서 방(me-나)에 머리를 붙인 글을 보낸다 — 「[메일 gm-… · 제목] 질문」·「[메일함] 질문」.
+  //   노트북 데스크.py --받기 가 01_Clients/gn/ops/메일비서.py 에 넘기고, 답은 대화에 온다. 설정 「메일비서」인 조직만.
+  var 비서직접id = '', 메일함묻는중 = false;
+  function 메일비서켜짐() { return !!(설정 && 설정.메일비서); }
+  function 메일비서묻기(글) {
+    var 방 = 'me-' + ((자료 && 자료.누구) || '');
+    var 항 = { 누가: '나', 종류: '글', 글: 글, 시각: 지금iso(), 임시: Date.now(), 방: 방, 상태: '보내는중' };
+    보낸것기록(항);
+    return 보내기짐({ 종류: '글', 글: 글, 방: 방 }).then(function (j) {
+      항.상태 = '받음'; 항.시각 = j.시각 || 항.시각;
+      var 목 = JSON.parse(저장.get('보낸것') || '[]'); 목 = 목.map(function (x) { return x.임시 === 항.임시 ? 항 : x; }); 저장.set('보낸것', JSON.stringify(목));
+      비서직접id = ''; 메일함묻는중 = false;
+      토스트('비서에게 보냈어요 — 답은 1~2분 뒤 「대화」에 와요.'); 그리기(); setTimeout(받아오기, 1500);
+    }).catch(function (e) {
+      var 목 = JSON.parse(저장.get('보낸것') || '[]'); 목 = 목.filter(function (x) { return x.임시 !== 항.임시; }); 저장.set('보낸것', JSON.stringify(목));
+      못했어요(e, '비서에게 묻기');
+    });
+  }
+  function 메일머리(x) { return '[메일 ' + x.id + ' · ' + String(x.제목 || '').replace(/[\[\]]/g, '').slice(0, 40) + '] '; }
+  // 답 글 안의 메일 id(gm-12자리)를 「메일 열기」로 — 누르면 메일 탭에서 그 메일이 열린다
+  function 메일링크(h) { return String(h).replace(/\(?\b(gm-[0-9a-f]{12})\b\)?/g, function (_m, id) { return ' <span class="메일열기링크" data-가="메일" data-초점="' + id + '">메일 열기 ›</span>'; }); }
   // 본문 안의 주소를 누를 수 있게 — 메일은 링크가 본론일 때가 많다(2026-09-23 유니스 「메일 본문에 링크가 있는 거면 그것도 살려야」).
   //   <http://…> 꼴(구글 비즈니스 메일)의 꺾쇠는 떼고, 긴 주소는 작은 글씨로 줄바꿈해 가로 스크롤이 안 나게 한다.
   function 링크살리기(글) {
@@ -1639,6 +1668,14 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
          '<button class="단추 테' + (깃발인가(x) ? ' 켬' : '') + '" data-메일깃발="' + esc(x.id) + '">' + (깃발인가(x) ? '깃발 내리기' : '깃발') + '</button>' +
          ((메일보낼수있나() && x.메일id) ? '<button class="단추 테" data-메일지움="' + esc(x.id) + '">지우기</button>' : '');
     h += '<div class="단추줄 메일도구">' + 단추 + '</div>';
+    if (메일비서켜짐()) {
+      h += '<div class="비서묻기"><span class="제">비서에게 묻기</span>' +
+           '<button data-비서묻기="요약해줘" data-메일="' + esc(x.id) + '">요약</button>' +
+           '<button data-비서묻기="이 메일에서 내가 할 일을 뽑아줘" data-메일="' + esc(x.id) + '">할 일 뽑기</button>' +
+           '<button data-비서묻기="답장 초안 써줘" data-메일="' + esc(x.id) + '">답장 초안</button>' +
+           '<button data-비서직접="' + esc(x.id) + '">직접 묻기</button></div>';
+      if (비서직접id === x.id) h += '<div class="답장칸"><textarea id="비서물음" placeholder="이 메일에 대해 물어보실 것을 적어 주세요. 예: 이 요청에 기한이 있나?"></textarea><div class="줄"><button class="단추" data-비서보내기="' + esc(x.id) + '">묻기</button><button class="단추 테" data-비서직접="">그만두기</button></div></div>';
+    }
     if (!메일보낼수있나()) h += '<div class="한줄" style="color:var(--흐림);font-size:13px;margin-top:6px;padding:0;border:0">여기서는 읽기만 돼요. 답장·전달은 ' + (x.열기 ? '「메일함에서 열기」로' : '원래 메일 프로그램에서') + ' 하시면 됩니다.</div>';
     if (답장쓰는id === x.id) {
       h += '<div class="답장칸"><textarea id="답장글" placeholder="' + esc((x.보낸이 || '') + '님께 보낼 답장을 적어 주세요. 그대로 나가요.') + '"></textarea>' +
@@ -1701,7 +1738,9 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var 전부 = 메일목록();
     if (!서버메일인가() && !전부.length) return '<div class="카드"><div class="빈">아직 읽어 온 메일이 없어요.</div></div>';
     var h = '<div class="메일위"><div class="갈래줄" id="메일칩">' + 메일칩들() + '</div>' +
-            '<input id="메일검색" type="search" placeholder="보낸 분·제목·본문·첨부 이름으로 찾기" value="' + esc(메일검색) + '" autocomplete="off"></div>';
+            '<input id="메일검색" type="search" placeholder="보낸 분·제목·본문·첨부 이름으로 찾기" value="' + esc(메일검색) + '" autocomplete="off">' +
+            (메일비서켜짐() ? '<button class="단추 테 메일함묻기단추" data-메일함묻기="1">메일함에 묻기</button>' : '') + '</div>' +
+            (메일비서켜짐() && 메일함묻는중 ? '<div class="답장칸 메일함물음"><textarea id="메일함물음" placeholder="예: 이번 주 Kenny 메일 정리해줘 · QC Inspector 관련 메일 찾아줘 · 내가 답 안 한 요청 모아줘"></textarea><div class="줄"><button class="단추" data-메일함보내기="1">묻기</button><button class="단추 테" data-메일함묻기="">그만두기</button></div></div>' : '');
     var 열린 = 열린메일 ? 메일찾기(열린메일) : null;
     h += '<div class="메일틀' + (열린 ? ' 읽는중' : '') + '"><div class="메일목록" id="메일목록">' + 메일목록그리기() + '</div>' +
          (열린 ? 읽기창(열린) : '<div class="읽기빈">왼쪽에서 메일을 고르면 여기에 열려요.<br><span style="font-size:13px">노트북에서는 ↑ ↓ 키로 다음 메일로 넘어가요.</span></div>') + '</div>';
@@ -1759,13 +1798,13 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var h = '<div class="줄 고객줄" data-고객="' + esc(x.id) + '" data-id="' + esc(x.id) + '"><div><div class="이름">' + esc(x.이름) + '<small>' + esc([x.나이 ? x.나이 + '세' : '', x.성별].filter(Boolean).join(' · ')) + '</small></div>';
     if (x.연락 && !제외됐나(x)) h += '<div class="이유">' + esc(x.연락.이유) + '</div>';
     else if (자세히) h += '<div class="한줄" style="padding-left:0;border:0">' + esc(x.기기목록 || x.분류 || '') + (x.최근접촉 ? ' · 최근 ' + esc(x.최근접촉) : '') + '</div>';
-    h += '<div class="때">' + (결 ? 결 + ' · ' : '') + esc(전화번호(x) || '') + (x.미수건수 && x.미수건수 !== '0' ? ' · <span class="신호 살핌">미수 ' + esc(x.미수건수) + '건</span>' : '') + '</div></div>';
+    h += '<div class="때">' + (x.묶음 || []).map(function (m) { return '<span class="칩">' + esc(m) + '</span> '; }).join('') + (결 ? 결 + ' · ' : '') + esc(전화번호(x) || '') + (x.미수건수 && x.미수건수 !== '0' ? ' · <span class="신호 살핌">미수 ' + esc(x.미수건수) + '건</span>' : '') + '</div></div>';
     h += '<div>' + 전화단추(x, !!x.연락 && !결) + '</div></div>';
     return h;
   }
   var 제외이유들 = ['돌아가심', '원치 않으심', '그 밖'];
   function 고객상세(x) {
-    var 칸 = [['주민번호 앞', x.주민앞], ['생년월일', x.생년 + (x.나이 ? ' (' + x.나이 + '세)' : '')], ['성별', x.성별], ['분류', x.분류], ['휴대폰', x.휴대폰], ['보호자', x.보호자], ['주소', x.주소], ['구입경로', x.구입경로],
+    var 칸 = [['주민번호 앞', x.주민앞], ['생년월일', x.생년 + (x.나이 ? ' (' + x.나이 + '세)' : '')], ['성별', x.성별], ['분류', x.분류], ['묶음', (x.묶음 || []).join(' · ')], ['휴대폰', x.휴대폰], ['보호자', x.보호자], ['주소', x.주소], ['구입경로', x.구입경로],
               ['가입일', x.가입일], ['최근 접촉', x.최근접촉], ['거래', (x.거래건수 || '0') + '건' + (x.누적판매가 ? ' · ' + Number(x.누적판매가).toLocaleString('ko-KR') + '원' : '')], ['우리 기기', x.자사기기], ['다른 센터 기기', x.타센터기기], ['기기', x.기기목록],
               ['청력(6분법)', (x.PTA6_RT || x.PTA6_LT) ? '오른쪽 ' + (x.PTA6_RT || '-') + 'dB · 왼쪽 ' + (x.PTA6_LT || '-') + 'dB' : ''], ['미수', x.미수건수 && x.미수건수 !== '0' ? x.미수건수 + '건' : ''], ['급여 신청일', x.급여신청일], ['급여 만료', x.급여만료], ['타사 만료', x.타사만료], ['메모', x.메모]];
     var h = '<section class="카드"><button class="더" data-고객닫기="1">‹ 목록으로</button><h2 style="margin-top:8px">' + esc(x.이름) + '<small style="font-weight:400;color:var(--보조);font-size:15px;margin-left:8px">' + esc([x.나이 ? x.나이 + '세' : '', x.성별].filter(Boolean).join(' · ')) + '</small></h2>';
@@ -1786,6 +1825,8 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   }
   function 고객거르기() {
     var 전부 = 고객목록(), q = 고객검색.trim().replace(/-/g, '');
+    // 묶음(2026-09-29 원장님 「소음성난청 산재 상담 고객 별도 카테고리로 · 놓치지 않게」) — 데스크_고객.py 가 orgs 「고객묶음」 낱말로 붙인다
+    if (고객보기.indexOf('묶:') === 0) { var 묶 = 고객보기.slice(2); 전부 = 전부.filter(function (x) { return (x.묶음 || []).indexOf(묶) >= 0; }); }
     var 골 = 고객보기 === '연락' ? 전부.filter(function (x) { return x.연락 && !제외됐나(x); }) : 고객보기 === '미수' ? 전부.filter(function (x) { return x.미수건수 && x.미수건수 !== '0'; }) : 고객보기 === '제외' ? 전부.filter(제외됐나) : 전부;
     if (q) 골 = 전부.filter(function (x) { return (x.이름 || '').indexOf(q) >= 0 || (x.휴대폰 || '').replace(/-/g, '').indexOf(q) >= 0 || (x.보호자 || '').replace(/-/g, '').indexOf(q) >= 0 || (x.기기목록 || '').indexOf(q) >= 0; });
     if (고객보기 === '연락' && !q) 골 = 골.slice().sort(function (a, b) { var ra = 연락결과들.indexOf(a.단계) >= 0 ? 1 : 0, rb = 연락결과들.indexOf(b.단계) >= 0 ? 1 : 0; return ra - rb; });
@@ -1803,7 +1844,9 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var 남 = 연락남은().length, 연 = 이번주연락().length;
     var h = '<div class="검색줄"><input id="고객검색" type="search" placeholder="이름·전화번호·기기로 찾기" value="' + esc(고객검색) + '" autocomplete="off"></div>';
     h += '<div class="갈래줄"><button class="' + (고객보기 === '연락' ? '켬' : '') + '" data-고객보기="연락">이번 주 연락 ' + 남 + (연 > 남 ? '/' + 연 : '') + '</button><button class="' + (고객보기 === '전부' ? '켬' : '') + '" data-고객보기="전부">전부 ' + 전부.length + '</button><button class="' + (고객보기 === '미수' ? '켬' : '') + '" data-고객보기="미수">미수</button>' + (전부.filter(제외됐나).length ? '<button class="' + (고객보기 === '제외' ? '켬' : '') + '" data-고객보기="제외">연락 안 함 ' + 전부.filter(제외됐나).length + '</button>' : '') + '</div>';
-    h += '<section class="카드"><h2>' + (고객검색.trim() ? '찾은 분' : 고객보기 === '연락' ? '이번 주 연락' : 고객보기 === '미수' ? '미수 있는 분' : 고객보기 === '제외' ? '연락 안 하기로 한 분' : '고객 전부') + '</h2>';
+    var 묶음들 = []; 전부.forEach(function (x) { (x.묶음 || []).forEach(function (m) { if (묶음들.indexOf(m) < 0) 묶음들.push(m); }); });
+    if (묶음들.length) h = h.replace(/<\/div>$/, 묶음들.map(function (m) { var n = 전부.filter(function (x) { return (x.묶음 || []).indexOf(m) >= 0; }).length; return '<button class="' + (고객보기 === '묶:' + m ? '켬' : '') + '" data-고객보기="묶:' + esc(m) + '">' + esc(m) + ' ' + n + '</button>'; }).join('') + '</div>');
+    h += '<section class="카드"><h2>' + (고객검색.trim() ? '찾은 분' : 고객보기.indexOf('묶:') === 0 ? esc(고객보기.slice(2)) + ' — 따로 챙길 분' : 고객보기 === '연락' ? '이번 주 연락' : 고객보기 === '미수' ? '미수 있는 분' : 고객보기 === '제외' ? '연락 안 하기로 한 분' : '고객 전부') + '</h2>';
     if (고객보기 === '연락' && !고객검색.trim()) h += '<div class="한줄" style="color:var(--보조);margin-bottom:8px;padding-left:0;border:0">이름을 누르면 이유와 정보가 보이고, 「전화」를 누르면 바로 걸려요. 통화하신 뒤 결과 단추 하나만.</div>';
     h += '<div id="고객목록">' + 고객목록그리기() + '</div></section>';
     return h;
@@ -2518,6 +2561,11 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var 초복 = e.target.closest('[data-초안복사]'); if (초복) { var 초x = 초안목록().filter(function (y) { return y.id === 초복.getAttribute('data-id'); })[0]; if (초x) { var 무엇 = 초복.getAttribute('data-초안복사'), 글 = 무엇 === '제목' ? (초x.메일제목 || '') : (초x.본문 || ''); (navigator.clipboard ? navigator.clipboard.writeText(글) : Promise.reject()).then(function () { 토스트(무엇 + '을 복사했어요. 아웃룩에 붙여 넣으세요.'); }, function () { 토스트('복사가 안 돼요. 글을 길게 눌러 복사해 주세요.'); }); } return; }
     var 초단 = e.target.closest('[data-초안단계]'); if (초단) { var 새단계 = 초단.getAttribute('data-초안단계'); 초단.disabled = true; 보내기짐({ 종류: '단계', id: 초단.getAttribute('data-id'), 단계: 새단계 }).then(function (j) { if (!j || !j.됨) throw new Error(); 토스트(새단계 === '보냄' ? '보낸 것으로 옮겼어요.' : '보낼 초안으로 되돌렸어요.'); 받아오기(); }).catch(function (e2) { 초단.disabled = false; 못했어요(e2, '초안 단계'); }); return; }
     var 메고 = e.target.closest('[data-메일고름]'); if (메고) { 메일열기(메고.getAttribute('data-메일고름')); 그리기(); var 창 = document.querySelector('.읽기창'); if (창) 창.scrollTop = 0; if (window.innerWidth < 900) window.scrollTo(0, 0); return; }
+    var 비묻 = e.target.closest('[data-비서묻기]'); if (비묻) { var 대상메일 = 메일찾기(비묻.getAttribute('data-메일')); if (대상메일) 메일비서묻기(메일머리(대상메일) + 비묻.getAttribute('data-비서묻기')); return; }
+    var 비직 = e.target.closest('[data-비서직접]'); if (비직) { 비서직접id = 비직.getAttribute('data-비서직접') || ''; 그리기(); setTimeout(function () { var t = $('비서물음'); if (t) t.focus(); }, 60); return; }
+    var 비보 = e.target.closest('[data-비서보내기]'); if (비보) { var 물음 = ($('비서물음') && $('비서물음').value.trim()) || ''; var 그메일 = 메일찾기(비보.getAttribute('data-비서보내기')); if (!물음) { 토스트('물어보실 것을 적어 주세요.'); return; } if (그메일) 메일비서묻기(메일머리(그메일) + 물음); return; }
+    var 함묻 = e.target.closest('[data-메일함묻기]'); if (함묻) { 메일함묻는중 = !!함묻.getAttribute('data-메일함묻기'); 그리기(); setTimeout(function () { var t = $('메일함물음'); if (t) t.focus(); }, 60); return; }
+    if (e.target.closest('[data-메일함보내기]')) { var 함물음 = ($('메일함물음') && $('메일함물음').value.trim()) || ''; if (!함물음) { 토스트('물어보실 것을 적어 주세요.'); return; } 메일비서묻기('[메일함] ' + 함물음); return; }
     var 메폴 = e.target.closest('[data-메일폴더]'); if (메폴) { 메일폴더 = 메폴.getAttribute('data-메일폴더'); 메일검색 = ''; 메일보일수 = 150; 그리기(); return; }
     var 메거 = e.target.closest('[data-메일거름]'); if (메거) { var 거 = 메거.getAttribute('data-메일거름'); 메일거름 = 메일거름 === 거 ? '' : 거; 메일보일수 = 150; 그리기(); return; }
     if (e.target.closest('[data-메일닫기]')) { if (!닫고돌아가기()) { 열린메일 = ''; 그리기(); } return; }
