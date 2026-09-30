@@ -586,7 +586,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-30e';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-30f';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -1137,19 +1137,22 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     return h + '</section>';
   }
   var 펼친진행 = {};
+  var 진행전부 = false;
   function 원장님홈(내것) {
     var 피 = (자료 && 자료.피드) || {};
     // 원장님이 시키지 않았는데 해 둔 것(먼저)이 맨 앞 — 2026-09-30 유니스 「공유·요청되지 않은 것이 오히려 앞에 보이면」. 그 안에서는 최근 것부터.
     var 진행 = (피.안내 || []).filter(function (x) { return x.갈래 === '진행'; }).sort(function (a, b) { if (!!a.먼저 !== !!b.먼저) return a.먼저 ? -1 : 1; return a.시각 < b.시각 ? 1 : -1; });
     var h = '<section class="카드"><h2>진행된 일</h2>';
     // 제목을 누르면 펼쳐서 무엇을·왜 했는지 전부 보인다(2026-09-27 유니스 「왜 이걸 했는지를 조금 더 알 수 있게」)
-    h += 진행.length ? 진행.slice(0, 3).map(function (x) {
+    h += 진행.length ? 진행.slice(0, 진행전부 ? 30 : 3).map(function (x) {
       var 펼 = !!펼친진행[x.id], 줄들 = String(x.글 || '').split('\n').filter(function (l) { return l.trim(); });
       var 몸 = '<div class="제목">' + esc(x.제목) + ' <span style="color:var(--보조);font-weight:400">' + (펼 ? '접기 ▲' : '자세히 ▼') + '</span></div>';
       몸 += 펼 ? 줄들.map(function (l) { return '<div class="한줄" style="white-space:normal">' + esc(l) + '</div>'; }).join('') : (줄들.length ? '<div class="한줄">' + esc(줄들[0]) + '</div>' : '');
       몸 += '<div class="때">' + 때글(x.시각) + (x.주소 ? ' · <a href="' + esc(x.주소) + '" target="_blank" rel="noopener" style="color:var(--강조)">열어 보기 ›</a>' : '') + '</div>';
       return '<div class="줄" data-진행펼침="' + esc(x.id) + '" style="cursor:pointer">' + 몸 + '</div>';
     }).join('') : '<div class="빈">새로 해 드린 것이 생기면 여기에 알려 드릴게요.</div>';
+    // 셋만 보이고 아래 「더보기」로 나머지(2026-09-30 유니스)
+    if (진행.length > 3) h += '<div style="text-align:center;margin-top:8px"><button class="더" data-진행더="1">' + (진행전부 ? '접기 ▲' : '더보기 ' + (진행.length - 3) + '개 ▼') + '</button></div>';
     h += '</section>';
     // 오늘 우선 할 일 — ① 기한이 오늘이거나 지난 일 ② 블로그 추천 1순위 초안 ③ 답을 기다리는 문자 문안 ④ 남은 할 일. 셋까지.
     var 오늘 = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
@@ -2536,6 +2539,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var 그복 = e.target.closest('[data-그림복사]'); if (그복) { var gx = ((자료 && 자료.피드.받은것) || []).filter(function (y) { return y.id === 그복.getAttribute('data-그림복사'); })[0]; var g = gx && (gx.그림들 || [])[Number(그복.getAttribute('data-번'))]; if (g) (navigator.clipboard ? navigator.clipboard.writeText(g.글) : Promise.reject()).then(function () { 토스트('프롬프트를 복사했어요. 그림 앱에 붙여 넣으세요.'); }, function () { 토스트('복사가 안 돼요. 글을 길게 눌러 복사해 주세요.'); }); return; }
     if (e.target.closest('#날고_열기')) { 날짜고침열림 = !날짜고침열림; 그리기(); return; }
     var 날고 = e.target.closest('[data-날고]'); if (날고) { var nid = 날고.getAttribute('data-날고'), 칸 = document.querySelector('[data-날고값="' + nid + '"]'), 새 = 칸 && 칸.value; if (!/^\d{4}-\d{2}-\d{2}$/.test(새 || '')) { 토스트('날짜를 골라 주세요.'); return; } 날고.disabled = true; 보내기짐({ 종류: '입력', 갈래: '장부수정', 짐: { id: nid, 날짜: 새 } }).then(function () { 토스트('날짜를 ' + 새 + ' 로 바꿔 달라고 보냈어요. 1분 안에 장부·재고·엑셀에 반영돼요.'); }, function (err) { 날고.disabled = false; 못했어요(err, '날짜 바꾸기'); }); return; }
+    if (e.target.closest('[data-진행더]')) { 진행전부 = !진행전부; 그리기(); return; }
     var 복 = e.target.closest('[data-복사]'); if (복) { var id = 복.getAttribute('data-복사'), x = ((자료 && 자료.피드.받은것) || []).filter(function (y) { return y.id === id; })[0]; if (x) { var 꼴k = (x.갈래 === '당근' && 소식꼴선택) ? 소식꼴선택 : ''; var t = 꼴k ? 꼴본문(x, 꼴k) : 복사용글(x); var 안 = 꼴k && 설정.소식꼴 && 설정.소식꼴[꼴k] && 설정.소식꼴[꼴k].안내; ((!꼴k && x.갈래 === '블로그' && navigator.clipboard && window.ClipboardItem) ? navigator.clipboard.write([new ClipboardItem({ 'text/plain': new Blob([t], { type: 'text/plain' }), 'text/html': new Blob([복사용HTML(x)], { type: 'text/html' }) })]).catch(function () { return navigator.clipboard.writeText(t); }) : (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject())).then(function () { 토스트('본문을 복사했어요. ' + (안 || (x.갈래 === '당근' ? '당근 「소식」 글쓰기에 붙여 넣으세요.' : '블로그 글쓰기에 붙여 넣으세요.'))); }, function () { 토스트('복사가 안 돼요. 글을 길게 눌러 복사해 주세요.'); }); } return; }
     var 꼴단 = e.target.closest('[data-소식꼴]'); if (꼴단) { 소식꼴선택 = 꼴단.getAttribute('data-소식꼴'); 그리기(); return; }
     if (e.target.closest('[data-전화]')) { e.stopPropagation(); return; }                                              // 전화·문자 링크는 줄을 열지 않고 그대로 간다
