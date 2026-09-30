@@ -586,7 +586,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-30a';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-30b';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -2020,6 +2020,21 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
       return '<div class="줄"><div class="제목">' + esc(x.구분) + ' · ' + esc(x.한줄) + '</div><div class="때">' + 상 + ' · ' + 때글(x.시각) + '</div></div>';
     }).join('') + '</section>';
   }
+  // 앱에서 넣은 줄의 날짜 고치기(2026-09-30 원장님 「HSOL 은 실제 입·출고일이 적은 날과 달라도 못 고쳐서 재고관리가 안 됐다」)
+  //   노트북이 1분 안에 장부 줄과(판매면) 엑셀 그 줄의 날짜를 바꾸고 원장·재고를 다시 센다. 엑셀에 직접 적으신 줄은 엑셀에서.
+  var 날짜고침열림 = false;
+  function 날짜고치기카드(장) {
+    var 목 = (장 && 장.최근입력) || [];
+    if (!목.length || 대표인가()) return '';
+    var h = '<section class="카드"><h2>넣은 것 날짜 고치기 <button class="더" id="날고_열기">' + (날짜고침열림 ? '접기' : '펼치기') + '</button></h2>';
+    if (!날짜고침열림) return h + '<div class="한줄" style="color:var(--보조)">실제로 들어오거나 나간 날이 적은 날과 다르면 여기서 고치시면 돼요. 재고와 엑셀도 함께 바뀌어요.</div></section>';
+    h += 목.slice(0, 15).map(function (x) {
+      return '<div class="줄"><div class="제목">' + esc(x.구분) + ' · ' + esc(x.상대 || '') + ' · ' + esc(x.내용 || '') + (x.금액 ? ' · ' + Number(x.금액).toLocaleString('ko-KR') + '원' : '') + '</div>' +
+        '<div style="display:flex;gap:8px;align-items:center;margin-top:6px"><input type="date" value="' + esc(x.날짜) + '" data-날고값="' + esc(x.id) + '" style="flex:1"><button class="단추 테" data-날고="' + esc(x.id) + '">날짜 바꾸기</button></div>' +
+        (x.날짜고침 ? '<div class="때">고친 적 있음 · ' + esc(x.날짜고침) + '</div>' : '') + '</div>';
+    }).join('');
+    return h + '</section>';
+  }
   function 입력칸() {
     if (대표인가()) return '';
     var L = (설정 && 설정.장부입력) || {};
@@ -2167,7 +2182,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
       return h;
     }
     var 급 = 대표인가() ? ((장.손익 || 0) >= 0 ? 신호('좋음', '이번 달 남음') : 신호('살핌', '이번 달 모자람')) : ((장.미지급 || []).length ? '<span data-가="장부" data-스크롤="미지급">' + 신호('살핌', '미지급 ' + 장.미지급.length + '곳') + '</span>' : 신호('좋음', '미지급 없음'));
-    var h = 입력칸() + 넣은것카드() + '<section class="카드"><h2>' + esc(장.연월) + ' ' + esc(장.제목) + '</h2>' + 급 + '<div class="한줄" style="color:var(--보조);margin-top:8px">' + esc(장.한줄 || '') + ' · 총액을 누르면 줄이 펼쳐져요</div>';
+    var h = 입력칸() + 넣은것카드() + 날짜고치기카드(장) + '<section class="카드"><h2>' + esc(장.연월) + ' ' + esc(장.제목) + '</h2>' + 급 + '<div class="한줄" style="color:var(--보조);margin-top:8px">' + esc(장.한줄 || '') + ' · 총액을 누르면 줄이 펼쳐져요</div>';
     h += '<table class="표" style="margin-top:12px"><tr><th></th><th style="text-align:right">건수</th><th style="text-align:right">금액</th></tr>';
     h += 줄('판매', '판매', (장.판매 && 장.판매.건수) || 0, 장.판매 && 장.판매.금액);
     h += 줄('매입', '매입', (장.매입 && 장.매입.건수) || 0, 장.매입 && 장.매입.금액);
@@ -2510,6 +2525,8 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var 지 = e.target.closest('[data-지난것]'); if (지) { 지난것보기 = 지.getAttribute('data-지난것') === '1'; 그리기(); return; }
     var 사저 = e.target.closest('[data-사진저장]'); if (사저) { var sid = 사저.getAttribute('data-사진저장'), sx = ((자료 && 자료.피드.받은것) || []).filter(function (y) { return y.id === sid; })[0]; if (sx) 사진저장(sx); return; }
     var 그복 = e.target.closest('[data-그림복사]'); if (그복) { var gx = ((자료 && 자료.피드.받은것) || []).filter(function (y) { return y.id === 그복.getAttribute('data-그림복사'); })[0]; var g = gx && (gx.그림들 || [])[Number(그복.getAttribute('data-번'))]; if (g) (navigator.clipboard ? navigator.clipboard.writeText(g.글) : Promise.reject()).then(function () { 토스트('프롬프트를 복사했어요. 그림 앱에 붙여 넣으세요.'); }, function () { 토스트('복사가 안 돼요. 글을 길게 눌러 복사해 주세요.'); }); return; }
+    if (e.target.closest('#날고_열기')) { 날짜고침열림 = !날짜고침열림; 그리기(); return; }
+    var 날고 = e.target.closest('[data-날고]'); if (날고) { var nid = 날고.getAttribute('data-날고'), 칸 = document.querySelector('[data-날고값="' + nid + '"]'), 새 = 칸 && 칸.value; if (!/^\d{4}-\d{2}-\d{2}$/.test(새 || '')) { 토스트('날짜를 골라 주세요.'); return; } 날고.disabled = true; 보내기짐({ 종류: '입력', 갈래: '장부수정', 짐: { id: nid, 날짜: 새 } }).then(function () { 토스트('날짜를 ' + 새 + ' 로 바꿔 달라고 보냈어요. 1분 안에 장부·재고·엑셀에 반영돼요.'); }, function (err) { 날고.disabled = false; 못했어요(err, '날짜 바꾸기'); }); return; }
     var 복 = e.target.closest('[data-복사]'); if (복) { var id = 복.getAttribute('data-복사'), x = ((자료 && 자료.피드.받은것) || []).filter(function (y) { return y.id === id; })[0]; if (x) { var 꼴k = (x.갈래 === '당근' && 소식꼴선택) ? 소식꼴선택 : ''; var t = 꼴k ? 꼴본문(x, 꼴k) : 복사용글(x); var 안 = 꼴k && 설정.소식꼴 && 설정.소식꼴[꼴k] && 설정.소식꼴[꼴k].안내; ((!꼴k && x.갈래 === '블로그' && navigator.clipboard && window.ClipboardItem) ? navigator.clipboard.write([new ClipboardItem({ 'text/plain': new Blob([t], { type: 'text/plain' }), 'text/html': new Blob([복사용HTML(x)], { type: 'text/html' }) })]).catch(function () { return navigator.clipboard.writeText(t); }) : (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject())).then(function () { 토스트('본문을 복사했어요. ' + (안 || (x.갈래 === '당근' ? '당근 「소식」 글쓰기에 붙여 넣으세요.' : '블로그 글쓰기에 붙여 넣으세요.'))); }, function () { 토스트('복사가 안 돼요. 글을 길게 눌러 복사해 주세요.'); }); } return; }
     var 꼴단 = e.target.closest('[data-소식꼴]'); if (꼴단) { 소식꼴선택 = 꼴단.getAttribute('data-소식꼴'); 그리기(); return; }
     if (e.target.closest('[data-전화]')) { e.stopPropagation(); return; }                                              // 전화·문자 링크는 줄을 열지 않고 그대로 간다
