@@ -586,7 +586,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-30d';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-30e';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -1139,7 +1139,8 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   var 펼친진행 = {};
   function 원장님홈(내것) {
     var 피 = (자료 && 자료.피드) || {};
-    var 진행 = (피.안내 || []).filter(function (x) { return x.갈래 === '진행'; }).sort(function (a, b) { return a.시각 < b.시각 ? 1 : -1; });
+    // 원장님이 시키지 않았는데 해 둔 것(먼저)이 맨 앞 — 2026-09-30 유니스 「공유·요청되지 않은 것이 오히려 앞에 보이면」. 그 안에서는 최근 것부터.
+    var 진행 = (피.안내 || []).filter(function (x) { return x.갈래 === '진행'; }).sort(function (a, b) { if (!!a.먼저 !== !!b.먼저) return a.먼저 ? -1 : 1; return a.시각 < b.시각 ? 1 : -1; });
     var h = '<section class="카드"><h2>진행된 일</h2>';
     // 제목을 누르면 펼쳐서 무엇을·왜 했는지 전부 보인다(2026-09-27 유니스 「왜 이걸 했는지를 조금 더 알 수 있게」)
     h += 진행.length ? 진행.slice(0, 3).map(function (x) {
