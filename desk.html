@@ -586,7 +586,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-30c';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-30d';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -1213,6 +1213,14 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     h += 급한.length ? 급한.slice(0, 3).map(function (x) { return 할일줄(x, true); }).join('') : '<div class="빈">이번 주 안에 기한이 걸린 것이 없어요.</div>';
     if (급한.length > 3) h += '<div class="한줄" style="padding-left:0;border:0;margin-top:8px"><span data-가="할일" style="color:var(--강조);cursor:pointer">이번 주 것 ' + (급한.length - 3) + '개 더 보기 ›</span></div>';
     h += '</section>';
+    // 블로그 — 올릴 차례(2026-09-30 유니스 「블로그는 내가 주 2~3회 기본으로 올리고 원장님은 올리고 싶으실 때」) — 추천 순위 둘 · 이번 주 올린 수
+    var 블초 = ((자료 && 자료.피드.받은것) || []).filter(function (x) { return x.갈래 === '블로그' && (x.단계 || '초안') === '초안' && !대체됐나(x); }).sort(function (a, b) { return (a.순위 || 999) - (b.순위 || 999); });
+    if (블초.length) {
+      var 주시작 = (function () { var d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d.toISOString().slice(0, 10); })();
+      var 이번주 = ((자료 && 자료.피드.받은것) || []).filter(function (x) { return x.갈래 === '블로그' && x.단계 === '썼어요' && String(x.단계때 || '').slice(0, 10) >= 주시작; }).length;
+      h += '<section class="카드 넓게"><h2>블로그 — 올릴 차례 <span style="font-size:14px;font-weight:400;color:var(--보조)">이번 주 ' + 이번주 + ' / 2~3편</span></h2>' +
+        블초.slice(0, 2).map(function (x, i) { return '<div class="줄" data-가="받은것" data-블로그열기="' + esc(x.id) + '" style="cursor:pointer"><div class="제목">' + (i + 1) + '. ' + esc(x.제목) + '</div><div class="한줄">누르면 본문 복사 · 사진 저장 · 올린 뒤 「썼어요」</div></div>'; }).join('') + '</section>';
+    }
     var 줄 = [];
     function 한줄(이름, 수, 가, 덧, 스크롤) {
       줄.push('<div class="항" data-가="' + 가 + '"' + (스크롤 ? ' data-스크롤="' + 스크롤 + '"' : '') + ' style="cursor:pointer"><span class="때칸">' + 수 + '</span><span class="몸">' + esc(이름) + (덧 ? ' <span style="color:var(--보조)">· ' + 덧 + '</span>' : '') + '</span></div>');
