@@ -35,7 +35,7 @@ body[data-탭="받은것"] { --강조: #5B6672; --강조연: #EEF0F2; }
   --강조: #1F6F5F; --강조연: #E6F1EE; --선: #E5E7EB; --좋음: #2E7D32; --살핌: #B26A00; --막힘: #C62828;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; background: var(--바탕); color: var(--글); font-family: 'Paperlogy', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; font-size: 16px; line-height: 1.5; -webkit-text-size-adjust: 100%; }
+html, body { margin: 0; background: var(--바탕); color: var(--글); font-family: var(--본문서체, 'Paperlogy'), 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; font-size: 16px; line-height: 1.5; -webkit-text-size-adjust: 100%; }
 button, input, textarea { font: inherit; }
 .위 { position: sticky; top: 0; z-index: 5; background: var(--머리바탕, var(--카드)); color: var(--머리글, var(--글)); border-bottom: 1px solid var(--머리선, var(--선)); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 /* 앱 표시(2026-09-23 유니스 「페이지 안에도 이미지가 · CI 처럼 아이콘이」) — 홈 화면 아이콘 그대로. 역할이 바뀌면 아이콘맞추기가 같이 바꾼다 */
@@ -586,7 +586,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-30b';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-09-30c';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
@@ -3003,7 +3003,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var 이름 = 스타일이름();
     var t = (이름 && j.테마후보 && j.테마후보[이름]) || j.테마 || null;
     var r0 = document.documentElement;
-    ['--바탕', '--카드', '--글', '--보조', '--흐림', '--강조', '--강조연', '--선', '--둥근', '--그림자', '--카드테', '--머리바탕', '--머리글', '--머리선', '--머리굵기', '--탭바탕', '--제목서체', '--테마강조', '--테마강조연'].forEach(function (k) { r0.style.removeProperty(k); });
+    ['--바탕', '--카드', '--글', '--보조', '--흐림', '--강조', '--강조연', '--선', '--둥근', '--그림자', '--카드테', '--머리바탕', '--머리글', '--머리선', '--머리굵기', '--탭바탕', '--제목서체', '--본문서체', '--테마강조', '--테마강조연'].forEach(function (k) { r0.style.removeProperty(k); });
     r0.classList.remove('테마있음'); r0.style.colorScheme = '';
     if (j.강조색) r0.style.setProperty('--강조', j.강조색);
     if (!t) {                                   // 테마는 없고 역할 색만 있는 조직(한마음)
@@ -3019,7 +3019,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
       return;
     }
     var r = document.documentElement, 칸 = { 바탕: '--바탕', 카드: '--카드', 글: '--글', 보조: '--보조', 흐림: '--흐림', 강조: '--강조', 강조연: '--강조연', 선: '--선', 둥근: '--둥근', 그림자: '--그림자', 카드테: '--카드테',
-      머리바탕: '--머리바탕', 머리글: '--머리글', 머리선: '--머리선', 머리굵기: '--머리굵기', 탭바탕: '--탭바탕', 제목서체: '--제목서체' };
+      머리바탕: '--머리바탕', 머리글: '--머리글', 머리선: '--머리선', 머리굵기: '--머리굵기', 탭바탕: '--탭바탕', 제목서체: '--제목서체', 본문서체: '--본문서체' };   // 본문서체 — 한마음은 원장님 글씨체(운동장 · 2026-09-30 유니스 「원장님 하면 원장님이 원하는 폰트로」)
     Object.keys(칸).forEach(function (k) { if (t[k] !== undefined && t[k] !== '') r.style.setProperty(칸[k], String(t[k])); });
     // 역할별 덮어쓰기(2026-09-23) — 같은 조직이라도 역할마다 강조색이 다를 수 있다(한마음 대표 = 리사운드 레드)
     var 역 = 보기 ? ((자료 && 자료.역할) || '') : (저장.get('데스크역할') || (자료 && 자료.역할) || '');
