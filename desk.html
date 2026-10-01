@@ -1144,7 +1144,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   function 원장님홈(내것) {
     var 피 = (자료 && 자료.피드) || {};
     // 원장님이 시키지 않았는데 해 둔 것(먼저)이 맨 앞 — 2026-09-30 유니스 「공유·요청되지 않은 것이 오히려 앞에 보이면」. 그 안에서는 최근 것부터.
-    var 진행 = (피.안내 || []).filter(function (x) { return x.갈래 === '진행'; }).sort(function (a, b) { if (!!a.먼저 !== !!b.먼저) return a.먼저 ? -1 : 1; return a.시각 < b.시각 ? 1 : -1; });
+    var 진행 = (피.안내 || []).filter(function (x) { return x.갈래 === '진행'; }).sort(function (a, b) { var da = String(a.시각 || '').slice(0, 10), db = String(b.시각 || '').slice(0, 10); if (da !== db) return da < db ? 1 : -1; if (!!a.먼저 !== !!b.먼저) return a.먼저 ? -1 : 1; if ((a.무게 || 0) !== (b.무게 || 0)) return (b.무게 || 0) - (a.무게 || 0); return a.시각 < b.시각 ? 1 : -1; });   // 2026-10-01 유니스 — 매일 아침 새로 · 그날 안에서 유니스가 한 일(먼저) · 큰 것(무게) 위
     var h = '<section class="카드"><h2>진행된 일</h2>';
     // 제목을 누르면 펼쳐서 무엇을·왜 했는지 전부 보인다(2026-09-27 유니스 「왜 이걸 했는지를 조금 더 알 수 있게」)
     h += 진행.length ? 진행.slice(0, 진행전부 ? 30 : 3).map(function (x) {
