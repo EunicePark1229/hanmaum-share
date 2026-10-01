@@ -623,6 +623,9 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var 같은날 = d.toDateString() === 오늘.toDateString();
     var hh = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
     return 같은날 ? hh : (d.getMonth() + 1) + '/' + d.getDate() + ' ' + hh; }
+  // 「썼어요」에는 올린 날을 붙인다(2026-10-01 유니스) — 단계때 = 블로그 RSS 의 올라간 날 또는 「썼어요」를 누른 때
+  function 올린날(x) { var t = String((x && x.단계때) || '').slice(0, 10).split('-'); return t.length === 3 ? (+t[1]) + '/' + (+t[2]) + ' 올림' : ''; }
+  function 썼어요글(x) { var d = 올린날(x); return d ? '썼어요 · ' + d : '썼어요'; }
   function 새것인가(iso) { var 읽은 = (자료 && 자료.읽은때) || 저장.get('읽은때') || ''; return !읽은 || iso > 읽은; }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
@@ -1078,7 +1081,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   }
   function 받은것상태(x) {
     if (x.갈래 === '문자') return 문자상태(x);
-    if (x.갈래 === '블로그' || x.갈래 === '당근') return x.단계 === '썼어요' ? 신호('좋음', '썼어요') : x.단계 === '보류' ? 신호('모름', '안 쓰기로') : 신호('살핌', '초안');
+    if (x.갈래 === '블로그' || x.갈래 === '당근') return x.단계 === '썼어요' ? 신호('좋음', 썼어요글(x)) : x.단계 === '보류' ? 신호('모름', '안 쓰기로') : 신호('살핌', '초안');
     return '';
   }
   // 대체됨 — 기계가 판을 바꿔 닫은 것. 단계(사람이 누른 것)와 따로 둔다 (2026-09-24 유니스).
@@ -2368,14 +2371,14 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     })();
   }
   function 블로그카드(x) {
-    var 급 = x.단계 === '썼어요' ? 신호('좋음', '썼어요') : x.단계 === '보류' ? 신호('모름', '안 쓸래요') : 신호('살핌', '초안');
+    var 급 = x.단계 === '썼어요' ? 신호('좋음', 썼어요글(x)) : x.단계 === '보류' ? 신호('모름', '안 쓸래요') : 신호('살핌', '초안');
     var 썸 = (x.사진 && x.사진[0]) ? '<img class="썸작" src="' + esc(x.사진[0].주소) + '" loading="lazy" alt="">' : '';
-    return '<div class="줄 블로그줄 고정있음" data-블로그="' + esc(x.id) + '">' + 썸 + '<div><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄 || '') + '</div>' + (x.순위 && (x.단계 || '초안') === '초안' ? '<div class="한줄" style="color:var(--강조)">' + (x.순위 === 1 ? '지금 먼저 올리시면 좋아요 · ' : x.순위 + '번째 추천 · ') + esc(x.순위이유 || '') + '</div>' : '') + '<div class="때">' + 급 + ' · ' + 때글(x.시각) + (x.사유 ? ' · ' + esc(x.사유) : '') + (x.글주소 ? ' · <a href="' + esc(x.글주소) + '" target="_blank" rel="noopener">올라간 글 보기</a>' : '') + '</div></div>' + 고정단추(x.id) + '</div>';
+    return '<div class="줄 블로그줄 고정있음" data-블로그="' + esc(x.id) + '">' + 썸 + '<div><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄 || '') + '</div>' + (x.순위 && (x.단계 || '초안') === '초안' ? '<div class="한줄" style="color:var(--강조)">' + (x.순위 === 1 ? '지금 먼저 올리시면 좋아요 · ' : x.순위 + '번째 추천 · ') + esc(x.순위이유 || '') + '</div>' : '') + '<div class="때">' + 급 + (x.단계 === '썼어요' && 올린날(x) ? '' : ' · ' + 때글(x.시각)) + (x.사유 ? ' · ' + esc(x.사유) : '') + (x.글주소 ? ' · <a href="' + esc(x.글주소) + '" target="_blank" rel="noopener">올라간 글 보기</a>' : '') + '</div></div>' + 고정단추(x.id) + '</div>';
   }
   function 블로그상세(x) {
     var h = '<section class="카드 블로그상세"><button class="더" data-블로그닫기="1">‹ 목록으로</button><h2 style="margin-top:8px">' + esc(x.제목) + '</h2>';
     if ((x.제목후보 || []).length > 1) h += '<div class="한줄" style="margin-bottom:8px">제목 후보 · ' + x.제목후보.slice(1).map(esc).join(' / ') + '</div>';
-    h += '<div style="margin:8px 0 12px">' + (x.단계 === '썼어요' ? 신호('좋음', '썼어요' + (x.단계때 ? ' · ' + 때글(x.단계때) : '')) : x.단계 === '보류' ? 신호('모름', '안 쓸래요' + (x.사유 ? ' · ' + esc(x.사유) : '')) : 신호('살핌', '초안')) + '</div>';
+    h += '<div style="margin:8px 0 12px">' + (x.단계 === '썼어요' ? 신호('좋음', 썼어요글(x)) : x.단계 === '보류' ? 신호('모름', '안 쓸래요' + (x.사유 ? ' · ' + esc(x.사유) : '')) : 신호('살핌', '초안')) + '</div>';
     h += 소식꼴줄(x);
     h += '<div class="단추줄"><button class="단추" data-복사="' + esc(x.id) + '">본문 복사</button>' + ((x.갈래 === '블로그' && (x.사진 || []).length) ? '<button class="단추 테" data-사진저장="' + esc(x.id) + '">사진 ' + x.사진.length + '장 저장</button>' : '') + (x.단계 !== '썼어요' ? '<button class="단추 테" data-단계="썼어요" data-id="' + esc(x.id) + '">썼어요</button>' : '') + (x.단계 === '초안' ? '<button class="단추 테" data-단계="보류" data-id="' + esc(x.id) + '">안 쓸래요</button>' : '') + (x.단계 !== '초안' ? '<button class="단추 테" data-단계="초안" data-id="' + esc(x.id) + '">다시 초안으로</button>' : '') + '</div>';
     var 꼴 = (x.갈래 === '당근' && 소식꼴선택 && 소식꼴선택 !== x.갈래) ? 소식꼴선택 : '';
