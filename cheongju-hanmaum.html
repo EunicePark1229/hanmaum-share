@@ -51,6 +51,14 @@
      ],
      "opens": "10:00",
      "closes": "18:00"
+    },
+    {
+     "@type": "OpeningHoursSpecification",
+     "dayOfWeek": [
+      "Saturday"
+     ],
+     "opens": "10:00",
+     "closes": "14:00"
     }
    ],
    "areaServed": [
@@ -188,6 +196,18 @@
      }
     ]
    },
+   "potentialAction": {
+    "@type": "ReserveAction",
+    "name": "무료 청력검사 예약",
+    "target": {
+     "@type": "EntryPoint",
+     "urlTemplate": "https://m.place.naver.com/place/1486392099/ticket",
+     "actionPlatform": [
+      "http://schema.org/MobileWebPlatform",
+      "http://schema.org/DesktopWebPlatform"
+     ]
+    }
+   },
    "description": "청주 가경동 하나병원 정문 맞은편 보청기 매장. 무료 청력검사, 보청기 무료 체험, 정부지원 보청기 신청 도움, 경로당·마을회관 출장 청력검사, 점검·사후관리. 벨톤 공식 앰버서더 센터."
   },
   {
@@ -310,8 +330,10 @@ footer a{color:var(--main)}
     <dd>충북 청주시 흥덕구 2순환로 1261번길 4, 1층<br>가경동 하나병원 정문 맞은편 · 청주 시외버스터미널 옆</dd>
     <dt>전화</dt>
     <dd><a href="tel:0432342918">043-234-2918</a></dd>
+    <dt>예약</dt>
+    <dd><a href="https://m.place.naver.com/place/1486392099/ticket">네이버 예약 — 무료 청력검사</a></dd>
     <dt>영업시간</dt>
-    <dd>월~금 오전 10시 ~ 오후 6시 · 일요일 쉼<br><span class="note">토요일과 공휴일은 전화로 확인해 주세요.</span></dd>
+    <dd>월~금 오전 10시 ~ 오후 6시 · 토 오전 10시 ~ 오후 2시 · 일요일 쉼<br><span class="note">공휴일은 전화로 확인해 주세요.</span></dd>
     <dt>버스로 오실 때</dt>
     <dd>하나병원 버스정류장에서 내리셔서 50m쯤 오시면 오른쪽에 있습니다.</dd>
     <dt>차로 오실 때</dt>
