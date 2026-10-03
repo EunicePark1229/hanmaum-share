@@ -1826,7 +1826,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   // ── 고객 한 분 = 한 화면(2026-10-03 유니스 「만들어」 · HSOL 대조 추천 1·2) — 청력도 그림 · 지난 일 시간순 ──
   // 청력도: 오른쪽 ○ 실선 · 왼쪽 × 점선(색 하나에 뜻을 싣지 않는다 — 모양과 글로도 가른다). 세로 −10~120dB 아래로 갈수록 안 들림.
   function 청력도그림(c) {
-    if (!c || !(c.RT || c.LT)) return '<div class="청력도"><h3 style="margin:16px 0 4px;font-size:17px">청력도</h3><div class="한줄" style="padding-left:0;border:0;color:var(--보조)">아직 없어요 — 5월 12일 고객정보 엑셀에 청력도가 없는 분이에요. 노아 청력도를 받으면 채워 둘게요.</div></div>';   // 2026-10-03 유니스 「청력도 그래프 안나오는데」 — 없을 때도 없다고 보인다
+    if (!c || !(c.RT || c.LT)) return '<div class="청력도"><h3 style="margin:16px 0 4px;font-size:17px">청력도</h3><div class="한줄" style="padding-left:0;border:0;color:var(--보조)">아직 없어요 — 5월 12일 엑셀에 청력도가 없는 분이에요. 노아 청력도를 받으면 채워 둘게요.</div></div>';   // 2026-10-03 유니스 「청력도 그래프 안나오는데」 — 없을 때도 없다고 보인다
     var 칸x = [0, 1, 2, 3, 4, 4.585, 5, 5.585, 6], 이름 = ['125', '250', '500', '1K', '2K', '3K', '4K', '6K', '8K'];
     var W = 340, H = 250, L = 38, R = 12, T = 18, B = 26, w = W - L - R, hh = H - T - B;
     function X(i) { return L + 칸x[i] / 6 * w; } function Y(db) { return T + (db + 10) / 130 * hh; }
@@ -1839,7 +1839,8 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     g += 선(c.RT, false, function (p) { return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="5" fill="#fff" stroke="#b42318" stroke-width="2"/>'; });
     g += 선(c.LT, true, function (p) { return '<path d="M' + (p[0] - 5) + ' ' + (p[1] - 5) + ' L' + (p[0] + 5) + ' ' + (p[1] + 5) + ' M' + (p[0] + 5) + ' ' + (p[1] - 5) + ' L' + (p[0] - 5) + ' ' + (p[1] + 5) + '" stroke="#1d4ed8" stroke-width="2"/>'; });
     g += '</svg>';
-    return '<div class="청력도"><h3 style="margin:16px 0 4px;font-size:17px">청력도</h3><div class="한줄" style="padding-left:0;border:0;color:var(--보조)">○ 오른쪽(실선) · × 왼쪽(점선) · 아래로 갈수록 작은 소리를 못 들으세요 · 고객정보 엑셀 ' + esc(c.기준 || '') + ' 기준</div>' + g + '</div>';
+    // 2026-10-03 유니스 — 제목 줄에 범례 · 둘째 줄 읽는 법 · 셋째 줄 기준일은 작은 글씨(「고객정보」는 뺌)
+    return '<div class="청력도"><h3 style="margin:16px 0 4px;font-size:17px">청력도 <span style="font-size:15px;font-weight:400;color:var(--보조);margin-left:6px">○ 오른쪽(실선) · × 왼쪽(점선)</span></h3><div class="한줄" style="padding-left:0;border:0;color:var(--보조)">· 아래로 갈수록 작은 소리를 못 들으세요</div><div style="font-size:12px;color:var(--보조)">· 엑셀 ' + esc(c.기준 || '') + ' 기준</div>' + g + '</div>';
   }
   function 기록목록(x) {
     var 줄 = x.기록 || []; if (!줄.length) return '';
