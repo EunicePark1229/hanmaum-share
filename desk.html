@@ -1848,6 +1848,18 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     return '<h3 style="margin:18px 0 6px;font-size:17px">지난 일 <small style="font-weight:400;color:var(--보조);font-size:14px">' + 줄.length + '줄 · 새 것이 위</small></h3><div class="기록목록" style="max-height:380px;overflow:auto;border-top:1px solid var(--선,#e5e7eb)">' +
       줄.map(function (r) { var 예정 = r.날 > 오늘; return '<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--선,#eef0f3)"><div style="min-width:62px;color:var(--보조);font-size:14px">' + esc(r.날.slice(5).replace('-', '/')) + (예정 ? '<br><b style="font-weight:400;color:var(--강조)">예정</b>' : '') + '</div><div><span class="칩" style="font-size:12px;margin-right:6px">' + esc(r.갈래) + '</span>' + esc(r.글) + '</div></div>'; }).join('') + '</div>';
   }
+  // 2026-10-03 유니스 「HSOL ④ 마저하자」 — 후기 적합관리 1~4차를 급여 신청일에서 세어 보인다(데스크_고객.적합차수)
+  function 적합목록(x) {
+    var a = x.적합; if (!a) return '';
+    if (a.해당없음) return '<h3 style="margin:18px 0 6px;font-size:17px">적합관리</h3><div class="한줄" style="padding-left:0;border:0;color:var(--보조)">해당 없어요 — ' + esc(a.해당없음) + '</div>';
+    var 오늘 = 오늘날();
+    return '<h3 style="margin:18px 0 6px;font-size:17px">적합관리 <small style="font-weight:400;color:var(--보조);font-size:14px">구입 1년 뒤부터 해마다 한 번 · 4차까지</small></h3>' +
+      '<div class="' + (a.할수있음 ? '고정힌트' : '한줄') + '" style="' + (a.할수있음 ? '' : 'padding-left:0;border:0;') + 'margin-bottom:6px">' + esc(a.지금) + '</div>' +
+      '<table class="고객표">' + (a.차수 || []).map(function (c) {
+        var 상태 = c.했음 ? '했어요 ' + c.했음.slice(5).replace('-', '/') : (c.까지 < 오늘 ? '기간 지남' : (c.부터 <= 오늘 ? '지금 청구할 수 있어요' : '아직'));
+        return '<tr><th>' + c.차 + '차</th><td>' + esc(c.부터.replace(/-/g, '.') + ' ~ ' + c.까지.replace(/-/g, '.')) + ' · ' + esc(상태) + '</td></tr>';
+      }).join('') + '</table><div style="font-size:12px;color:var(--보조);margin-top:4px">· 급여 신청일 기준이에요. 구입일이 다르면 알려 주세요</div>';
+  }
   function 고객상세(x) {
     var 칸 = [['주민번호 앞', x.주민앞], ['생년월일', x.생년 + (x.나이 ? ' (' + x.나이 + '세)' : '')], ['성별', x.성별], ['분류', x.분류], ['묶음', (x.묶음 || []).join(' · ')],]
       // 묶음 진행(2026-09-29 원장님 「진행 단계만 확인 · 3개월에 한 번 노무법인에 전화」) — 단계 · 상대 · 다음 확인 날
@@ -1868,6 +1880,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     }
     // 2026-10-03 유니스 「안보이는데 웹에서 청력도」 — 표가 길어 그래프가 맨 아래였다. 넓은 화면은 표 오른쪽 · 폰은 표 위에 그래프
     h += '<div style="display:flex;flex-wrap:wrap;flex-direction:row-reverse;gap:8px 28px;align-items:flex-start"><div style="flex:0 1 420px;min-width:280px">' + 청력도그림(x.청력도) + '</div><div style="flex:1 1 480px;min-width:280px"><table class="고객표">' + 칸.filter(function (r) { return r[1]; }).map(function (r) { return '<tr><th>' + esc(r[0]) + '</th><td>' + esc(r[1]) + '</td></tr>'; }).join('') + '</table></div></div>';
+    h += 적합목록(x);
     h += 기록목록(x);
     // 앞으로 연락 안 할 분(2026-09-21 유니스 「돌아가시거나 진상고객이었다거나 다시 연락하지 않을 분 옵션」) — 누르면 다음 주부터 명단에서 빠진다
     if (!제외) h += '<div class="제외줄"><div class="한줄" style="padding-left:0;border:0;color:var(--보조)">앞으로 연락 안 할 분이면 이유를 하나 눌러 주세요. 명단에서 계속 빠져요(고객 정보는 남아요).</div><div class="결과줄">' + 제외이유들.map(function (r) { return '<button data-연락제외="' + esc(r) + '" data-id="' + esc(x.id) + '">' + esc(r) + '</button>'; }).join('') + '</div></div>';
