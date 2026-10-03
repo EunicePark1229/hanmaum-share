@@ -1823,6 +1823,30 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     return h;
   }
   var 제외이유들 = ['돌아가심', '원치 않으심', '그 밖'];
+  // ── 고객 한 분 = 한 화면(2026-10-03 유니스 「만들어」 · HSOL 대조 추천 1·2) — 청력도 그림 · 지난 일 시간순 ──
+  // 청력도: 오른쪽 ○ 실선 · 왼쪽 × 점선(색 하나에 뜻을 싣지 않는다 — 모양과 글로도 가른다). 세로 −10~120dB 아래로 갈수록 안 들림.
+  function 청력도그림(c) {
+    if (!c || !(c.RT || c.LT)) return '';
+    var 칸x = [0, 1, 2, 3, 4, 4.585, 5, 5.585, 6], 이름 = ['125', '250', '500', '1K', '2K', '3K', '4K', '6K', '8K'];
+    var W = 340, H = 250, L = 38, R = 12, T = 18, B = 26, w = W - L - R, hh = H - T - B;
+    function X(i) { return L + 칸x[i] / 6 * w; } function Y(db) { return T + (db + 10) / 130 * hh; }
+    var g = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="max-width:420px;display:block" role="img" aria-label="청력도 — 오른쪽 동그라미, 왼쪽 엑스">';
+    for (var db = 0; db <= 120; db += 20) g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(db) + '" y2="' + Y(db) + '" stroke="#d9dee6" stroke-width="1"/><text x="' + (L - 6) + '" y="' + (Y(db) + 4) + '" font-size="11" text-anchor="end" fill="#6b7280">' + db + '</text>';
+    for (var i = 0; i < 9; i++) if ([0,1,2,3,4,6,8].indexOf(i) >= 0) g += '<line y1="' + T + '" y2="' + (H - B) + '" x1="' + X(i) + '" x2="' + X(i) + '" stroke="#eef1f5"/><text x="' + X(i) + '" y="' + (H - 8) + '" font-size="11" text-anchor="middle" fill="#6b7280">' + 이름[i] + '</text>';
+    function 선(v, 점선, 그리기) { var 점 = []; (v || []).forEach(function (d, i) { if (d !== null && d !== undefined) 점.push([X(i), Y(d)]); });
+      var s = 점.length > 1 ? '<polyline fill="none" stroke="#1A2B4C" stroke-width="1.6"' + (점선 ? ' stroke-dasharray="5 4"' : '') + ' points="' + 점.map(function (p) { return p.join(','); }).join(' ') + '"/>' : '';
+      return s + 점.map(그리기).join(''); }
+    g += 선(c.RT, false, function (p) { return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="5" fill="#fff" stroke="#b42318" stroke-width="2"/>'; });
+    g += 선(c.LT, true, function (p) { return '<path d="M' + (p[0] - 5) + ' ' + (p[1] - 5) + ' L' + (p[0] + 5) + ' ' + (p[1] + 5) + ' M' + (p[0] + 5) + ' ' + (p[1] - 5) + ' L' + (p[0] - 5) + ' ' + (p[1] + 5) + '" stroke="#1d4ed8" stroke-width="2"/>'; });
+    g += '</svg>';
+    return '<div class="청력도"><h3 style="margin:16px 0 4px;font-size:17px">청력도</h3><div class="한줄" style="padding-left:0;border:0;color:var(--보조)">○ 오른쪽(실선) · × 왼쪽(점선) · 아래로 갈수록 작은 소리를 못 들으세요 · 고객정보 엑셀 ' + esc(c.기준 || '') + ' 기준</div>' + g + '</div>';
+  }
+  function 기록목록(x) {
+    var 줄 = x.기록 || []; if (!줄.length) return '';
+    var 오늘 = 오늘날();
+    return '<h3 style="margin:18px 0 6px;font-size:17px">지난 일 <small style="font-weight:400;color:var(--보조);font-size:14px">' + 줄.length + '줄 · 새 것이 위</small></h3><div class="기록목록" style="max-height:380px;overflow:auto;border-top:1px solid var(--선,#e5e7eb)">' +
+      줄.map(function (r) { var 예정 = r.날 > 오늘; return '<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--선,#eef0f3)"><div style="min-width:62px;color:var(--보조);font-size:14px">' + esc(r.날.slice(5).replace('-', '/')) + (예정 ? '<br><b style="font-weight:400;color:var(--강조)">예정</b>' : '') + '</div><div><span class="칩" style="font-size:12px;margin-right:6px">' + esc(r.갈래) + '</span>' + esc(r.글) + '</div></div>'; }).join('') + '</div>';
+  }
   function 고객상세(x) {
     var 칸 = [['주민번호 앞', x.주민앞], ['생년월일', x.생년 + (x.나이 ? ' (' + x.나이 + '세)' : '')], ['성별', x.성별], ['분류', x.분류], ['묶음', (x.묶음 || []).join(' · ')],]
       // 묶음 진행(2026-09-29 원장님 「진행 단계만 확인 · 3개월에 한 번 노무법인에 전화」) — 단계 · 상대 · 다음 확인 날
@@ -1842,6 +1866,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
       if (연락결과들.indexOf(x.단계) >= 0) h += '<div class="때">' + esc(x.단계) + (x.단계때 ? ' · ' + 때글(x.단계때) : '') + (x.사유 ? ' · ' + esc(x.사유) : '') + '</div>';
     }
     h += '<table class="고객표">' + 칸.filter(function (r) { return r[1]; }).map(function (r) { return '<tr><th>' + esc(r[0]) + '</th><td>' + esc(r[1]) + '</td></tr>'; }).join('') + '</table>';
+    h += 청력도그림(x.청력도) + 기록목록(x);   // 2026-10-03 — 고객 한 분 = 한 화면
     // 앞으로 연락 안 할 분(2026-09-21 유니스 「돌아가시거나 진상고객이었다거나 다시 연락하지 않을 분 옵션」) — 누르면 다음 주부터 명단에서 빠진다
     if (!제외) h += '<div class="제외줄"><div class="한줄" style="padding-left:0;border:0;color:var(--보조)">앞으로 연락 안 할 분이면 이유를 하나 눌러 주세요. 명단에서 계속 빠져요(고객 정보는 남아요).</div><div class="결과줄">' + 제외이유들.map(function (r) { return '<button data-연락제외="' + esc(r) + '" data-id="' + esc(x.id) + '">' + esc(r) + '</button>'; }).join('') + '</div></div>';
     return h + 댓글칸(x) + '</section>';
