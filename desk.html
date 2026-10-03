@@ -1302,7 +1302,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
       }
       if (x.누가 === '우리' && !x.제목 && x.종류) return '<div class="말 우리" data-id="' + esc(x.id || '') + '"><div class="이름">' + esc(비서이름()) + '</div>' + esc(x.글 || '') + '<div class="때">' + 때글(x.시각) + '</div></div>';
       // 그림은 바로 보이게(2026-09-30 유니스 「클릭 안 되는 것 같은데」) — 누르면 크게 열린다
-      var 파일 = (x.파일 || []).map(function (f) { if (f.사진id && 설정 && 설정.뒷단.indexOf('script.google') < 0) { var u = 뒷단주소('p=file&id=' + encodeURIComponent(f.사진id)); return '<a href="' + u + '" target="_blank" rel="noopener" style="display:block"><img loading="lazy" src="' + u + '" alt="' + esc(f.이름) + '" style="display:block;width:100%;max-width:420px;height:auto;border-radius:10px;margin-top:8px"></a><div class="때">누르면 크게 보여요</div>'; } return '<div>파일 · ' + esc(f.이름) + '</div>'; }).join('');
+      var 파일 = (x.파일 || []).map(function (f) { if (f.사진id && 설정 && 설정.뒷단.indexOf('script.google') < 0) { var u = 뒷단주소('p=file&id=' + encodeURIComponent(f.사진id)); return '<a href="' + u + '" target="_blank" rel="noopener" style="display:block"><img loading="lazy" src="' + u + '" alt="' + esc(f.이름) + '" style="display:block;width:100%;max-width:420px;height:auto;border-radius:10px;margin-top:8px"></a><div class="때">누르면 크게 보여요</div>'; } if (f.파일id && 설정 && 설정.뒷단.indexOf('script.google') < 0) return '<a class="단추" style="display:inline-block;margin-top:8px" href="' + 뒷단주소('p=file&id=' + encodeURIComponent(f.파일id)) + '" target="_blank" rel="noopener">' + esc(f.이름) + ' 열기</a>'; return '<div>파일 · ' + esc(f.이름) + '</div>'; }).join('');
       return '<div class="말 우리" data-id="' + esc(x.id || '') + '">' + (x.받는이 ? '<div class="이름">' + esc(비서이름()) + ' → ' + esc(x.받는이) + '</div>' : '') + (x.제목 ? '<div class="제목">' + esc(x.제목) + '</div>' : '') + 메일링크(esc(x.글)) + 파일 + '<div class="때">' + 때글(x.시각) + '</div></div>';
     }).join('') + '</div>';
   }
@@ -1853,12 +1853,12 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var a = x.적합; if (!a) return '';
     if (a.해당없음) return '<h3 style="margin:18px 0 6px;font-size:17px">적합관리</h3><div class="한줄" style="padding-left:0;border:0;color:var(--보조)">해당 없어요 — ' + esc(a.해당없음) + '</div>';
     var 오늘 = 오늘날();
-    return '<h3 style="margin:18px 0 6px;font-size:17px">적합관리 <small style="font-weight:400;color:var(--보조);font-size:14px">구입 1년 뒤부터 해마다 한 번 · 4차까지</small></h3>' +
+    return '<h3 style="margin:18px 0 6px;font-size:17px">적합관리 <small style="font-weight:400;color:var(--보조);font-size:14px">구입 1년 뒤부터 1년마다 한 번 이상 · 청구는 그 1년이 끝난 뒤 · 4차까지</small></h3>' +
       '<div class="' + (a.할수있음 ? '고정힌트' : '한줄') + '" style="' + (a.할수있음 ? '' : 'padding-left:0;border:0;') + 'margin-bottom:6px">' + esc(a.지금) + '</div>' +
       '<table class="고객표">' + (a.차수 || []).map(function (c) {
-        var 상태 = c.했음 ? '했어요 ' + c.했음.slice(5).replace('-', '/') : (c.까지 < 오늘 ? '기간 지남' : (c.부터 <= 오늘 ? '지금 청구할 수 있어요' : '아직'));
+        var 상태 = (c.상태 || '') + (c.했음 ? ' (' + c.했음.slice(5).replace('-', '/') + ')' : '');
         return '<tr><th>' + c.차 + '차</th><td>' + esc(c.부터.replace(/-/g, '.') + ' ~ ' + c.까지.replace(/-/g, '.')) + ' · ' + esc(상태) + '</td></tr>';
-      }).join('') + '</table><div style="font-size:12px;color:var(--보조);margin-top:4px">· 급여 신청일 기준이에요. 구입일이 다르면 알려 주세요</div>';
+      }).join('') + '</table><div style="font-size:12px;color:var(--보조);margin-top:4px">· ' + esc(a.기준 || '') + ' 기준이에요. 다르면 알려 주세요</div>';
   }
   function 고객상세(x) {
     var 칸 = [['주민번호 앞', x.주민앞], ['생년월일', x.생년 + (x.나이 ? ' (' + x.나이 + '세)' : '')], ['성별', x.성별], ['분류', x.분류], ['묶음', (x.묶음 || []).join(' · ')],]
