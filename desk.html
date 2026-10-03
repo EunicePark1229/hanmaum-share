@@ -1853,7 +1853,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
       .concat((x.진행 || []).map(function (p) { return [p.묶음 + ' 진행', [p.단계, p.상대, p.다음확인 ? '다음 확인 ' + p.다음확인.slice(5).replace('-', '/') : ''].filter(Boolean).join(' · ')]; }))
       .concat([ ['휴대폰', x.휴대폰], ['보호자', x.보호자], ['주소', x.주소], ['구입경로', x.구입경로],
               ['가입일', x.가입일], ['최근 접촉', x.최근접촉], ['거래', (x.거래건수 || '0') + '건' + (x.누적판매가 ? ' · ' + Number(x.누적판매가).toLocaleString('ko-KR') + '원' : '')], ['우리 기기', x.자사기기], ['다른 센터 기기', x.타센터기기], ['기기', x.기기목록],
-              ['청력(6분법)', (x.PTA6_RT || x.PTA6_LT) ? '오른쪽 ' + (x.PTA6_RT || '-') + 'dB · 왼쪽 ' + (x.PTA6_LT || '-') + 'dB' : ''], ['미수', x.미수건수 && x.미수건수 !== '0' ? x.미수건수 + '건' : ''], ['급여 신청일', x.급여신청일], ['급여 만료', x.급여만료], ['타사 만료', x.타사만료], ['메모', x.메모]]);
+              ['장애정도', x.장애정도], ['청력(6분법)', (x.PTA6_RT || x.PTA6_LT) ? '오른쪽 ' + (x.PTA6_RT || '-') + 'dB · 왼쪽 ' + (x.PTA6_LT || '-') + 'dB' : ''], ['미수', x.미수건수 && x.미수건수 !== '0' ? x.미수건수 + '건' : ''], ['급여 신청일', x.급여신청일], ['급여 만료', x.급여만료], ['타사 만료', x.타사만료], ['메모', x.메모]]);
     var h = '<section class="카드"><button class="더" data-고객닫기="1">‹ 목록으로</button><h2 style="margin-top:8px">' + esc(x.이름) + '<small style="font-weight:400;color:var(--보조);font-size:15px;margin-left:8px">' + esc([x.나이 ? x.나이 + '세' : '', x.성별].filter(Boolean).join(' · ')) + '</small></h2>';
     var 번 = 전화번호(x);
     h += '<div class="단추줄">' + (번 ? '<a class="전화단추 채움" href="tel:' + esc(번.replace(/-/g, '')) + '" data-전화="' + esc(x.id) + '">' + 전화아이콘 + '전화 ' + esc(번) + '</a><a class="전화단추" href="sms:' + esc(번.replace(/-/g, '')) + '" data-전화="' + esc(x.id) + '">문자</a>' : '<span class="칩 끝">번호 없음</span>') + '</div>';
