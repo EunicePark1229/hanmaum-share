@@ -1865,8 +1865,9 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
       h += '<div class="결과줄">' + 연락결과들.map(function (r) { return '<button data-연락결과="' + esc(r) + '" data-id="' + esc(x.id) + '"' + (x.단계 === r ? ' class="켬"' : '') + '>' + esc(r) + '</button>'; }).join('') + '</div>';
       if (연락결과들.indexOf(x.단계) >= 0) h += '<div class="때">' + esc(x.단계) + (x.단계때 ? ' · ' + 때글(x.단계때) : '') + (x.사유 ? ' · ' + esc(x.사유) : '') + '</div>';
     }
-    h += '<table class="고객표">' + 칸.filter(function (r) { return r[1]; }).map(function (r) { return '<tr><th>' + esc(r[0]) + '</th><td>' + esc(r[1]) + '</td></tr>'; }).join('') + '</table>';
-    h += 청력도그림(x.청력도) + 기록목록(x);   // 2026-10-03 — 고객 한 분 = 한 화면
+    // 2026-10-03 유니스 「안보이는데 웹에서 청력도」 — 표가 길어 그래프가 맨 아래였다. 넓은 화면은 표 오른쪽 · 폰은 표 위에 그래프
+    h += '<div style="display:flex;flex-wrap:wrap;flex-direction:row-reverse;gap:8px 28px;align-items:flex-start"><div style="flex:0 1 420px;min-width:280px">' + 청력도그림(x.청력도) + '</div><div style="flex:1 1 480px;min-width:280px"><table class="고객표">' + 칸.filter(function (r) { return r[1]; }).map(function (r) { return '<tr><th>' + esc(r[0]) + '</th><td>' + esc(r[1]) + '</td></tr>'; }).join('') + '</table></div></div>';
+    h += 기록목록(x);
     // 앞으로 연락 안 할 분(2026-09-21 유니스 「돌아가시거나 진상고객이었다거나 다시 연락하지 않을 분 옵션」) — 누르면 다음 주부터 명단에서 빠진다
     if (!제외) h += '<div class="제외줄"><div class="한줄" style="padding-left:0;border:0;color:var(--보조)">앞으로 연락 안 할 분이면 이유를 하나 눌러 주세요. 명단에서 계속 빠져요(고객 정보는 남아요).</div><div class="결과줄">' + 제외이유들.map(function (r) { return '<button data-연락제외="' + esc(r) + '" data-id="' + esc(x.id) + '">' + esc(r) + '</button>'; }).join('') + '</div></div>';
     return h + 댓글칸(x) + '</section>';
