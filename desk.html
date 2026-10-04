@@ -359,6 +359,7 @@ a.단추 { display: inline-flex; align-items: center; text-decoration: none; col
 .전화단추 { height: 40px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--강조); background: var(--카드); color: var(--강조); font-size: 15px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; white-space: nowrap; }
 .전화단추 svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; }
 .전화단추.채움 { background: var(--강조); color: #fff; }
+.연락줄 { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
 .고객표 { width: 100%; border-collapse: collapse; font-size: 15px; margin-top: 8px; }
 .고객표 th { text-align: left; color: var(--보조); font-weight: 400; width: 34%; padding: 7px 4px; vertical-align: top; border-bottom: 1px solid var(--선); }
 .고객표 td { padding: 7px 4px; border-bottom: 1px solid var(--선); word-break: break-all; }
@@ -896,6 +897,22 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     }).map(function (p) { return p.이름; });
   }
   function 상대칩들(x) { var 들 = 상대찾기(x); return 들.length ? '<div style="margin-top:4px">' + 들.map(function (n) { return '<span class="상대칩">' + esc(n) + '</span>'; }).join('') + '</div>' : ''; }
+  // 「~에 연락하기」 줄에는 연락처를 늘 붙인다(2026-09-30 앱 피드백 60) — 이름·번호를 줄에 · 누르면 바로 전화 · 못 찾으면 「연락처 없음」.
+  //   찾는 곳 — 설정 「상대들」 중 번호가 있는 것({이름, 별칭, 번호}) · 고객 명단(제목·한줄에 이름이 있는 분)
+  function 연락할일인가(x) { return /연락|전화(?!번호)|통화/.test(String(x.제목 || '')); }
+  function 연락처찾기(x) {
+    var 글 = [x.제목, x.한줄, x.덧].filter(Boolean).join(' '), 들 = [], 상 = 상대찾기(x);
+    상대들설정().forEach(function (p) { if (p.번호 && 상.indexOf(p.이름) >= 0) 들.push({ 이름: p.이름, 번호: p.번호, id: p.이름 }); });
+    고객목록().forEach(function (g) { var n = String(g.이름 || '').trim(); if (n.length >= 2 && 글.indexOf(n) >= 0) 들.push({ 이름: n + '님', 번호: 전화번호(g), id: g.id }); });
+    if (!들.some(function (c) { return c.번호; })) { var m = 글.match(/(^|[^\d])(0\d{1,2}-\d{3,4}-\d{4}|01[016789]\d{7,8})(?!\d)/); if (m) 들.unshift({ 이름: '적힌 번호', 번호: m[2], id: x.id || '' }); }   // 글에 번호가 적혀 있으면 그 번호로(GN 감독관 등 · 10-04 GN데일리 제안)
+    return 들.slice(0, 3);
+  }
+  function 연락칩(x) {
+    if (!x || !연락할일인가(x)) return '';
+    var 들 = 연락처찾기(x);
+    if (!들.length) return '<div class="연락줄"><span class="칩 끝">연락처 없음</span></div>';
+    return '<div class="연락줄">' + 들.map(function (c) { return c.번호 ? '<a class="전화단추" href="tel:' + esc(c.번호.replace(/-/g, '')) + '" data-전화="' + esc(c.id) + '">' + 전화아이콘 + esc(c.이름) + ' ' + esc(c.번호) + '</a>' : '<span class="칩 끝">' + esc(c.이름) + ' · 연락처 없음</span>'; }).join('') + '</div>';
+  }
   function 상대세기(목록) { var 수 = {}, 없음 = 0; 목록.forEach(function (x) { var 들 = 상대찾기(x); if (!들.length) 없음 += 1; 들.forEach(function (n) { 수[n] = (수[n] || 0) + 1; }); }); return { 수: 수, 없음: 없음 }; }
   function 상대거르기(목록) { if (!할일상대) return 목록; if (할일상대 === '__없음') return 목록.filter(function (x) { return !상대찾기(x).length; }); return 목록.filter(function (x) { return 상대찾기(x).indexOf(할일상대) >= 0; }); }
   function 상대줄(열림) {
@@ -926,7 +943,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   function 할일줄(x, 덧있나) {
     var 며 = 며칠째(x.시각), 왜 = 왜이차례(x);
     var 앞 = (지금못하나(x) ? '<span class="칩 쉼">' + esc(일종류(x) === '막힘' ? '막힘' : 일종류(x) === '기다림' ? '기다림' : '대기') + '</span> ' : '') + (결정인가(x) ? 결정칩 : '');
-    return '<div class="줄' + (지금못하나(x) ? ' 쉬는줄' : '') + '" data-가="할일" data-초점="' + esc(x.id) + '" data-할일열기="' + esc(x.id) + '"><div class="제목">' + 앞 + esc(x.제목) + '</div><div class="한줄 접힘">' + esc(x.한줄 || '') + (덧있나 && x.덧 ? ' · ' + esc(x.덧) : '') + '</div><div class="때">' + (왜.말 ? (왜.급 ? 신호(왜.급, 왜.말) : '<span style="color:var(--보조)">' + 왜.말 + '</span>') + ' · ' : '') + (며 ? 며 + ' · ' : '') + 때글(x.시각) + '</div></div>';
+    return '<div class="줄' + (지금못하나(x) ? ' 쉬는줄' : '') + '" data-가="할일" data-초점="' + esc(x.id) + '" data-할일열기="' + esc(x.id) + '"><div class="제목">' + 앞 + esc(x.제목) + '</div>' + 연락칩(x) + '<div class="한줄 접힘">' + esc(x.한줄 || '') + (덧있나 && x.덧 ? ' · ' + esc(x.덧) : '') + '</div><div class="때">' + (왜.말 ? (왜.급 ? 신호(왜.급, 왜.말) : '<span style="color:var(--보조)">' + 왜.말 + '</span>') + ' · ' : '') + (며 ? 며 + ' · ' : '') + 때글(x.시각) + '</div></div>';
   }
   function 신호(급, 말) { return '<span class="신호 ' + 급 + '">' + esc(말) + '</span>'; }
   // ── 차례(순서) — 사람마다. 워커가 준 자료.순서 { 할일:[id…], 홈:[카드키…], 재고:[갈래…] } ──
@@ -1165,13 +1182,13 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var 사흘 = new Date(Date.now() + 3 * 864e5 - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
     var 받 = 피.받은것 || [];
     받.filter(function (x) { return x.갈래 === '문자' && (x.단계 || '초안') === '초안' && !대체됐나(x); }).forEach(function (x) { 할.push({ 급: 0, 순: x.발송시각 || '', 가: '받은것', 속: 'data-문자="' + esc(x.id) + '"', 제목: '문자 보고 「보내도 됩니다」 눌러 주기', 한줄: (x.제목 || '') + ' · 누르시면 ' + (x.발송시각 ? x.발송시각 + '에 ' : '') + '나가요' /* 2026-10-03 — 「오늘 14:00」이 날이 바뀌어도 남아 있었다. 날은 카드 제목에, 시각만 여기에 */ }); });
-    내것.forEach(function (x) { var 급 = x.기한 && x.기한 <= 오늘 ? 1 : x.기한 && x.기한 <= 사흘 ? 2 : 3; 할.push({ 급: 급, 순: x.기한 || '9999', 가: '할일', 속: 'data-할일열기="' + esc(x.id) + '"', 제목: x.제목, 한줄: x.기한 ? '기한 ' + x.기한 + (x.기한 < 오늘 ? ' — 지났어요' : x.기한 === 오늘 ? ' — 오늘' : '') : (x.한줄 || '') }); });
+    내것.forEach(function (x) { var 급 = x.기한 && x.기한 <= 오늘 ? 1 : x.기한 && x.기한 <= 사흘 ? 2 : 3; 할.push({ 급: 급, 순: x.기한 || '9999', 가: '할일', 속: 'data-할일열기="' + esc(x.id) + '"', 원: x, 제목: x.제목, 한줄: x.기한 ? '기한 ' + x.기한 + (x.기한 < 오늘 ? ' — 지났어요' : x.기한 === 오늘 ? ' — 오늘' : '') : (x.한줄 || '') }); });
     var 초안 = 받.filter(function (x) { return x.갈래 === '블로그' && (x.단계 || '초안') === '초안' && !대체됐나(x); }).sort(function (a, b) { return (a.순위 || 999) - (b.순위 || 999); });
     if (초안.length) 할.push({ 급: 4, 순: '', 가: '받은것', 속: 'data-블로그열기="' + esc(초안[0].id) + '"', 제목: '블로그 글 올리기 — ' + 초안[0].제목, 한줄: 초안[0].순위이유 || '본문을 복사해서 블로그에 붙여 넣으시면 돼요' });
     할.sort(function (a, b) { return a.급 - b.급 || (a.순 < b.순 ? -1 : a.순 > b.순 ? 1 : 0); });
     h += '<section class="카드"><h2>오늘 우선 할 일 ' + 오늘표() + '</h2>';
     h += 할.length ? 할.slice(0, 3).map(function (t, i) {
-      return '<div class="줄" data-가="' + t.가 + '" ' + t.속 + ' style="cursor:pointer"><div class="제목">' + (i + 1) + '. ' + esc(t.제목) + '</div>' + (t.한줄 ? '<div class="한줄">' + esc(String(t.한줄).split(String.fromCharCode(10))[0]) + '</div>' : '') + '<div class="때"><span style="color:var(--강조)">바로 가기 ›</span></div></div>';
+      return '<div class="줄" data-가="' + t.가 + '" ' + t.속 + ' style="cursor:pointer"><div class="제목">' + (i + 1) + '. ' + esc(t.제목) + '</div>' + 연락칩(t.원) + (t.한줄 ? '<div class="한줄">' + esc(String(t.한줄).split(String.fromCharCode(10))[0]) + '</div>' : '') + '<div class="때"><span style="color:var(--강조)">바로 가기 ›</span></div></div>';
     }).join('') : '<div class="빈">오늘은 따로 하실 일이 없어요.</div>';
     h += '</section>';
     h += 바로가기카드();
@@ -2014,7 +2031,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var h = 상대줄(열림전부) + 할일적기칸();
     // 끌어서 차례 바꾸기 — 열린 것끼리. 줄을 길게 누르거나 오른쪽 ⋮⋮ 를 잡는다(2026-09-21)
     var 원한줄 = 한줄;
-    한줄 = function (x, 끝났나) { var t = 원한줄(x, 끝났나); t = t.replace('<div class="한줄 접힘">', 상대칩들(x) + '<div class="한줄 접힘">'); if (끝났나) return t; return t.replace('<div class="줄 할일줄" data-할일=', '<div class="줄 할일줄 끌수있음" data-차례무엇="할일" data-차례키="' + esc(x.id) + '" data-할일=').replace('<div class="제목">', 손잡이 + '<div class="제목">'); };
+    한줄 = function (x, 끝났나) { var t = 원한줄(x, 끝났나); t = t.replace('<div class="한줄 접힘">', 상대칩들(x) + (끝났나 ? '' : 연락칩(x)) + '<div class="한줄 접힘">'); if (끝났나) return t; return t.replace('<div class="줄 할일줄" data-할일=', '<div class="줄 할일줄 끌수있음" data-차례무엇="할일" data-차례키="' + esc(x.id) + '" data-할일=').replace('<div class="제목">', 손잡이 + '<div class="제목">'); };
     // 20건 넘으면 「더 보기」 — GN 할 일 33건이 폰 34화면이었다(2026-09-22 재검토 4-2)
     function 줄들(목, 구역, 끝났나) {
       var 다 = !!펼침더[구역], 보 = 다 ? 목 : 목.slice(0, 20);
@@ -2579,7 +2596,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
       return;
     }
     if (e.target.closest('[data-할일닫기]')) { if (!닫고돌아가기()) { 열린할일id = ''; 그리기(); } return; }
-    var 할 = e.target.closest('[data-할일]'); if (할 && !e.target.closest('button')) { var hx = ((자료 && 자료.피드.할일) || []).filter(function (y) { return y.id === 할.getAttribute('data-할일'); })[0]; if (hx && (hx.배경 || hx.할일전문 || 대표것인가(hx))) { 열린할일id = hx.id; 탭 = '할일'; 그리기(); window.scrollTo(0, 0); } return; }
+    var 할 = e.target.closest('[data-할일]'); if (할 && !e.target.closest('button, [data-전화]')) { var hx = ((자료 && 자료.피드.할일) || []).filter(function (y) { return y.id === 할.getAttribute('data-할일'); })[0]; if (hx && (hx.배경 || hx.할일전문 || 대표것인가(hx))) { 열린할일id = hx.id; 탭 = '할일'; 그리기(); window.scrollTo(0, 0); } return; }
     var 블 = e.target.closest('[data-블로그],[data-문자]'); if (블) { 열린블로그 = 블.getAttribute('data-블로그') || 블.getAttribute('data-문자'); 소식꼴선택 = ''; 탭 = '받은것'; 그리기(); window.scrollTo(0, 0); return; }
     if (e.target.closest('[data-블로그닫기]')) { if (!닫고돌아가기()) { 열린블로그 = ''; 그리기(); } return; }
     var 지 = e.target.closest('[data-지난것]'); if (지) { 지난것보기 = 지.getAttribute('data-지난것') === '1'; 그리기(); return; }
