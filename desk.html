@@ -2418,12 +2418,16 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   }
   function 사진저장(x) {
     // 사진을 폰에 한 장씩 내려받는다(같은 주소라 바로 저장된다). 블로그 앱에서 【사진 N】 자리에 순서대로 넣으시면 된다.
-    var 들 = x.사진 || [];
+    // 저장 순서 = 글 속 【사진 N】 순서(2026-10-05 유니스 블로그 올리다 — 목록 순서로 받아 사진3 이 【사진 3】 자리가 아니었다).
+    // 글에 안 들어간 것(글씨 없는 표지 같은 대안)은 맨 뒤에 「더」 이름으로 받는다.
+    var 목록 = x.사진 || [], 글속 = (메모뺀본문(x).match(/^!\[[^\]]*\]\(([^)]+)\)/gm) || []).map(function (l) { return l.replace(/^!\[[^\]]*\]\(/, '').replace(/\)$/, ''); });
+    var 들 = 글속.map(function (u) { return 목록.filter(function (p) { return p.주소 === u; })[0] || { 주소: u }; })
+      .concat(목록.filter(function (p) { return 글속.indexOf(p.주소) < 0; }).map(function (p) { return { 주소: p.주소, 더: true }; }));
     if (!들.length) { 토스트('이 글에는 넣을 사진이 없어요.'); return; }
     var i = 0;
     (function 다음() {
-      if (i >= 들.length) { 토스트('사진 ' + 들.length + '장을 저장했어요. 블로그에서 【사진 1】부터 순서대로 넣으시면 돼요.'); return; }
-      var p = 들[i], 번 = i + 1; i += 1;
+      if (i >= 들.length) { 토스트('사진 ' + 글속.length + '장을 저장했어요. 사진1 은 【사진 1】 자리, 사진2 는 【사진 2】 자리에 넣으시면 돼요.' + (들.length > 글속.length ? ' 「더」로 시작하는 것은 바꿔 쓰실 때만 보세요.' : '')); return; }
+      var p = 들[i], 번 = p.더 ? '더' + (i + 1 - 글속.length) : String(i + 1); i += 1;
       fetch(p.주소).then(function (r) { return r.blob(); }).then(function (b) {
         var a = document.createElement('a'), 끝 = (String(p.주소).split('.').pop() || 'png').split('?')[0];
         a.href = URL.createObjectURL(b); a.download = '사진' + 번 + '.' + 끝; document.body.appendChild(a); a.click();
