@@ -2340,11 +2340,13 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
         if (칸.length) { 나온.push(칸[0]); if (칸.length > 1) 나온.push('→ ' + 칸.slice(1).join(' · ')); 나온.push(''); }
         continue;
       }
+      // 그림 줄 ![설명](주소) 은 칸이 아니다 — 설명이 「원장님 …」으로 시작하면 칸으로 지워져 「!○○(주소)」가 복사됐다(2026-10-05 유니스)
+      if (/^\s*!\[/.test(l)) { 나온.push(l); continue; }
       나온.push(l.replace(/[ \t]*\[원장님[^\]]*\][ \t]*$/, '').replace(/\[원장님[^\]]*\]/g, '○○'));
     }
     return 나온.join('\n');
   }
-  function 본문메모들(x) { return (String(x.본문 || '').match(/\[원장님[^\]]*\]/g) || []).map(function (m) { return m.replace(/^\[원장님\s*(확인)?\s*[—-]?\s*/, '').replace(/\]$/, ''); }); }
+  function 본문메모들(x) { return (String(x.본문 || '').split('\n').filter(function (l) { return !/^\s*!\[/.test(l); }).join('\n').match(/\[원장님[^\]]*\]/g) || []).map(function (m) { return m.replace(/^\[원장님\s*(확인)?\s*[—-]?\s*/, '').replace(/\]$/, ''); }); }
   function 굵게줄들(글) {
     // **굵게** 가 줄 나눔에 걸려 두 줄로 갈라지면 ** 가 글자로 새어 나갔다(2026-09-28 유니스 「** 이런 거 안 나오게」).
     // 줄을 나누기 전에 굵은 구간을 표시로 바꾸고, 나눈 뒤 줄마다 <b> 를 다시 여닫는다.
