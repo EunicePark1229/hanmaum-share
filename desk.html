@@ -1255,6 +1255,8 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var d = x.마감 || x.기한; if (!d) return 9;
     var 오 = 오늘날(), 차 = Math.round((new Date(d + 'T00:00:00') - new Date(오 + 'T00:00:00')) / 864e5);
     if (x.단계 === '얘기중') return 차 <= 7 ? 3 : 9;
+    // 정하신 할 일 — 그다음은 남의 손이라 이번 주 맨 아래로(2026-10-06 GN 유니스 「이렇게 했으면 이제 아래로 내려가던가」)
+    if (x.단계 === '결정') return 차 <= 7 ? 4 : 9;
     if (차 < -7) return 3;
     if (차 < 0) return 0;
     return 차 <= 1 ? 1 : 차 <= 7 ? 2 : 9;
