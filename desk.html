@@ -448,6 +448,34 @@ body.띠있음 { --방줄위: 114px; }
 .시트.보임 { display: block; }
 .시트 .판 { position: absolute; left: 0; right: 0; bottom: 0; background: var(--카드); border-radius: 20px 20px 0 0; padding: 16px 16px 28px; max-height: 80vh; overflow: auto; }
 .시트 .판 h2 { margin: 0 0 8px; font-size: 20px; font-weight: 400; }
+/* 업무는 앱으로(2026-10-06 유니스 「원장님은 한마음이와 대화하시고 업무는 앱을 통해서만」) — 대화 탭 입구 · 알림 켜기 카드 · 요청 시트 */
+.입구 { margin: 0 0 16px; }
+.입구 h2 { font-size: 22px; font-weight: 400; margin: 4px 0 12px; }
+.입구 .큰단추들 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.입구 .큰단추 { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; border: 2px solid var(--강조); background: var(--카드); color: var(--글); border-radius: 18px; padding: 16px 14px; min-height: 104px; cursor: pointer; font-family: inherit; }
+.입구 .큰단추 b { font-weight: 400; font-size: 20px; color: var(--강조); }
+.입구 .큰단추 span { font-size: 14px; color: var(--보조); line-height: 1.35; }
+.입구 .안내 { margin-top: 10px; font-size: 14px; color: var(--보조); }
+.입구 .보낸것 { margin-top: 12px; border-top: 1px solid var(--선); padding-top: 8px; font-size: 15px; }
+.입구 .보낸것 div { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; }
+.알림카드 { background: #FFF4D6; border: 2px solid #E8B21F; border-radius: 18px; padding: 18px; margin-bottom: 16px; }
+.알림카드 .제목 { font-size: 20px; line-height: 1.3; }
+.알림카드 .한줄 { margin-top: 6px; color: #5A4A12; }
+.알림카드 button { margin-top: 12px; width: 100%; height: 54px; font-size: 19px; }
+#요청시트 .판 h2 { margin-bottom: 10px; }
+#요청시트 .라벨 { margin: 14px 0 6px; font-size: 15px; color: var(--보조); }
+#요청시트 .칩줄 { display: flex; flex-wrap: wrap; gap: 8px; }
+#요청시트 .고름 { border: 2px solid var(--강조); background: var(--카드); color: var(--강조); border-radius: 999px; padding: 8px 16px; font-size: 17px; font-family: inherit; cursor: pointer; }
+#요청시트 .고름.켬 { background: var(--강조); color: #fff; }
+#요청시트 textarea { width: 100%; min-height: 96px; border: 2px solid var(--선); border-radius: 14px; padding: 12px; font-size: 17px; font-family: inherit; resize: vertical; box-sizing: border-box; }
+#요청시트 .사진들 { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+#요청시트 .사진들 img { width: 64px; height: 64px; object-fit: cover; border-radius: 10px; }
+#요청시트 .사진추가 { width: 64px; height: 64px; border: 2px dashed var(--강조); border-radius: 10px; background: transparent; color: var(--강조); font-size: 28px; cursor: pointer; }
+#요청시트 .전달 { display: flex; align-items: center; gap: 10px; margin-top: 14px; padding: 12px 14px; border: 2px dashed var(--강조); border-radius: 14px; font-size: 16px; cursor: pointer; }
+#요청시트 .전달 input { width: 22px; height: 22px; }
+#요청시트 .보내기줄 { display: flex; gap: 10px; margin-top: 18px; }
+#요청시트 .보내기줄 .단추 { flex: 1; height: 54px; font-size: 19px; }
+
 .토스트 { position: fixed; left: 16px; right: 16px; bottom: 130px; background: var(--글); color: #fff; padding: 12px 16px; border-radius: 12px; font-size: 15px; display: none; z-index: 10; }
 .토스트.보임 { display: block; }
 .갈래줄 { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 8px; }
@@ -577,6 +605,9 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   <button class="단추" id="보내기">보내기</button>
 </div>
 
+<div class="시트" id="요청시트"><div class="판"><h2 id="요청제목"></h2><div id="요청몸"></div>
+  <div class="보내기줄"><button class="단추 테" id="요청닫기">닫기</button><button class="단추" id="요청보내기">보내기</button></div>
+  <input type="file" id="요청사진파일" accept="image/*" multiple class="숨김"></div></div>
 <div class="시트" id="알림시트"><div class="판"><h2>알림</h2><div id="알림목록"></div>
   <div id="푸시칸" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--선)"><div class="한줄" style="color:var(--보조);margin-bottom:8px">앱을 닫아 두어도 새 답·할 일·안내가 오면 폰에 알림이 떠요.</div><button class="단추" id="푸시켜기" style="width:100%">폰 알림 켜기</button></div>
   <div id="스타일칸" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--선)" hidden><div class="제목" style="margin-bottom:2px">화면 스타일</div><div class="한줄" style="color:var(--보조);margin-bottom:8px">보는 사람마다 골라요 — 이 기기에 남고, 같은 이름으로 여는 다른 기기에도 따라가요.</div><div class="단추줄" id="스타일단추들"></div></div>
@@ -587,13 +618,16 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-09-30j';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-10-06a';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; })();   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
   var $ = function (id) { return document.getElementById(id); };
-  var 저장 = { get: function (k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } },
-               set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+  // 워커 주소(…/app/<조직>/)에서 열면 조직마다 저장 칸을 나눈다 — 하늘·GN 이 같은 주소라 열쇠·이름·역할을 서로 덮어썼다(2026-10-06 GN 화면에 박서연이 뜬 일).
+  //   한마음은 깃허브 페이지(다른 주소)라 접두 없이 종전 그대로 — 원장님 폰의 열쇠가 풀리지 않는다.
+  var 접두 = (function () { var o = (location.pathname || '').match(/\/app\/([^\/]+)\//); return o ? decodeURIComponent(o[1]) + ':' : ''; })();
+  var 저장 = { get: function (k) { try { return localStorage.getItem(접두 + k) || ''; } catch (e) { return ''; } },
+               set: function (k, v) { try { localStorage.setItem(접두 + k, v); } catch (e) {} } };
 
   // 열쇠 — 링크의 #k=… 을 이 폰에만 저장한다. 주소창에는 안 남긴다
   var m = (location.hash || '').match(/k=([A-Za-z0-9_\-]+)/);
@@ -1162,7 +1196,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var 피 = (자료 && 자료.피드) || {};
     // 원장님이 시키지 않았는데 해 둔 것(먼저)이 맨 앞 — 2026-09-30 유니스 「공유·요청되지 않은 것이 오히려 앞에 보이면」. 그 안에서는 최근 것부터.
     var 진행 = (피.안내 || []).filter(function (x) { return x.갈래 === '진행'; }).sort(function (a, b) { var da = String(a.시각 || '').slice(0, 10), db = String(b.시각 || '').slice(0, 10); if (da !== db) return da < db ? 1 : -1; if (!!a.먼저 !== !!b.먼저) return a.먼저 ? -1 : 1; if ((a.무게 || 0) !== (b.무게 || 0)) return (b.무게 || 0) - (a.무게 || 0); return a.시각 < b.시각 ? 1 : -1; });   // 2026-10-01 유니스 — 매일 아침 새로 · 그날 안에서 유니스가 한 일(먼저) · 큰 것(무게) 위
-    var h = '<section class="카드"><h2>진행된 일</h2>';
+    var h = 알림카드() + '<section class="카드"><h2>진행된 일</h2>';
     // 제목을 누르면 펼쳐서 무엇을·왜 했는지 전부 보인다(2026-09-27 유니스 「왜 이걸 했는지를 조금 더 알 수 있게」)
     h += 진행.length ? 진행.slice(0, 진행전부 ? 30 : 3).map(function (x) {
       var 펼 = !!펼친진행[x.id], 줄들 = String(x.글 || '').split('\n').filter(function (l) { return l.trim(); });
@@ -1307,8 +1341,8 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     //   대표·관리자에게는 누가 읽었는지가 일이라 그대로 이름을 보인다.
     var 이름까지 = (자료 && (자료.역할 === '대표' || 자료.역할 === '관리자'));
     var 읽음글 = 남읽음.length ? (이름까지 ? esc(남읽음.join(', ')) + ' 읽음' : '읽음') : '';
-    if (!줄들.length) return 방줄() + '<div class="카드"><div class="빈">아래에 적어 보내시면 됩니다. 사진과 음성도 돼요.</div></div>';
-    return 방줄() + '<div class="대화">' + 줄들.map(function (x) {
+    if (!줄들.length) return 입구() + 방줄() + '<div class="카드"><div class="빈">아래에 적어 보내시면 됩니다. 사진과 음성도 돼요.</div></div>';
+    return 입구() + 방줄() + '<div class="대화">' + 줄들.map(function (x) {
       if (x.누가 === '나' || x.누가 === '남') {
         var 몸 = x.종류 === '사진' ? '<div>사진 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '음성' ? '<div>음성 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '파일' ? '<div>파일 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '장부입력' ? 장부한줄(x.글) : esc(x.글);   // 장부입력은 2026-09-24 부터 대화로 안 온다 — 옛 줄만 보인다
         if (x.미리보기) 몸 = '<img class="썸" src="' + x.미리보기 + '" alt="보낸 사진">';
@@ -2516,7 +2550,8 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     document.body.classList.toggle('대화중', 탭 === '대화' && !보기);
     보기띠그리기();
     배지그리기();
-    if (탭 === '대화' && !보기) { window.scrollTo(0, document.body.scrollHeight); 소켓열기(); 읽음보내기(); } else 소켓닫기();
+    if (탭 === '대화' && !보기) { if (입구켜짐()) { if (그전탭 !== '대화') window.scrollTo(0, 0); } else window.scrollTo(0, document.body.scrollHeight); 소켓열기(); 읽음보내기(); } else 소켓닫기();
+    그전탭 = 탭;
     역사넣기();
   }
 
@@ -2934,6 +2969,88 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     ws.onerror = function () { try { ws.close(); } catch (e) {} };
   }
   function 소켓닫기() { clearTimeout(다시붙기); if (소켓) { var ws = 소켓; 소켓 = null; 소켓켜짐 = false; 여기들 = []; 입력중들 = {}; try { ws.onclose = null; ws.close(); } catch (e) {} } }
+
+  // ── 업무는 앱으로(2026-10-06) — 원장님이 하시는 일을 네 가지 입구로 · 「대표님께도 전해 주세요」를 누른 것만 유니스께 간다 ──
+  //   설정 「입구」 가 켜진 조직(한마음)의 원장 화면에만 보인다. 글·사진은 종전 대화 보내기(보내기)로 그대로 간다 — 받는 쪽(방들_처리)은 「[만들어 주세요 · 블로그 글]」 같은 머리표를 읽는다.
+  var 그전탭 = '';
+  var 입구종류 = {
+    만들기: { 제목: '만들어 주세요', 설명: '블로그 · 문자 · 전단 · 그림', 칩: ['블로그 글', '당근 글', '문자', '전단·명함', '그림', '그 밖'], 물음: '어떻게 만들면 될까요? 한두 줄이면 돼요', 사진: '참고할 사진이 있으면', 언제: true },
+    알아보기: { 제목: '알아봐 주세요', 설명: '비교 · 추천 · 해야 하나', 칩: ['추천', '비교', '해야 하나요', '그 밖'], 물음: '궁금한 것을 한 줄로 적어 주세요', 사진: '참고할 사진이 있으면', 언제: true },
+    알리기: { 제목: '알려 드릴게요', 설명: '고객 · 판매 · 오늘 한 일', 칩: ['연락 빼기', '우리 센터에서 구매', '번호·정보 바뀜', '소개받음', '오늘 한 일', '그 밖'], 물음: '누구에 대해, 무엇인지 적어 주세요 (예: 김계식님 어제 구매하셨어요)', 사진: '사진이 있으면', 언제: false },
+    사진: { 제목: '사진 · 파일', 설명: '서류 · 이상한 문자 · 시안', 칩: ['서류', '이상한 문자', '시안', '그 밖'], 물음: '무슨 사진인지 한 줄 (안 적으셔도 돼요)', 사진: '보낼 사진을 골라 주세요', 언제: false, 사진필수: true }
+  };
+  var 입구고름 = null;   // { 종류, 칩, 언제, 전달, 글, 사진들:[{dataUrl,base64,이름}] }
+  function 입구켜짐() { return !!(설정 && 설정.입구 && 자료 && !대표인가() && !보기); }
+  function 입구보낸목록() { try { return JSON.parse(저장.get('입구보낸것') || '[]'); } catch (e) { return []; } }
+  function 입구() {
+    if (!입구켜짐() || 현재방().indexOf('me-') !== 0) return '';
+    var h = '<section class="입구 카드"><h2>무엇을 도와 드릴까요?</h2><div class="큰단추들">';
+    ['만들기', '알아보기', '알리기', '사진'].forEach(function (k) { var o = 입구종류[k]; h += '<button class="큰단추" data-입구="' + k + '"><b>' + esc(o.제목) + '</b><span>' + esc(o.설명) + '</span></button>'; });
+    h += '</div><div class="안내">그 밖의 부탁은 아래 칸에 적으시거나 마이크로 말씀해 주세요.</div>';
+    var 목 = 입구보낸목록().slice(-3).reverse();
+    if (목.length) h += '<div class="보낸것">' + 목.map(function (x) { return '<div><span>' + esc(x.제목) + '</span><span style="color:var(--보조)">' + esc(x.때) + ' · 받았어요</span></div>'; }).join('') + '</div>';
+    return h + '</section>';
+  }
+  function 알림카드() {
+    if (!입구켜짐()) return '';
+    if (저장.get('푸시구독') === '1') return '';
+    if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) return '';
+    if (Notification.permission === 'denied') return '<div class="알림카드"><div class="제목">알림이 꺼져 있어요</div><div class="한줄">주소창 왼쪽 자물쇠를 누르고 「권한」 → 「알림」을 「허용」으로 바꿔 주세요.</div></div>';
+    return '<div class="알림카드"><div class="제목">답이 오면 폰이 알려 드려요</div><div class="한줄">처음 한 번만 눌러 주세요. 켜 두시면 텔레그램을 안 열어도 앱에서 답을 바로 보실 수 있어요.</div><button class="단추" data-알림켜기="1">알림 켜기</button></div>';
+  }
+  function 요청그리기() {
+    var o = 입구종류[입구고름.종류];
+    $('요청제목').textContent = o.제목;
+    var h = '<div class="라벨">무엇인가요?</div><div class="칩줄">' + o.칩.map(function (c) { return '<button class="고름' + (입구고름.칩 === c ? ' 켬' : '') + '" data-요청칩="' + esc(c) + '">' + esc(c) + '</button>'; }).join('') + '</div>';
+    h += '<div class="라벨">' + esc(o.물음) + '</div><textarea id="요청글" placeholder="여기에 적어 주세요">' + esc(입구고름.글 || '') + '</textarea>';
+    h += '<div class="라벨">' + esc(o.사진) + '</div><div class="사진들">' + 입구고름.사진들.map(function (x) { return '<img src="' + x.dataUrl + '" alt="">'; }).join('') + '<button class="사진추가" id="요청사진추가" aria-label="사진 더하기">＋</button></div>';
+    if (o.언제) h += '<div class="라벨">언제까지 필요하세요?</div><div class="칩줄">' + ['오늘', '이번 주', '급하지 않아요'].map(function (c) { return '<button class="고름' + (입구고름.언제 === c ? ' 켬' : '') + '" data-요청언제="' + c + '">' + c + '</button>'; }).join('') + '</div>';
+    h += '<label class="전달"><input type="checkbox" id="요청전달"' + (입구고름.전달 ? ' checked' : '') + '> 이건 대표님께도 꼭 전해 주세요</label>';
+    $('요청몸').innerHTML = h;
+  }
+  function 요청열기(종류) {
+    입구고름 = { 종류: 종류, 칩: '', 언제: '', 전달: false, 글: '', 사진들: [] };
+    요청그리기(); $('요청시트').classList.add('보임');
+  }
+  function 요청닫기() { $('요청시트').classList.remove('보임'); 입구고름 = null; }
+  function 요청글읽기() { var t = $('요청글'); if (t && 입구고름) 입구고름.글 = t.value; var c = $('요청전달'); if (c && 입구고름) 입구고름.전달 = c.checked; }
+  function 요청보내기() {
+    if (!입구고름) return; 요청글읽기();
+    var o = 입구종류[입구고름.종류], g = 입구고름;
+    var 글 = (g.글 || '').trim();
+    if (o.사진필수 && !g.사진들.length) { 토스트('보낼 사진을 먼저 골라 주세요.'); return; }
+    if (!o.사진필수 && !글 && !g.사진들.length) { 토스트('한두 줄만 적어 주세요. 말로 하시려면 닫고 아래 마이크를 눌러도 돼요.'); return; }
+    var 머리 = '[' + o.제목 + (g.칩 ? ' · ' + g.칩 : '') + ']';
+    var 꼬리 = (g.언제 ? ' (언제까지: ' + g.언제 + ')' : '') + (g.전달 ? ' [대표님께 전달]' : '');
+    var 몸 = 머리 + (글 ? ' ' + 글 : '') + 꼬리;
+    // 글이 있거나 사진이 없으면 글 한 줄을 먼저 보낸다. 사진만 있으면 첫 사진에 머리표를 싣는다(글 줄이 비지 않게)
+    if (글 || !g.사진들.length) 보내기({ 종류: '글', 글: 몸 }, { 누가: '나', 종류: '글', 글: 몸, 시각: 지금iso(), 임시: Date.now() });
+    g.사진들.forEach(function (x, i) {
+      var 사진글 = (!글 && i === 0) ? 몸 : 머리 + ' 사진 ' + (i + 1) + (g.전달 ? ' [대표님께 전달]' : '');
+      보내기({ 종류: '사진', 글: 사진글, 파일이름: x.이름, 파일형식: 'image/jpeg', 파일: x.base64 }, { 누가: '나', 종류: '사진', 글: 사진글, 파일이름: x.이름, 미리보기: x.dataUrl, 시각: 지금iso(), 임시: Date.now() + i + 1 });
+    });
+    var 기록 = 입구보낸목록(); var d = new Date();
+    기록.push({ 제목: o.제목 + (g.칩 ? ' · ' + g.칩 : ''), 때: (d.getMonth() + 1) + '/' + d.getDate() + ' ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) }); 저장.set('입구보낸것', JSON.stringify(기록.slice(-10)));
+    요청닫기(); 토스트('받았어요. 끝나면 이 대화로 알려 드려요.');
+  }
+  document.addEventListener('click', function (e) {
+    var t = e.target; if (!t || !t.closest) return;
+    var 입 = t.closest('[data-입구]'); if (입) { 요청열기(입.getAttribute('data-입구')); return; }
+    if (t.closest('[data-알림켜기]')) { 푸시켜기(); setTimeout(그리기, 2500); return; }
+    var 칩 = t.closest('[data-요청칩]'); if (칩 && 입구고름) { 요청글읽기(); 입구고름.칩 = 칩.getAttribute('data-요청칩'); 요청그리기(); return; }
+    var 언 = t.closest('[data-요청언제]'); if (언 && 입구고름) { 요청글읽기(); 입구고름.언제 = 언.getAttribute('data-요청언제'); 요청그리기(); return; }
+    if (t.closest('#요청사진추가')) { 요청글읽기(); $('요청사진파일').click(); return; }
+    if (t.closest('#요청닫기')) { 요청닫기(); return; }
+    if (t.closest('#요청보내기')) { 요청보내기(); return; }
+    if (t === $('요청시트')) 요청닫기();
+  });
+  $('요청사진파일').addEventListener('change', function () {
+    var fs = Array.prototype.slice.call(this.files || [], 0, 5); this.value = '';
+    if (!fs.length || !입구고름) return;
+    var 이번 = 입구고름;
+    fs.forEach(function (f) { 줄이기(f).then(function (r) { if (입구고름 !== 이번 || 이번.사진들.length >= 5) return; 이번.사진들.push({ dataUrl: r.dataUrl, base64: r.base64, 이름: '사진_' + 지금iso().replace(/[-:T]/g, '').slice(0, 14) + '_' + (이번.사진들.length + 1) + '.jpg' }); 요청그리기(); }); });
+  });
+
   function 소켓으로(짐) { if (소켓 && 소켓.readyState === 1) { try { 소켓.send(JSON.stringify(짐)); return true; } catch (e) { return false; } } return false; }
   function 읽음보내기() { var t = Date.now(); if (t - 읽음보낸때 < 4000) return; if (소켓으로({ 종류: '읽음' })) 읽음보낸때 = t; }
   function 통화신호받기(m) { /* 2단계(음성·영상 통화) — 여기서 offer/answer/ICE 를 받는다 */ }
@@ -3130,8 +3247,21 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     if (자료) { 자료.순서 = 자료.순서 || {}; 자료.순서.스타일 = [k]; }
     보내기짐({ 종류: '순서', 무엇: '스타일', 목록: [k] }).catch(function () {});
   });
+  function 시연시계(iso) {
+    var 진짜 = Date, 차 = new 진짜(iso).getTime() - 진짜.now();
+    if (!isFinite(차)) return;
+    function 가짜() {
+      if (arguments.length === 0) return new 진짜(진짜.now() + 차);
+      return new (Function.prototype.bind.apply(진짜, [null].concat([].slice.call(arguments))))();
+    }
+    가짜.prototype = 진짜.prototype; 가짜.now = function () { return 진짜.now() + 차; }; 가짜.UTC = 진짜.UTC; 가짜.parse = 진짜.parse;
+    window.Date = 가짜;
+  }
   // ── 시작 ──
   fetch('desk-org.json', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) {
+    // 시연 시계(2026-10-05 BD · 가상 회사 시연) — 설정에 「시연시각」이 있는 조직만 그 시각을 「지금」으로 본다. 없는 조직(한마음·GN)은 아무것도 안 바뀐다.
+    //   가상 회사 메일은 11월 날짜라 실제 오늘로 세면 「이번 주 할 일」이 늘 0 이다 — 화면 전체의 오늘·이번 주·지남이 한 시각에서 나오게 Date 하나를 옮긴다.
+    if (j.시연시각) 시연시계(j.시연시각);
     설정 = j; $('이름').textContent = (j.짧은이름 || '한마음') + ' 데스크'; document.title = $('이름').textContent;
     if (j.강조색) document.documentElement.style.setProperty('--강조', j.강조색);
     테마입히기(j);
