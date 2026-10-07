@@ -458,10 +458,12 @@ body.띠있음 { --방줄위: 114px; }
 .입구 .안내 { margin-top: 10px; font-size: 14px; color: var(--보조); }
 .입구 .보낸것 { margin-top: 12px; border-top: 1px solid var(--선); padding-top: 8px; font-size: 15px; }
 .입구 .보낸것 div { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; }
-.알림카드 { background: #FFF4D6; border: 2px solid #E8B21F; border-radius: 18px; padding: 18px; margin-bottom: 16px; }
-.알림카드 .제목 { font-size: 20px; line-height: 1.3; }
-.알림카드 .한줄 { margin-top: 6px; color: #5A4A12; }
-.알림카드 button { margin-top: 12px; width: 100%; height: 54px; font-size: 19px; }
+/* 폰 알림 한 줄 — 홈·알림 시트 맨 위에 작게(2026-10-07 유니스 「맨 밑에 내려가 있어 눈에 안 띈다 · 모든 앱에서 맨 위로, 크기는 조금 줄여 · 자주 쓰지 않을 테니까」) */
+.알림카드, #푸시칸 { display: flex; align-items: center; justify-content: space-between; gap: 10px; border: 1px solid var(--선); border-radius: 10px; padding: 5px 6px 5px 12px; margin: 0 0 12px; font-size: 14px; line-height: 1.35; color: var(--보조); background: var(--카드); }
+.알림카드 span, #푸시칸 span { min-width: 0; }
+.알림카드 button, #푸시칸 button { flex: none; height: 32px; padding: 0 12px; font-size: 14px; border-radius: 8px; }
+#푸시칸.켬 { border: 0; padding: 0; margin: 0 0 8px; font-size: 13px; color: var(--좋음); background: none; }
+main.홈격자 > .알림카드 { column-span: all; }
 #요청시트 .판 h2 { margin-bottom: 10px; }
 #요청시트 .라벨 { margin: 14px 0 6px; font-size: 15px; color: var(--보조); }
 #요청시트 .칩줄 { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -608,8 +610,9 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <div class="시트" id="요청시트"><div class="판"><h2 id="요청제목"></h2><div id="요청몸"></div>
   <div class="보내기줄"><button class="단추 테" id="요청닫기">닫기</button><button class="단추" id="요청보내기">보내기</button></div>
   <input type="file" id="요청사진파일" accept="image/*" multiple class="숨김"></div></div>
-<div class="시트" id="알림시트"><div class="판"><h2>알림</h2><div id="알림목록"></div>
-  <div id="푸시칸" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--선)"><div class="한줄" style="color:var(--보조);margin-bottom:8px">앱을 닫아 두어도 새 답·할 일·안내가 오면 폰에 알림이 떠요.</div><button class="단추" id="푸시켜기" style="width:100%">폰 알림 켜기</button></div>
+<div class="시트" id="알림시트"><div class="판"><h2>알림</h2>
+  <div id="푸시칸"><span>새 답·할 일이 오면 알려 드려요.</span><button class="단추" id="푸시켜기">폰 알림 켜기</button></div>
+  <div id="알림목록"></div>
   <div id="스타일칸" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--선)" hidden><div class="제목" style="margin-bottom:2px">화면 스타일</div><div class="한줄" style="color:var(--보조);margin-bottom:8px">보는 사람마다 골라요 — 이 기기에 남고, 같은 이름으로 여는 다른 기기에도 따라가요.</div><div class="단추줄" id="스타일단추들"></div></div>
   <div style="margin-top:12px"><button class="단추 테" id="알림닫기" style="width:100%">닫기</button></div></div></div>
 <div class="힌트" id="힌트">캡처는 Ctrl+V · 파일은 화면에 끌어다 놓기</div>
@@ -1239,7 +1242,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     // 원장님 홈 — 셋만(2026-09-27 유니스 「원장님이 지금 화면이 버거우신 것 같아」 · 「홈 화면은 이렇게만 남겨줘」)
     //   진행된 일 · 오늘 우선 할 일 셋 · 바로가기. 나머지는 아래 탭에 그대로 있다(앱 피드백 48)
     if (!대표인가()) return 원장님홈(내것);
-    return 대표홈(열린, 원장할일);
+    return 알림카드() + 대표홈(열린, 원장할일);
   }
   // ── 대표 홈 — 먼저 할 것 셋 + 나머지는 한 줄씩 수와 링크만(2026-09-28 · 앱 피드백 48 을 대표에게도) ──
   //   유니스 09-28 「아직 9월 30일이 안 됐는데 정하실 것 맨 위에 있으면 압박만 느껴진다 · 너무 많은 list 는 아무도 안 본다 ·
@@ -2701,7 +2704,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
       return;
     }
     var 초열 = e.target.closest('[data-초안열기]'); if (초열) { 열린초안 = 초열.getAttribute('data-초안열기'); 그리기(); window.scrollTo(0, 0); return; }
-    if (e.target.closest('[data-초안닫기]')) { if (!닫고돌아가기()) { 열린초안 = ''; 그리기(); } return; }
+    if (e.target.closest('[data-초안닫기]')) { 초안닫는중 = true; if (!닫고돌아가기()) { 초안닫는중 = false; 열린초안 = ''; 탭 = '초안'; 그리기(); } return; }   // 뒤로 간 칸이 다른 탭(대화 등)이면 popstate 에서 초안 목록으로 맞춘다(2026-10-07 GN 제보)
     var 초복 = e.target.closest('[data-초안복사]'); if (초복) { var 초x = 초안목록().filter(function (y) { return y.id === 초복.getAttribute('data-id'); })[0]; if (초x) { var 무엇 = 초복.getAttribute('data-초안복사'), 글 = 무엇 === '제목' ? (초x.메일제목 || '') : (초x.본문 || ''); (navigator.clipboard ? navigator.clipboard.writeText(글) : Promise.reject()).then(function () { 토스트(무엇 + '을 복사했어요. 아웃룩에 붙여 넣으세요.'); }, function () { 토스트('복사가 안 돼요. 글을 길게 눌러 복사해 주세요.'); }); } return; }
     var 초단 = e.target.closest('[data-초안단계]'); if (초단) { var 새단계 = 초단.getAttribute('data-초안단계'); 초단.disabled = true; 보내기짐({ 종류: '단계', id: 초단.getAttribute('data-id'), 단계: 새단계 }).then(function (j) { if (!j || !j.됨) throw new Error(); 토스트(새단계 === '보냄' ? '보낸 것으로 옮겼어요.' : '보낼 초안으로 되돌렸어요.'); 받아오기(); }).catch(function (e2) { 초단.disabled = false; 못했어요(e2, '초안 단계'); }); return; }
     var 메고 = e.target.closest('[data-메일고름]'); if (메고) { 메일열기(메고.getAttribute('data-메일고름')); 그리기(); var 창 = document.querySelector('.읽기창'); if (창) 창.scrollTop = 0; if (window.innerWidth < 900) window.scrollTo(0, 0); return; }
@@ -2828,15 +2831,16 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     보내기짐({ 종류: '읽음' }).catch(function () {});
     배지그리기();
   }
-  $('종').addEventListener('click', 알림열기);
+  $('종').addEventListener('click', function () { 알림열기(); });   // 클릭 사건이 펼칠id 로 들어가 replace 에서 멈추던 것(10-07 시험에서 찾음 — 그 뒤 알림 줄 상태·읽은때 저장이 안 돌았다)
 
   // ── 폰 알림(웹 푸시) — 단추를 눌러야 권한을 물을 수 있다. 구독은 뒷단에 저장하고 노트북(데스크.py)이 보낸다
   function 푸시상태그리기() {
     var 칸 = $('푸시칸'); if (!칸) return;
     var 됨 = ('Notification' in window) && ('serviceWorker' in navigator) && ('PushManager' in window);
-    if (!됨) { 칸.innerHTML = '<div class="한줄" style="color:var(--보조)">이 폰·브라우저는 알림을 못 받아요. 아이폰이면 공유 → 홈 화면에 추가 뒤에 다시 열어 주세요.</div>'; return; }
-    if (Notification.permission === 'granted' && 저장.get('푸시구독') === '1') { 칸.innerHTML = '<div class="한줄" style="color:var(--좋음)">이 기기의 알림이 켜져 있어요.</div>'; }
-    else if (Notification.permission === 'denied') { 칸.innerHTML = '<div class="한줄" style="color:var(--보조)">이 기기의 알림이 꺼져 있어요. 폰이면 설정 → 앱 → 알림에서, 컴퓨터면 주소창 자물쇠 → 알림에서 켜고 다시 눌러 주세요.</div>'; }
+    칸.classList.remove('켬');
+    if (!됨) { 칸.innerHTML = '<span>이 폰·브라우저는 알림을 못 받아요. 아이폰이면 공유 → 홈 화면에 추가 뒤에 다시 열어 주세요.</span>'; return; }
+    if (Notification.permission === 'granted' && 저장.get('푸시구독') === '1') { 칸.classList.add('켬'); 칸.innerHTML = '<span>이 기기의 알림이 켜져 있어요.</span>'; }
+    else if (Notification.permission === 'denied') { 칸.innerHTML = '<span>이 기기의 알림이 꺼져 있어요. 폰이면 설정 → 앱 → 알림에서, 컴퓨터면 주소창 자물쇠 → 알림에서 켜고 다시 눌러 주세요.</span>'; }
     else { var b = $('푸시켜기'); if (b) { b.disabled = false; b.textContent = '폰 알림 켜기'; } }
   }
   function 푸시단추(글, 잠금) { var b = $('푸시켜기'); if (b) { b.disabled = !!잠금; b.textContent = 글; } }
@@ -2886,6 +2890,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   // ── 뒤로 가기(2026-09-20 유니스 「항목 열고 코멘트 뒤 뒤로 가기를 누르면 화면이 아예 꺼져」) ──
   //    홈 화면 앱은 브라우저 뒤로 가기가 곧 앱 닫기다. 상세·알림 시트·탭을 열 때 역사에 한 칸 넣어 두면 뒤로 가기가 그 칸을 빼고 목록으로 돌아온다.
   var 역사적용중 = false;
+  var 초안닫는중 = false;   // 「목록으로」로 history.back() 한 뒤 도착한 칸의 탭이 초안이 아니면 초안 목록으로 맞춘다
   function 역사상태() { return { 탭: 탭, 할일: 열린할일id || '', 블로그: 열린블로그 || '', 고객: 열린고객 || '', 메일: 열린메일 || '', 초안: 열린초안 || '', 알림: $('알림시트').classList.contains('보임'), 보기: 보기 || '' }; }
   function 역사넣기() { if (역사적용중) return; try { var 지금 = 역사상태(), 전 = history.state || {}; if (전.탭 === 지금.탭 && (전.할일 || '') === 지금.할일 && (전.블로그 || '') === 지금.블로그 && (전.고객 || '') === 지금.고객 && (전.메일 || '') === 지금.메일 && (전.초안 || '') === 지금.초안 && !!전.알림 === 지금.알림 && (전.보기 || '') === 지금.보기) return; history.pushState(지금, ''); } catch (e) {} }
   window.addEventListener('popstate', function (e) {
@@ -2900,7 +2905,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     }
     var st = e.state || { 탭: '홈', 할일: '', 블로그: '', 알림: false };
     역사적용중 = true;
-    try { if ((st.보기 || '') !== 보기) { if (st.보기) 보기시작(st.보기); else 보기끝(); } 열린할일id = st.할일 || ''; 열린블로그 = st.블로그 || ''; 열린고객 = st.고객 || ''; 열린메일 = st.메일 || ''; 열린초안 = st.초안 || ''; 탭 = st.탭 || '홈'; if (!st.알림) $('알림시트').classList.remove('보임'); 그리기(); if (st.알림) 알림열기(); }
+    try { if ((st.보기 || '') !== 보기) { if (st.보기) 보기시작(st.보기); else 보기끝(); } 열린할일id = st.할일 || ''; 열린블로그 = st.블로그 || ''; 열린고객 = st.고객 || ''; 열린메일 = st.메일 || ''; 열린초안 = st.초안 || ''; 탭 = st.탭 || '홈'; if (초안닫는중) { 초안닫는중 = false; 열린초안 = ''; 탭 = '초안'; } if (!st.알림) $('알림시트').classList.remove('보임'); 그리기(); if (st.알림) 알림열기(); }
     finally { 역사적용중 = false; }
   });
   function 닫고돌아가기() { var st = history.state; if (st && (st.할일 || st.블로그 || st.고객 || st.메일 || st.초안 || st.알림)) { history.back(); return true; } return false; }
@@ -2993,12 +2998,13 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     if (목.length) h += '<div class="보낸것">' + 목.map(function (x) { return '<div><span>' + esc(x.제목) + '</span><span style="color:var(--보조)">' + esc(x.때) + ' · 받았어요</span></div>'; }).join('') + '</div>';
     return h + '</section>';
   }
+  // 홈 맨 위 한 줄 — 원장님만이던 것을 모든 사람에게(2026-10-07 유니스 「모든 앱에서 폰 알림 켜기는 맨 위로, 크기는 작게」). 켠 기기에서는 안 보인다(종 → 알림 맨 위에 「켜져 있어요」 한 줄)
   function 알림카드() {
-    if (!입구켜짐()) return '';
+    if (!자료 || 보기) return '';
     if (저장.get('푸시구독') === '1') return '';
     if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) return '';
-    if (Notification.permission === 'denied') return '<div class="알림카드"><div class="제목">알림이 꺼져 있어요</div><div class="한줄">주소창 왼쪽 자물쇠를 누르고 「권한」 → 「알림」을 「허용」으로 바꿔 주세요.</div></div>';
-    return '<div class="알림카드"><div class="제목">답이 오면 폰이 알려 드려요</div><div class="한줄">처음 한 번만 눌러 주세요. 켜 두시면 텔레그램을 안 열어도 앱에서 답을 바로 보실 수 있어요.</div><button class="단추" data-알림켜기="1">알림 켜기</button></div>';
+    if (Notification.permission === 'denied') return '<div class="알림카드"><span>폰 알림이 꺼져 있어요 — 주소창 왼쪽 자물쇠 → 「권한」 → 「알림」을 「허용」으로 바꿔 주세요.</span></div>';
+    return '<div class="알림카드"><span>답이 오면 폰이 알려 드려요.</span><button class="단추" data-알림켜기="1">알림 켜기</button></div>';
   }
   function 요청그리기() {
     var o = 입구종류[입구고름.종류];
