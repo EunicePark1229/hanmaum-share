@@ -1216,38 +1216,77 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   }
   var 펼친진행 = {};
   var 진행전부 = false;
+  var 진행열림 = false;   // 원장님 홈 「진행된 일」 — 접힌 한 줄로 두고 누르면 최근 셋(2026-10-11 유니스 (가))
+  // ── 원장님 홈 「오늘 우선 할 일」 고르기 — 화면을 안 그리는 함수라 시험_우선할일.py 가 node 로 그대로 잰다 ──
+  //   설정 「우선순위」가 있으면(2026-10-11 유니스 (나)) 점수 = 목적 × 배수 + 늦으면. 칸이 빈 항목은 갈래 기본값.
+  //   목적 0~3 = 손님·판매·6개월 홍보에 닿는 정도 · 늦으면 1~3 = 하루 늦을 때 잃는 것. 원장님 화면에는 점수가 안 보이고 순서만 바뀐다.
+  //   걸러내기 — 묻는 할 일(묻기)에 그 사람이 댓글로 답했으면 뺀다. 법·약속 기한이 오늘이거나 지난 것은 점수와 관계없이 맨 위.
+  //   ⚠️ 되돌리기 — desk-org.json(·orgs/<조직>.json) 의 「우선순위」 칸을 지우면 아래 종전 급 순서 그대로 돈다.
+  function 답한묻기인가(x) {
+    if (!x || !x.묻기) return false;
+    return (x.댓글 || []).some(function (c) { var 누 = (c && c.누가) || ''; return 누 && 누 !== '관리자' && (!x.대상 || x.대상 === '모두' || 누 === x.대상); });
+  }
+  function 우선할일목록(피, 내것, 규칙, 오늘, 사흘) {
+    var 할 = [], 받 = (피 && 피.받은것) || [];
+    // 종전 급(규칙이 없을 때) — 0 오늘 발송이 걸린 문자 · 1 기한 지남·오늘 · 2 기한 사흘 안 · 3 그 밖 할 일(기한 순) · 4 블로그 1순위
+    받.filter(function (x) { return x.갈래 === '문자' && (x.단계 || '초안') === '초안' && !대체됐나(x); }).forEach(function (x) { 할.push({ 종류: '문자', 급: 0, 순: x.발송시각 || '', 가: '받은것', 속: 'data-문자="' + esc(x.id) + '"', 원: null, 항목: x, 제목: '문자 보고 「보내도 됩니다」 눌러 주기', 한줄: (x.제목 || '') + ' · 누르시면 ' + (x.발송시각 ? x.발송시각 + '에 ' : '') + '나가요' /* 2026-10-03 — 「오늘 14:00」이 날이 바뀌어도 남아 있었다. 날은 카드 제목에, 시각만 여기에 */ }); });
+    (내것 || []).forEach(function (x) {
+      if (규칙 && 규칙.답하면빠짐 !== false && 답한묻기인가(x)) return;   // 이미 답하신 것 — 다시 위에 올리지 않는다
+      var 급 = x.기한 && x.기한 <= 오늘 ? 1 : x.기한 && x.기한 <= 사흘 ? 2 : 3;
+      할.push({ 종류: '할일', 급: 급, 순: x.기한 || '9999', 가: '할일', 속: 'data-할일열기="' + esc(x.id) + '"', 원: x, 항목: x, 제목: x.제목, 한줄: x.기한 ? '기한 ' + x.기한 + (x.기한 < 오늘 ? ' — 지났어요' : x.기한 === 오늘 ? ' — 오늘' : '') : (x.한줄 || '') });
+    });
+    var 초안 = 받.filter(function (x) { return x.갈래 === '블로그' && (x.단계 || '초안') === '초안' && !대체됐나(x); }).sort(function (a, b) { return (a.순위 || 999) - (b.순위 || 999); });
+    if (초안.length) 할.push({ 종류: '블로그', 급: 4, 순: '', 가: '받은것', 속: 'data-블로그열기="' + esc(초안[0].id) + '"', 원: null, 항목: 초안[0], 제목: '블로그 글 올리기 — ' + 초안[0].제목, 한줄: 초안[0].순위이유 || '본문을 복사해서 블로그에 붙여 넣으시면 돼요' });
+    if (!규칙) {
+      할.sort(function (a, b) { return a.급 - b.급 || (a.순 < b.순 ? -1 : a.순 > b.순 ? 1 : 0); });
+      return 할;
+    }
+    var 배 = Number(규칙.목적배수) || 2, 기본 = 규칙.기본 || {};
+    function 칸(t, 이름, i) { var v = t.항목 && t.항목[이름]; if (v === 0 || v) return Number(v) || 0; var d = 기본[t.종류] || 기본.할일 || [1, 1]; return Number(d[i]) || 0; }
+    할.forEach(function (t) {
+      t.점수 = 칸(t, '목적', 0) * 배 + 칸(t, '늦으면', 1);
+      var x = t.원, 날 = x && (x.마감 || x.기한);
+      t.맨위 = !!(날 && 날 <= 오늘 && !(typeof 우리가정한날 === 'function' && 우리가정한날(x)));   // 법·약속 기한이 오늘이거나 지남 — 우리가 정한 목표일은 빼고
+    });
+    할.sort(function (a, b) {
+      if (a.맨위 !== b.맨위) return a.맨위 ? -1 : 1;
+      if (a.맨위 && a.순 !== b.순) return a.순 < b.순 ? -1 : 1;
+      if (a.점수 !== b.점수) return b.점수 - a.점수;
+      var qa = !!(a.항목 && a.항목.금방), qb = !!(b.항목 && b.항목.금방);   // 같은 점수면 1분 안에 끝나는 것(누르기·고르기) 먼저
+      if (qa !== qb) return qa ? -1 : 1;
+      return a.급 - b.급 || (a.순 < b.순 ? -1 : a.순 > b.순 ? 1 : 0);
+    });
+    return 할;
+  }
   function 원장님홈(내것) {
     var 피 = (자료 && 자료.피드) || {};
     // 원장님이 시키지 않았는데 해 둔 것(먼저)이 맨 앞 — 2026-09-30 유니스 「공유·요청되지 않은 것이 오히려 앞에 보이면」. 그 안에서는 최근 것부터.
     var 진행 = (피.안내 || []).filter(function (x) { return x.갈래 === '진행'; }).sort(function (a, b) { var da = String(a.시각 || '').slice(0, 10), db = String(b.시각 || '').slice(0, 10); if (da !== db) return da < db ? 1 : -1; if (!!a.먼저 !== !!b.먼저) return a.먼저 ? -1 : 1; if ((a.무게 || 0) !== (b.무게 || 0)) return (b.무게 || 0) - (a.무게 || 0); return a.시각 < b.시각 ? 1 : -1; });   // 2026-10-01 유니스 — 매일 아침 새로 · 그날 안에서 유니스가 한 일(먼저) · 큰 것(무게) 위
-    var h = 알림카드() + '<section class="카드"><h2>진행된 일</h2>';
-    // 제목을 누르면 펼쳐서 무엇을·왜 했는지 전부 보인다(2026-09-27 유니스 「왜 이걸 했는지를 조금 더 알 수 있게」)
-    h += 진행.length ? 진행.slice(0, 진행전부 ? 30 : 3).map(function (x) {
-      var 펼 = !!펼친진행[x.id], 줄들 = String(x.글 || '').split('\n').filter(function (l) { return l.trim(); });
-      var 몸 = '<div class="제목">' + esc(x.제목) + ' <span style="color:var(--보조);font-weight:400">' + (펼 ? '접기 ▲' : '자세히 ▼') + '</span></div>';
-      몸 += 펼 ? 줄들.map(function (l) { return '<div class="한줄" style="white-space:normal">' + esc(l) + '</div>'; }).join('') : (줄들.length ? '<div class="한줄">' + esc(줄들[0]) + '</div>' : '');
-      몸 += '<div class="때">' + 때글(x.시각) + (x.주소 ? ' · <a href="' + esc(x.주소) + '" target="_blank" rel="noopener" style="color:var(--강조)">열어 보기 ›</a>' : '') + '</div>';
-      return '<div class="줄" data-진행펼침="' + esc(x.id) + '" style="cursor:pointer">' + 몸 + '</div>';
-    }).join('') : '<div class="빈">새로 해 드린 것이 생기면 여기에 알려 드릴게요.</div>';
-    // 셋만 보이고 아래 「더보기」로 나머지(2026-09-30 유니스)
-    if (진행.length > 3) h += '<div style="text-align:center;margin-top:8px"><button class="더" data-진행더="1">' + (진행전부 ? '접기 ▲' : '더보기 ' + (진행.length - 3) + '개 ▼') + '</button></div>';
-    h += '</section>';
-    // 오늘 우선 할 일 — ① 기한이 오늘이거나 지난 일 ② 블로그 추천 1순위 초안 ③ 답을 기다리는 문자 문안 ④ 남은 할 일. 셋까지.
+    // (가) 2026-10-11 유니스 — 「오늘 우선 할 일」이 맨 위, 「진행된 일」은 바로 아래 접힌 한 줄(누르면 지금처럼 최근 셋). 카드는 셋 그대로.
+    //   근거 — 10-05~10-11 원장님이 앱에서 하신 일 10건이 모두 「처리할 거리」였고 진행된 일에 반응하신 흔적은 0건(09_Docs/보고/주제/2026-10-11_원장님_데스크_사용_검토.md)
     var 오늘 = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-    var 할 = [];
-    // 급한 순서(2026-09-30 유니스 「우선 할 일도 급한 것이 가장 위에」) — 점수가 낮을수록 위
-    //   0 오늘 발송이 걸린 문자(누르셔야 나감) · 1 기한 지남·오늘 · 2 기한 사흘 안 · 3 그 밖 할 일(기한 순) · 4 블로그(유니스가 주 2~3회 올려서 원장님은 원하실 때)
     var 사흘 = new Date(Date.now() + 3 * 864e5 - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-    var 받 = 피.받은것 || [];
-    받.filter(function (x) { return x.갈래 === '문자' && (x.단계 || '초안') === '초안' && !대체됐나(x); }).forEach(function (x) { 할.push({ 급: 0, 순: x.발송시각 || '', 가: '받은것', 속: 'data-문자="' + esc(x.id) + '"', 제목: '문자 보고 「보내도 됩니다」 눌러 주기', 한줄: (x.제목 || '') + ' · 누르시면 ' + (x.발송시각 ? x.발송시각 + '에 ' : '') + '나가요' /* 2026-10-03 — 「오늘 14:00」이 날이 바뀌어도 남아 있었다. 날은 카드 제목에, 시각만 여기에 */ }); });
-    내것.forEach(function (x) { var 급 = x.기한 && x.기한 <= 오늘 ? 1 : x.기한 && x.기한 <= 사흘 ? 2 : 3; 할.push({ 급: 급, 순: x.기한 || '9999', 가: '할일', 속: 'data-할일열기="' + esc(x.id) + '"', 원: x, 제목: x.제목, 한줄: x.기한 ? '기한 ' + x.기한 + (x.기한 < 오늘 ? ' — 지났어요' : x.기한 === 오늘 ? ' — 오늘' : '') : (x.한줄 || '') }); });
-    var 초안 = 받.filter(function (x) { return x.갈래 === '블로그' && (x.단계 || '초안') === '초안' && !대체됐나(x); }).sort(function (a, b) { return (a.순위 || 999) - (b.순위 || 999); });
-    if (초안.length) 할.push({ 급: 4, 순: '', 가: '받은것', 속: 'data-블로그열기="' + esc(초안[0].id) + '"', 제목: '블로그 글 올리기 — ' + 초안[0].제목, 한줄: 초안[0].순위이유 || '본문을 복사해서 블로그에 붙여 넣으시면 돼요' });
-    할.sort(function (a, b) { return a.급 - b.급 || (a.순 < b.순 ? -1 : a.순 > b.순 ? 1 : 0); });
-    h += '<section class="카드"><h2>오늘 우선 할 일 ' + 오늘표() + '</h2>';
+    var 할 = 우선할일목록(피, 내것, (설정 && 설정.우선순위) || null, 오늘, 사흘);
+    var h = 알림카드() + '<section class="카드"><h2>오늘 우선 할 일 ' + 오늘표() + '</h2>';
     h += 할.length ? 할.slice(0, 3).map(function (t, i) {
       return '<div class="줄" data-가="' + t.가 + '" ' + t.속 + ' style="cursor:pointer"><div class="제목">' + (i + 1) + '. ' + esc(t.제목) + '</div>' + 연락칩(t.원) + (t.한줄 ? '<div class="한줄">' + esc(String(t.한줄).split(String.fromCharCode(10))[0]) + '</div>' : '') + '<div class="때"><span style="color:var(--강조)">바로 가기 ›</span></div></div>';
     }).join('') : '<div class="빈">오늘은 따로 하실 일이 없어요.</div>';
+    h += '</section>';
+    h += '<section class="카드"><h2>진행된 일</h2>';
+    if (!진행.length) h += '<div class="빈">새로 해 드린 것이 생기면 여기에 알려 드릴게요.</div>';
+    else if (!진행열림) h += '<div class="줄" data-진행열기="1" style="cursor:pointer"><div class="한줄" style="padding:0;border:0">' + esc(진행[0].제목) + (진행.length > 1 ? ' 외 ' + (진행.length - 1) + '개' : '') + ' <span style="color:var(--보조)">펼쳐 보기 ▼</span></div></div>';
+    else {
+      // 제목을 누르면 펼쳐서 무엇을·왜 했는지 전부 보인다(2026-09-27 유니스 「왜 이걸 했는지를 조금 더 알 수 있게」)
+      h += 진행.slice(0, 진행전부 ? 30 : 3).map(function (x) {
+        var 펼 = !!펼친진행[x.id], 줄들 = String(x.글 || '').split('\n').filter(function (l) { return l.trim(); });
+        var 몸 = '<div class="제목">' + esc(x.제목) + ' <span style="color:var(--보조);font-weight:400">' + (펼 ? '접기 ▲' : '자세히 ▼') + '</span></div>';
+        몸 += 펼 ? 줄들.map(function (l) { return '<div class="한줄" style="white-space:normal">' + esc(l) + '</div>'; }).join('') : (줄들.length ? '<div class="한줄">' + esc(줄들[0]) + '</div>' : '');
+        몸 += '<div class="때">' + 때글(x.시각) + (x.주소 ? ' · <a href="' + esc(x.주소) + '" target="_blank" rel="noopener" style="color:var(--강조)">열어 보기 ›</a>' : '') + '</div>';
+        return '<div class="줄" data-진행펼침="' + esc(x.id) + '" style="cursor:pointer">' + 몸 + '</div>';
+      }).join('');
+      // 셋만 보이고 아래 「더보기」로 나머지(2026-09-30 유니스) · 다시 접기
+      h += '<div style="text-align:center;margin-top:8px">' + (진행.length > 3 ? '<button class="더" data-진행더="1">' + (진행전부 ? '셋만 ▲' : '더보기 ' + (진행.length - 3) + '개 ▼') + '</button> ' : '') + '<button class="더" data-진행열기="1">접기 ▲</button></div>';
+    }
     h += '</section>';
     h += 바로가기카드();
     return h;
@@ -2768,6 +2807,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     if (e.target.closest('#날고_열기')) { 날짜고침열림 = !날짜고침열림; 그리기(); return; }
     var 날고 = e.target.closest('[data-날고]'); if (날고) { var nid = 날고.getAttribute('data-날고'), 칸 = document.querySelector('[data-날고값="' + nid + '"]'), 새 = 칸 && 칸.value; if (!/^\d{4}-\d{2}-\d{2}$/.test(새 || '')) { 토스트('날짜를 골라 주세요.'); return; } 날고.disabled = true; 보내기짐({ 종류: '입력', 갈래: '장부수정', 짐: { id: nid, 날짜: 새 } }).then(function () { 토스트('날짜를 ' + 새 + ' 로 바꿔 달라고 보냈어요. 1분 안에 장부·재고·엑셀에 반영돼요.'); }, function (err) { 날고.disabled = false; 못했어요(err, '날짜 바꾸기'); }); return; }
     if (e.target.closest('[data-진행더]')) { 진행전부 = !진행전부; 그리기(); return; }
+    if (e.target.closest('[data-진행열기]')) { 진행열림 = !진행열림; if (!진행열림) 진행전부 = false; 그리기(); return; }
     var 제복 = e.target.closest('[data-제목복사]'); if (제복) { var 제x = ((자료 && 자료.피드.받은것) || []).filter(function (y) { return y.id === 제복.getAttribute('data-제목복사'); })[0]; if (제x) { var 번 = Number(제복.getAttribute('data-번')), 제글 = 번 ? (제x.제목후보 || [])[번] : 제x.제목; (navigator.clipboard ? navigator.clipboard.writeText(제글 || '') : Promise.reject()).then(function () { 토스트('제목을 복사했어요. 블로그 제목칸에 붙여 넣으세요.'); }, function () { 토스트('복사가 안 돼요. 제목을 길게 눌러 복사해 주세요.'); }); } return; }
     var 복 = e.target.closest('[data-복사]'); if (복) { var id = 복.getAttribute('data-복사'), x = ((자료 && 자료.피드.받은것) || []).filter(function (y) { return y.id === id; })[0]; if (x) { var 꼴k = (x.갈래 === '당근' && 소식꼴선택) ? 소식꼴선택 : ''; var t = 꼴k ? 꼴본문(x, 꼴k) : 복사용글(x); var 안 = 꼴k && 설정.소식꼴 && 설정.소식꼴[꼴k] && 설정.소식꼴[꼴k].안내; ((!꼴k && x.갈래 === '블로그' && navigator.clipboard && window.ClipboardItem) ? navigator.clipboard.write([new ClipboardItem({ 'text/plain': new Blob([t], { type: 'text/plain' }), 'text/html': new Blob([복사용HTML(x)], { type: 'text/html' }) })]).catch(function () { return navigator.clipboard.writeText(t); }) : (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject())).then(function () { 토스트('본문을 복사했어요. ' + (안 || (x.갈래 === '당근' ? '당근 「소식」 글쓰기에 붙여 넣으세요.' : '블로그 글쓰기에 붙여 넣으세요.'))); }, function () { 토스트('복사가 안 돼요. 글을 길게 눌러 복사해 주세요.'); }); } return; }
     var 꼴단 = e.target.closest('[data-소식꼴]'); if (꼴단) { 소식꼴선택 = 꼴단.getAttribute('data-소식꼴'); 그리기(); return; }
