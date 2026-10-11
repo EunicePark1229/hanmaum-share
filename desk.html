@@ -84,7 +84,7 @@ main { padding: 16px 16px 96px; max-width: 720px; margin: 0 auto; }
 /* 대표 홈 「나머지」 — 한 줄에 수 · 이름(2026-09-28 · 앱 피드백 48). 폰에서도 세로로 쪼개지 않는다 */
 .나머지줄 .항 { display: flex; gap: 12px; align-items: baseline; padding: 10px 0; border-top: 1px solid var(--선); }
 .나머지줄 .항:first-of-type { border-top: 0; }
-.나머지줄 .항 .때칸 { flex: 0 0 40px; font-weight: 600; color: var(--강조); font-variant-numeric: tabular-nums; text-align: right; }
+.나머지줄 .항 .때칸 { flex: 0 0 auto; min-width: 40px; white-space: nowrap; font-weight: 600; color: var(--강조); font-variant-numeric: tabular-nums; text-align: right; }
 .나머지줄 .항 .몸 { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .접힌카드 > summary { cursor: pointer; font-weight: 600; color: var(--보조); list-style: none; }
 .접힌카드 > summary::-webkit-details-marker { display: none; }
@@ -634,11 +634,178 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <div class="힌트" id="힌트">캡처는 Ctrl+V · 파일은 화면에 끌어다 놓기</div>
 <div class="토스트" id="토스트"></div>
 
+<!-- 부품:공지팝업 — 정본 06_Platform/app/parts/notice-popup.js · 여기서 고치지 않는다(부품넣기.py 가 덮는다) -->
+<script>
+/* 공지 팝업 부품 v1 (2026-10-11 유니스 「알림을 키우는 대신 공지 성격은 앱 안 팝업으로 · 세 앱에 같은 부품」)
+   ⛔ 이 파일이 정본이다. desk.html(한마음·GN)과 일상 _src/15_notice_popup.js 에는 `06_Platform/_engine/부품넣기.py` 가 그대로 베껴 넣는다.
+      앱 쪽에서 고치지 않는다 — 베낀 것이 정본과 다르면 시험_공지팝업.py 가 실패한다.
+   하는 일 — 공지 목록과 사람마다의 상태를 받아 「지금 띄울 것 하나」를 고르고(고르기), 누른 것을 상태에 적고(행동), 화면에 띄운다(그리기).
+     규칙(유니스가 받아들인 설계 1~5)
+       · 종류는 둘뿐 — 「일」(오늘 손이 필요하고 늦으면 손해) · 「특이」(한 번은 꼭 아셔야 할 것). 그 밖은 띄우지 않고 목록에만
+       · 앱을 열면 한 번에 하나 · 하루 둘까지(같은 날 이미 보인 것은 다시 열 때 또 떠도 둘을 넘기지 않는다)
+       · 닫기 = 오늘만 숨김 · 다른 날 두 번 닫으면 그 뒤로는 목록에만 · 다시 보지 않기 = 그 공지만 영구히
+       · 「확인했어요·바로 가기·열어 보기」(누름) = 오늘은 다시 안 뜸 · 특이는 한 번 누르면 끝
+       · 이어진 할 일이 끝나면 · 만료일이 지나면 · 올린 쪽이 끄면(꺼짐) 안 뜬다
+       · 배경을 눌러도 · Esc 를 눌러도 안 닫힌다(손 실수 막기) · 단추 셋은 크게 · 글씨는 앱 서체를 그대로 받는다
+   상태는 문자열 목록 하나로 주고받는다(앱이 이미 가진 「사람마다 값」 칸에 그대로 넣으려고 · 데스크는 워커 순서_<이름>.공지, 일상은 cfg/me.notice_state).
+     "<id>|끔" · "<id>|닫|2026-10-11,2026-10-12" · "<id>|누름|2026-10-11" · "@보임|2026-10-11|<id>,<id>" · "<id>|센|열림,닫기,끔,누름"(횟수)
+   이걸 만들면서 그만둔 것 — 앱마다 「처음 안내」처럼 팝업을 따로 짜던 것(데스크 안내시트 · 일상 처음안내가 따로 있었다). */
+var 공지팝업 = (function () {
+  'use strict';
+  var 종류들 = ['일', '특이'];
+  var 하루최대 = 2;
+  var 이름말 = { 일: '오늘 하실 일', 특이: '꼭 알려 드릴 것' };
+
+  function 날더하기(날, n) {
+    var t = String(날).split('-'); var d = new Date(Date.UTC(+t[0], +t[1] - 1, +t[2] + n));
+    return d.toISOString().slice(0, 10);
+  }
+  function 빈상태() { return { 공지: {}, 보임: { 날: '', ids: [] } }; }
+  function 칸(상태, id) { return 상태.공지[id] || (상태.공지[id] = { 끔: false, 닫은날: [], 누른날: '', 센: { 열림: 0, 닫기: 0, 끔: 0, 누름: 0 } }); }
+
+  // ── 상태 ↔ 문자열 목록 ──
+  function 읽기(목록) {
+    var s = 빈상태();
+    (Array.isArray(목록) ? 목록 : []).forEach(function (줄) {
+      var p = String(줄 || '').split('|'); if (p.length < 2) return;
+      if (p[0] === '@보임') { s.보임 = { 날: p[1] || '', ids: (p[2] || '').split(',').filter(Boolean) }; return; }
+      var c = 칸(s, p[0]);
+      if (p[1] === '끔') c.끔 = true;
+      else if (p[1] === '닫') c.닫은날 = (p[2] || '').split(',').filter(Boolean);
+      else if (p[1] === '누름') c.누른날 = p[2] || '';
+      else if (p[1] === '센') { var n = (p[2] || '').split(','); c.센 = { 열림: +n[0] || 0, 닫기: +n[1] || 0, 끔: +n[2] || 0, 누름: +n[3] || 0 }; }
+    });
+    return s;
+  }
+  // 살아 있는 공지 것만 남긴다(목록이 끝없이 늘지 않게 · 워커 칸은 200줄까지)
+  function 쓰기(s, 남길ids) {
+    var 남길 = 남길ids ? {} : null; (남길ids || []).forEach(function (i) { 남길[i] = 1; });
+    var 줄 = [];
+    if (s.보임 && s.보임.날) 줄.push('@보임|' + s.보임.날 + '|' + s.보임.ids.join(','));
+    Object.keys(s.공지).sort().forEach(function (id) {
+      if (남길 && !남길[id]) return;
+      var c = s.공지[id];
+      if (c.끔) 줄.push(id + '|끔');
+      if (c.닫은날.length) 줄.push(id + '|닫|' + c.닫은날.slice(-5).join(','));
+      if (c.누른날) 줄.push(id + '|누름|' + c.누른날);
+      var n = c.센 || {}; if (n.열림 || n.닫기 || n.끔 || n.누름) 줄.push(id + '|센|' + [n.열림 || 0, n.닫기 || 0, n.끔 || 0, n.누름 || 0].join(','));
+    });
+    return 줄.slice(0, 200);
+  }
+  // 두 기기(서버 것 · 이 폰 것)를 합친다 — 끔은 하나라도 끄면 끔, 날은 합집합, 횟수는 큰 쪽
+  function 합치기(a, b) {
+    var s = 빈상태(), x = 읽기(a), y = 읽기(b);
+    [x, y].forEach(function (t) {
+      Object.keys(t.공지).forEach(function (id) {
+        var c = 칸(s, id), o = t.공지[id];
+        c.끔 = c.끔 || o.끔;
+        o.닫은날.forEach(function (d) { if (c.닫은날.indexOf(d) < 0) c.닫은날.push(d); });
+        c.닫은날.sort();
+        if (o.누른날 > c.누른날) c.누른날 = o.누른날;
+        ['열림', '닫기', '끔', '누름'].forEach(function (k) { c.센[k] = Math.max(c.센[k] || 0, (o.센 && o.센[k]) || 0); });
+      });
+      if (t.보임.날 > s.보임.날) s.보임 = { 날: t.보임.날, ids: t.보임.ids.slice() };
+      else if (t.보임.날 && t.보임.날 === s.보임.날) t.보임.ids.forEach(function (i) { if (s.보임.ids.indexOf(i) < 0) s.보임.ids.push(i); });
+    });
+    return 쓰기(s);
+  }
+
+  // ── 고르기 ──
+  // 공지 꼴 {id, 시각, 제목, 글, 공지종류:'일'|'특이', 만료:'YYYY-MM-DD', 할일:id?, 주소?, 꺼짐?}
+  function 살아있나(n, 오늘, 할일끝났나) {
+    if (!n || !n.id || n.꺼짐) return false;
+    if (종류들.indexOf(n.공지종류) < 0) return false;
+    if (n.만료 && n.만료 < 오늘) return false;
+    if (n.할일 && typeof 할일끝났나 === 'function' && 할일끝났나(n.할일)) return false;
+    return true;
+  }
+  function 띄울까(n, s, 오늘) {
+    var c = s.공지[n.id];
+    if (!c) return true;
+    if (c.끔) return false;
+    if (c.닫은날.indexOf(오늘) >= 0) return false;                       // 닫기 = 오늘만
+    if (c.닫은날.length >= 2) return false;                              // 다른 날 두 번 닫으면 목록에만
+    if (c.누른날 === 오늘) return false;                                 // 오늘 이미 눌러서 처리
+    if (n.공지종류 === '특이' && c.누른날) return false;                 // 특이는 한 번 확인하면 끝
+    return true;
+  }
+  function 고르기(공지들, 상태목록, 오늘, 할일끝났나) {
+    var s = 읽기(상태목록);
+    var 오늘보인 = s.보임.날 === 오늘 ? s.보임.ids : [];
+    var 후보 = (공지들 || []).filter(function (n) { return 살아있나(n, 오늘, 할일끝났나) && 띄울까(n, s, 오늘); });
+    if (오늘보인.length >= 하루최대) 후보 = 후보.filter(function (n) { return 오늘보인.indexOf(n.id) >= 0; });   // 하루 둘 — 새 것은 내일로
+    후보.sort(function (a, b) {
+      if (a.공지종류 !== b.공지종류) return a.공지종류 === '일' ? -1 : 1;              // 늦으면 손해인 일이 먼저
+      var ma = a.만료 || '9999', mb = b.만료 || '9999'; if (ma !== mb) return ma < mb ? -1 : 1;
+      return String(a.시각 || '') < String(b.시각 || '') ? -1 : 1;
+    });
+    return 후보[0] || null;
+  }
+  // 무엇 = 보임 | 닫기 | 끔 | 누름 → 새 상태 목록
+  function 행동(상태목록, id, 무엇, 오늘) {
+    var s = 읽기(상태목록), c = 칸(s, id);
+    if (무엇 === '보임') {
+      if (s.보임.날 !== 오늘) s.보임 = { 날: 오늘, ids: [] };
+      if (s.보임.ids.indexOf(id) < 0) s.보임.ids.push(id);
+      c.센.열림++;
+    } else if (무엇 === '닫기') { if (c.닫은날.indexOf(오늘) < 0) c.닫은날.push(오늘); c.센.닫기++; }
+    else if (무엇 === '끔') { c.끔 = true; c.센.끔++; }
+    else if (무엇 === '누름') { c.누른날 = 오늘; c.센.누름++; }
+    return 쓰기(s);
+  }
+  function 센것(상태목록, id) { var c = 읽기(상태목록).공지[id]; return c ? c.센 : { 열림: 0, 닫기: 0, 끔: 0, 누름: 0 }; }
+
+  // ── 그리기 (브라우저에서만) ──
+  var 꼴 = '.공지팝업{position:fixed;inset:0;z-index:9000;background:rgba(17,24,39,.55);display:flex;align-items:center;justify-content:center;padding:18px}'
+    + '.공지팝업 .판{background:var(--카드,#fff);color:var(--글,#111);border-radius:18px;max-width:440px;width:100%;padding:22px 20px 18px;box-shadow:0 12px 40px rgba(0,0,0,.25);font:inherit}'
+    + '.공지팝업 .갈래{display:inline-block;font-size:16px;padding:4px 10px;border-radius:999px;border:1.5px solid var(--강조,#1F6F5F);color:var(--강조,#1F6F5F);margin-bottom:10px}'
+    + '.공지팝업 h2{font-size:22px;line-height:1.35;margin:0 0 10px;font-weight:700}'
+    + '.공지팝업 .글{font-size:18px;line-height:1.6;margin:0 0 18px;white-space:pre-wrap;word-break:keep-all}'
+    + '.공지팝업 .때{font-size:16px;color:var(--보조,#6B7280);margin:-8px 0 16px}'
+    + '.공지팝업 button{display:block;width:100%;min-height:56px;font:inherit;font-size:18px;border-radius:12px;margin-top:10px;cursor:pointer}'
+    + '.공지팝업 .주{background:var(--강조,#1F6F5F);color:#fff;border:0;font-weight:700}'
+    + '.공지팝업 .보{background:transparent;color:var(--글,#111);border:1.5px solid var(--선,#D1D5DB)}'
+    + '.공지팝업 .끔{background:transparent;color:var(--보조,#6B7280);border:0;min-height:48px;font-size:17px;text-decoration:underline}';
+  function 꼴넣기() {
+    if (document.getElementById('공지팝업꼴')) return;
+    var st = document.createElement('style'); st.id = '공지팝업꼴'; st.textContent = 꼴; document.head.appendChild(st);
+  }
+  function 글자(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  // 손 = { 주글, 누름(), 닫기(), 끔() } — 셋 다 누르면 팝업을 먼저 치우고 부른다
+  function 그리기(n, 손) {
+    닫기();
+    꼴넣기();
+    var 판 = document.createElement('div');
+    판.className = '공지팝업'; 판.id = '공지팝업'; 판.setAttribute('role', 'dialog'); 판.setAttribute('aria-modal', 'true'); 판.setAttribute('data-id', n.id);
+    var 만 = n.만료 ? (+n.만료.slice(5, 7)) + '/' + (+n.만료.slice(8, 10)) + '까지' : '';
+    판.innerHTML = '<div class="판"><span class="갈래">' + 글자(이름말[n.공지종류] || '알려 드릴 것') + '</span>'
+      + '<h2>' + 글자(n.제목) + '</h2>' + (n.글 ? '<p class="글">' + 글자(n.글) + '</p>' : '') + (만 ? '<div class="때">' + 만 + '</div>' : '')
+      + '<button class="주" data-공지="누름">' + 글자(손.주글 || '확인했어요') + '</button>'
+      + '<button class="보" data-공지="닫기">닫기 (내일 한 번 더 알려 드려요)</button>'
+      + '<button class="끔" data-공지="끔">이 알림 다시 보지 않기</button></div>';
+    판.addEventListener('click', function (e) {
+      var b = e.target.closest && e.target.closest('[data-공지]'); if (!b) return;   // 배경은 눌러도 아무 일 없음
+      var 무엇 = b.getAttribute('data-공지'); 닫기();
+      if (손 && typeof 손[무엇] === 'function') 손[무엇]();
+    });
+    document.body.appendChild(판);
+    var 주 = 판.querySelector('.주'); if (주 && 주.focus) 주.focus();
+    return 판;
+  }
+  function 닫기() { var o = typeof document !== 'undefined' && document.getElementById('공지팝업'); if (o) o.remove(); }
+  function 열린id() { var o = typeof document !== 'undefined' && document.getElementById('공지팝업'); return o ? o.getAttribute('data-id') : ''; }
+
+  return { 종류들: 종류들, 하루최대: 하루최대, 이름말: 이름말, 날더하기: 날더하기, 읽기: 읽기, 쓰기: 쓰기, 합치기: 합치기, 살아있나: 살아있나, 고르기: 고르기, 행동: 행동, 센것: 센것, 그리기: 그리기, 닫기: 닫기, 열린id: 열린id };
+})();
+if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝업;
+</script>
+<!-- /부품:공지팝업 -->
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-10-08c';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-10-11p';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
+  var 첫불러옴실패 = false;   // 처음 여는 기기(저장된 자료 없음)에서 자료가 아직 안 왔거나 못 왔을 때 — 빈 홈(「할 일 없어요」)을 먼저 그리지 않는다(2026-10-12)
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; var t2 = (location.search || '').match(/[?&]tab=([a-z]+)/); var 별 = { draft: '초안', home: '홈', chat: '대화', todo: '할일', mail: '메일', inbox: '받은것', cal: '일정', stock: '재고' }; if (t2 && 별[t2[1]]) 탭 = 별[t2[1]]; })();   // 한글 없는 탭 링크(?tab=draft) — 한글이 섞이면 채팅 앱이 링크를 중간에 끊는다(2026-10-07 유니스 링크가 ?%ED%83%AD 에서 잘림)   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
   var $ = function (id) { return document.getElementById(id); };
@@ -694,17 +861,19 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var 물을때보기 = 보기;
     return fetch(뒷단주소('p=desk&방=' + encodeURIComponent(현재방()) + (보기 ? '&보기=' + encodeURIComponent(보기) : '')), { redirect: 'follow' }).then(function (r) { return r.json(); }).then(function (j) {
       if (!j || !j.됨) {
+        if (!자료 && !첫불러옴실패) { 첫불러옴실패 = true; 그리기(); }
         if (j && j.왜 === '열쇠') 토스트('링크가 맞지 않아요. 대표님께 다시 받아 주세요.');
         else if (물을때보기 && j && j.왜) { 보기끝(); 토스트('그 화면은 못 봐요 — ' + j.왜); }
         return;
       }
       if (물을때보기 !== 보기) return;                       // 그 사이 내 화면으로 돌아왔으면 버린다
+      공지새자료 = true;
       if (보기) { 자료 = j; 테마입히기(설정); 그리기(); return; }   // 남의 화면은 이 폰에 안 남긴다(누구·역할·아이콘·색도 그 사람 것 · 2026-09-23 유니스 「원장님 보시는 색 그대로」)
       자료 = j; 저장.set('자료', JSON.stringify(j)); if (j.누구) { 누구 = j.누구; 저장.set('데스크누구', j.누구); } if (j.역할) { 저장.set('데스크역할', j.역할); 아이콘맞추기(); if (설정) 테마입히기(설정); }
       if (!스타일고른것 && 설정 && j.순서 && j.순서.스타일) 테마입히기(설정);   // 다른 기기에서 고른 스타일이 따라온다
       if (초안쓰는중()) { 초안수정줄고치기(document.activeElement.getAttribute('data-id')); return; }   // 초안을 고치는 중엔 다시 그리지 않는다 — 한글 조합이 끊기고 커서가 튄다(2026-10-07) · 다음 30초에 그린다
       그리기();
-    }).catch(function () { /* 조용히 — 다음 30초에 다시 */ });
+    }).catch(function () { /* 조용히 — 다음 30초에 다시 */ if (!자료 && !첫불러옴실패) { 첫불러옴실패 = true; 그리기(); } });
   }
   function 보내기짐(짐) {
     if (보기 && 짐.종류 !== '기록') { 토스트(보기 + ' 화면을 보는 중이라 여기서는 못 바꿔요. 「내 화면으로」를 누른 뒤에 해 주세요.'); return Promise.reject(new Error('보기')); }
@@ -1258,18 +1427,20 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     });
     return 할;
   }
+  // 몇 개 보이나(2026-10-11 유니스 「셋에서 다섯까지」) — 설정 「우선순위.개수」(1~10). 칸이 없으면 종전 3. 고르는 순서(우선할일목록)는 그대로고 자르는 자리만 이것이다
+  function 우선할일개수(규칙) { var n = Math.floor(Number(규칙 && 규칙.개수)); return n >= 1 ? Math.min(n, 10) : 3; }
   function 원장님홈(내것) {
     var 피 = (자료 && 자료.피드) || {};
     // 원장님이 시키지 않았는데 해 둔 것(먼저)이 맨 앞 — 2026-09-30 유니스 「공유·요청되지 않은 것이 오히려 앞에 보이면」. 그 안에서는 최근 것부터.
     var 진행 = (피.안내 || []).filter(function (x) { return x.갈래 === '진행'; }).sort(function (a, b) { var da = String(a.시각 || '').slice(0, 10), db = String(b.시각 || '').slice(0, 10); if (da !== db) return da < db ? 1 : -1; if (!!a.먼저 !== !!b.먼저) return a.먼저 ? -1 : 1; if ((a.무게 || 0) !== (b.무게 || 0)) return (b.무게 || 0) - (a.무게 || 0); return a.시각 < b.시각 ? 1 : -1; });   // 2026-10-01 유니스 — 매일 아침 새로 · 그날 안에서 유니스가 한 일(먼저) · 큰 것(무게) 위
-    // (가) 2026-10-11 유니스 — 「오늘 우선 할 일」이 맨 위, 「진행된 일」은 바로 아래 접힌 한 줄(누르면 지금처럼 최근 셋). 카드는 셋 그대로.
+    // (가) 2026-10-11 유니스 — 「오늘 우선 할 일」이 맨 위, 「진행된 일」은 바로 아래 접힌 한 줄(누르면 지금처럼 최근 셋). 카드는 셋 그대로(우선 할 일 · 진행된 일 · 바로가기) · 우선 할 일 줄 수는 설정 「우선순위.개수」(한마음 5 · 10-11 유니스 · 없으면 3).
     //   근거 — 10-05~10-11 원장님이 앱에서 하신 일 10건이 모두 「처리할 거리」였고 진행된 일에 반응하신 흔적은 0건(09_Docs/보고/주제/2026-10-11_원장님_데스크_사용_검토.md)
     var 오늘 = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
     var 사흘 = new Date(Date.now() + 3 * 864e5 - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-    var 할 = 우선할일목록(피, 내것, (설정 && 설정.우선순위) || null, 오늘, 사흘);
+    var 할 = 우선할일목록(피, 내것, (설정 && 설정.우선순위) || null, 오늘, 사흘), 몇 = 우선할일개수(설정 && 설정.우선순위);
     var h = 알림카드() + '<section class="카드"><h2>오늘 우선 할 일 ' + 오늘표() + '</h2>';
-    h += 할.length ? 할.slice(0, 3).map(function (t, i) {
-      return '<div class="줄" data-가="' + t.가 + '" ' + t.속 + ' style="cursor:pointer"><div class="제목">' + (i + 1) + '. ' + esc(t.제목) + '</div>' + 연락칩(t.원) + (t.한줄 ? '<div class="한줄">' + esc(String(t.한줄).split(String.fromCharCode(10))[0]) + '</div>' : '') + '<div class="때"><span style="color:var(--강조)">바로 가기 ›</span></div></div>';
+    h += 할.length ? 할.slice(0, 몇).map(function (t, i) {
+      return '<div class="줄" data-가="' + t.가 + '" ' + t.속 + ' style="cursor:pointer"><div class="제목">' + (i + 1) + '. ' + esc(t.제목) + '</div>' + 연락칩(t.원) + (t.한줄 ? '<div class="한줄 접힘">' + esc(String(t.한줄).split(String.fromCharCode(10))[0]) + '</div>' : '') + '<div class="때"><span style="color:var(--강조)">바로 가기 ›</span></div></div>';
     }).join('') : '<div class="빈">오늘은 따로 하실 일이 없어요.</div>';
     h += '</section>';
     h += '<section class="카드"><h2>진행된 일</h2>';
@@ -1300,7 +1471,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var 받 = ((자료 && 자료.피드.받은것) || []).filter(function (x) { return !받은것끝났나(x); }).slice(-3).reverse();
     var h = '';
     // 원장님 홈 — 셋만(2026-09-27 유니스 「원장님이 지금 화면이 버거우신 것 같아」 · 「홈 화면은 이렇게만 남겨줘」)
-    //   진행된 일 · 오늘 우선 할 일 셋 · 바로가기. 나머지는 아래 탭에 그대로 있다(앱 피드백 48)
+    //   오늘 우선 할 일(설정 개수 · 한마음 다섯) · 진행된 일 · 바로가기. 나머지는 아래 탭에 그대로 있다(앱 피드백 48)
     if (!대표인가()) return 원장님홈(내것);
     return 알림카드() + 대표홈(열린, 원장할일);
   }
@@ -2135,6 +2306,10 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     var id = 대.split(' · ')[0], 사유 = 대.indexOf(' · ') >= 0 ? 대.slice(대.indexOf(' · ') + 3) : '';
     var 제 = 제목찾기(id);
     if (무 === '열림') return '앱을 열어 봤어요';
+    if (무.indexOf('공지:') === 0) {   // 공지 팝업(2026-10-11) — 「공지:열림:<id>」
+      var 공 = 무.split(':'), 공제 = 제목찾기(공.slice(2).join(':'));
+      return (공제 ? '공지 <b>' + esc(공제) + '</b> ' : '공지를 ') + ({ 열림: '보셨어요', 닫기: '닫으셨어요(내일 다시)', 끔: '다시 보지 않기로 하셨어요', 누름: '눌러서 처리하셨어요' }[공[1]] || esc(공[1]));
+    }
     if (무 === '끝냈어요') return (제 ? '<b>' + esc(제) + '</b> ' : '') + (id.indexOf('m-') === 0 ? '메일 처리했어요' : '끝냈어요');
     if (무.indexOf('단계:') === 0) {
       var 단 = 무.slice(3);
@@ -2160,7 +2335,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
   // 이름 뒤 조사 — 받침이 있으면 「이」, 없으면 「가」(2026-09-28 「유니스이 하신 것」)
   function 이가(이름) { var c = String(이름 || '').slice(-1).charCodeAt(0); return (c >= 0xAC00 && c <= 0xD7A3 && (c - 0xAC00) % 28 === 0) ? '가' : '이'; }
   function 한일카드() {
-    var 줄들 = (자료 && 자료.한일) || [], 마지막 = 자료 && 자료.마지막열림;
+    var 줄들 = ((자료 && 자료.한일) || []).filter(function (h) { return h.무엇 !== '순서:공지'; }), 마지막 = 자료 && 자료.마지막열림;   // 공지 팝업 상태 저장은 「차례 바꿈」이 아니다 — 누른 것은 「공지:…」 줄로 따로 남는다
     if ((!줄들.length && !마지막) || 보기) return '';
     var 사람 = ((자료 && 자료.사람들) || []);
     var 제목 = 사람.length === 1 ? 사람[0].이름 + 이가(사람[0].이름) + ' 하신 것' : '다른 분들이 하신 것';
@@ -2699,7 +2874,8 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     if (!화면[탭]) 탭 = '홈';
     // 초안 칸을 고치는 중에 다시 그리면(Ctrl+S 저장 등) 그 칸·커서·스크롤을 되살린다(2026-10-07)
     var 초점 = document.activeElement, 초점칸 = (초점 && 초점.getAttribute && 초점.getAttribute('data-초안칸')) ? { 칸: 초점.getAttribute('data-초안칸'), id: 초점.getAttribute('data-id') || '', s: 초점.selectionStart, e: 초점.selectionEnd, 위: 초점.scrollTop, 창위: window.scrollY } : null;
-    본.innerHTML = 화면[탭]() + ((탭 !== '대화' && !보기 && 자료) ? '<div class="화면꼬리">이 화면, 고칠 데 있으면 <button data-가="대화">대화</button>에 적어 주세요.</div>' : '');
+    var 자료기다림 = !자료 && 열쇠 && !보기;
+    본.innerHTML = 자료기다림 ? '<div class="카드"><div class="빈">' + (첫불러옴실패 ? '아직 못 불러왔어요. 인터넷이 느린지 봐 주세요. 30초마다 다시 해 보고 있어요.' : '불러오는 중이에요…') + '</div></div>' : 화면[탭]() + ((탭 !== '대화' && !보기 && 자료) ? '<div class="화면꼬리">이 화면, 고칠 데 있으면 <button data-가="대화">대화</button>에 적어 주세요.</div>' : '');
     본.classList.toggle('홈격자', 탭 === '홈');
     $('이름').textContent = (window.innerWidth >= 900) ? ((탭이름[탭] || 탭) + (자료 && 자료.누구 ? ' · ' + 자료.누구 + (자료.역할 ? '(' + 자료.역할 + ')' : '') : '')) : ((설정 && (설정.짧은이름 || '한마음')) + ' 데스크');
     document.body.setAttribute('data-탭', 탭);
@@ -2712,6 +2888,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     if (탭 === '대화' && !보기) { if (입구켜짐()) { if (그전탭 !== '대화') window.scrollTo(0, 0); } else window.scrollTo(0, document.body.scrollHeight); 소켓열기(); 읽음보내기(); } else 소켓닫기();
     그전탭 = 탭;
     안내자동();
+    공지살피기();
     역사넣기();
     if (초점칸) { var 새칸 = 본.querySelector('[data-초안칸="' + 초점칸.칸 + '"][data-id="' + 초점칸.id.replace(/"/g, '') + '"]'); if (새칸) { try { 새칸.focus({ preventScroll: true }); 새칸.setSelectionRange(초점칸.s, 초점칸.e); 새칸.scrollTop = 초점칸.위; } catch (e) {} window.scrollTo(0, 초점칸.창위); } }
   }
@@ -2990,6 +3167,61 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
     if (안내자동함 || !자료 || 보기 || 저장.get('안내그만') === '1') return;
     안내자동함 = true; setTimeout(안내열기, 600);
   }
+  // ── 공지 팝업(2026-10-11 유니스 「알림을 키우는 대신 공지 성격은 앱 안 팝업으로」) — 부품은 위 <script>(parts/notice-popup.js), 여기는 이 앱에 잇는 자리만 ──
+  //   공지 = 피드 안내 중 갈래 「공지」(데스크.py --공지). 띄우는 것은 설정 「공지팝업」이 true 인 조직만 — 칸을 지우거나 false 면 종전 화면 그대로.
+  //   사람마다 상태(닫은 날·끔·누름·보인 날)는 워커 순서_<이름>.공지(기기가 바뀌어도 남음) + 이 폰 저장(바로 반영) 둘을 합쳐 쓴다.
+  //   기록 — 열림·닫기·끔·누름을 뒷단 한일에 「공지:<무엇>:<id>」로 남긴다(데스크.py --공지목록 이 센다).
+  var 공지이번판 = false, 공지숨은때 = 0, 공지새자료 = false;   // 공지새자료 — 이 판에서 뒷단 답을 한 번이라도 받았나(폰에 남은 옛 자료의 옛 상태로 띄우지 않게)
+  function 공지오늘() { return new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
+  function 공지목록() {
+    var 나 = 자료 && 자료.누구;
+    return ((자료 && 자료.피드 && 자료.피드.안내) || []).filter(function (x) { return x.갈래 === '공지' && (!x.대상 || x.대상 === '모두' || x.대상 === 나); });
+  }
+  function 공지상태() { var 서버 = (자료 && 자료.순서 && 자료.순서.공지) || [], 폰 = []; try { 폰 = JSON.parse(저장.get('공지상태') || '[]'); } catch (e) { 폰 = []; } return 공지팝업.합치기(서버, 폰); }
+  function 공지할일끝났나(id) { var x = ((자료 && 자료.피드.할일) || []).filter(function (t) { return t.id === id; })[0]; return !x || x.단계 === '완료' || 끝난할일(id); }
+  function 공지기록(무엇, id) { if (보기 || !열쇠) return; try { 보내기짐({ 종류: '기록', 무엇: ('공지:' + 무엇 + ':' + id).slice(0, 40), 상세: id }).catch(function () {}); } catch (e) {} }
+  function 공지저장(목록, 서버도) {
+    if (보기) return;
+    var 살아 = 공지목록().map(function (x) { return x.id; });
+    목록 = 공지팝업.쓰기(공지팝업.읽기(목록), 살아);
+    저장.set('공지상태', JSON.stringify(목록));
+    if (자료) { 자료.순서 = 자료.순서 || {}; 자료.순서.공지 = 목록; }
+    if (서버도 && 열쇠) 보내기짐({ 종류: '순서', 무엇: '공지', 목록: 목록 }).catch(function () { /* 이 폰에는 남았다 — 다음 누름에 다시 올린다 */ });
+  }
+  function 공지살피기() {
+    if (!설정 || 설정.공지팝업 !== true || !자료 || !자료.피드 || !공지새자료) return;
+    var 열린 = 공지팝업.열린id();
+    if (열린) {                                                     // 떠 있는 사이 그 일이 끝났거나 꺼졌으면 치운다
+      var 그것 = 공지목록().filter(function (x) { return x.id === 열린; })[0];
+      if (!그것 || !공지팝업.살아있나(그것, 공지오늘(), 공지할일끝났나)) 공지팝업.닫기();
+      return;
+    }
+    if (공지이번판 || 안내자동함 || document.querySelector('.시트.보임')) return;   // 한 번 열 때 하나 · 첫 안내가 뜬 판에는 안 띄운다
+    var 오늘 = 공지오늘(), 상태 = 공지상태();
+    var n = 공지팝업.고르기(공지목록(), 상태, 오늘, 공지할일끝났나);
+    if (!n) return;
+    공지이번판 = true;
+    공지저장(공지팝업.행동(상태, n.id, '보임', 오늘), false);
+    공지기록('열림', n.id);
+    var 주글 = n.할일 ? '바로 가기' : n.주소 ? '열어 보기' : '확인했어요';
+    function 했다(무엇) { 공지저장(공지팝업.행동(공지상태(), n.id, 무엇, 공지오늘()), true); 공지기록(무엇, n.id); }
+    공지팝업.그리기(n, {
+      주글: 주글,
+      누름: function () {
+        했다('누름');
+        if (n.할일) { 열린할일id = n.할일; 가기('할일'); }
+        else if (n.주소) window.open(n.주소, '_blank', 'noopener');
+        else 토스트('확인하셨어요. 종(오른쪽 위)에서 다시 보실 수 있어요.');
+      },
+      닫기: function () { 했다('닫기'); 토스트('내일 한 번 더 알려 드릴게요. 종(오른쪽 위)에도 남아 있어요.'); },
+      끔: function () { 했다('끔'); 토스트('이 알림은 다시 안 띄울게요. 종(오른쪽 위)에는 남아 있어요.'); }
+    });
+  }
+  // 앱을 다시 켠 것도 「열 때」로 친다 — 10분 넘게 다른 화면에 있다 돌아오면 한 번 더 살핀다(폰 홈 화면 앱은 새로고침 없이 이어서 열린다)
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) { 공지숨은때 = Date.now(); return; }
+    if (공지숨은때 && Date.now() - 공지숨은때 > 10 * 60 * 1000) { 공지이번판 = false; 안내자동함 = 안내자동함 && !!document.querySelector('#안내시트.보임'); }
+  });
   $('안내닫기').addEventListener('click', 안내닫기);
   $('안내다시').addEventListener('click', 안내열기);
   $('안내시트').addEventListener('click', function (e) { if (e.target === $('안내시트')) 안내닫기(); });
