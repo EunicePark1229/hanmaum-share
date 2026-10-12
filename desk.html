@@ -803,7 +803,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-10-11p';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-10-12s';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 첫불러옴실패 = false;   // 처음 여는 기기(저장된 자료 없음)에서 자료가 아직 안 왔거나 못 왔을 때 — 빈 홈(「할 일 없어요」)을 먼저 그리지 않는다(2026-10-12)
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
@@ -856,10 +856,14 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
 
   // ── 뒷단 ──
   function 뒷단주소(q) { return 설정.뒷단 + (설정.뒷단.indexOf('?') < 0 ? '?' : '&') + q + '&k=' + encodeURIComponent(열쇠); }
+  // 바뀐 때만 받기(2026-10-12 데스크 느림 개선 C) — 뒷단이 답마다 지문(판)을 붙인다. 지난 답의 판을 ver= 로 보내면, 그 사이 아무것도
+  //   안 바뀌었을 때 { 같음:true } 수백 바이트만 온다(종전엔 30초마다 GN 3MB · 한마음 0.5~0.7MB). 판은 자료 안에 같이 두어(자료.판 · 자료.판키)
+  //   폰에 남는 자료와 판이 늘 한 벌이다. 이 화면에서 무엇을 보내면(보내기짐) 판을 비워 다음 번엔 통째로 받는다 — 화면에서 먼저 바꿔 둔 것이 그대로 굳지 않게
+  function 판키() { return 현재방() + '|' + (보기 || ''); }
   function 받아오기() {
     if (!설정 || !열쇠) return Promise.resolve();
-    var 물을때보기 = 보기;
-    return fetch(뒷단주소('p=desk&방=' + encodeURIComponent(현재방()) + (보기 ? '&보기=' + encodeURIComponent(보기) : '')), { redirect: 'follow' }).then(function (r) { return r.json(); }).then(function (j) {
+    var 물을때보기 = 보기, 물은키 = 판키(), ver = (자료 && 자료.판 && 자료.판키 === 물은키) ? 자료.판 : '';
+    return fetch(뒷단주소('p=desk&방=' + encodeURIComponent(현재방()) + (보기 ? '&보기=' + encodeURIComponent(보기) : '') + (ver ? '&ver=' + encodeURIComponent(ver) : '') + '&lite=1'), { redirect: 'follow' }).then(function (r) { return r.json(); }).then(function (j) {
       if (!j || !j.됨) {
         if (!자료 && !첫불러옴실패) { 첫불러옴실패 = true; 그리기(); }
         if (j && j.왜 === '열쇠') 토스트('링크가 맞지 않아요. 대표님께 다시 받아 주세요.');
@@ -867,6 +871,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
         return;
       }
       if (물을때보기 !== 보기) return;                       // 그 사이 내 화면으로 돌아왔으면 버린다
+      if (j.같음) { if (자료 && 자료.판 === j.판) 공지새자료 = true; return; }   // 바뀐 것 없음 — 지금 화면이 뒷단과 같다. 다시 그리지 않는다
+      j.판키 = 물은키;
       공지새자료 = true;
       if (보기) { 자료 = j; 테마입히기(설정); 그리기(); return; }   // 남의 화면은 이 폰에 안 남긴다(누구·역할·아이콘·색도 그 사람 것 · 2026-09-23 유니스 「원장님 보시는 색 그대로」)
       자료 = j; 저장.set('자료', JSON.stringify(j)); if (j.누구) { 누구 = j.누구; 저장.set('데스크누구', j.누구); } if (j.역할) { 저장.set('데스크역할', j.역할); 아이콘맞추기(); if (설정) 테마입히기(설정); }
@@ -878,6 +884,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
   function 보내기짐(짐) {
     if (보기 && 짐.종류 !== '기록') { 토스트(보기 + ' 화면을 보는 중이라 여기서는 못 바꿔요. 「내 화면으로」를 누른 뒤에 해 주세요.'); return Promise.reject(new Error('보기')); }
     짐.k = 열쇠;
+    if (자료 && 짐.종류 !== '기록') 자료.판 = '';               // 무엇이 바뀌었을 수 있다 — 다음 받기는 통째로(C)
     if (!열쇠) return Promise.reject(new Error('열쇠가 이 기기에 없어요 — 받으신 링크로 다시 열어 주세요'));
     return fetch(설정.뒷단, { method: 'POST', body: JSON.stringify(짐), headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow' })
       .then(function (r) { return r.json().catch(function () { throw new Error('뒷단이 답을 안 줬어요(' + r.status + ')'); }); })
@@ -1395,40 +1402,49 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     if (!x || !x.묻기) return false;
     return (x.댓글 || []).some(function (c) { var 누 = (c && c.누가) || ''; return 누 && 누 !== '관리자' && (!x.대상 || x.대상 === '모두' || 누 === x.대상); });
   }
+  // 모든 데스크(한마음·GN·일상)가 같은 기준을 쓴다(2026-10-12 유니스 「할 일 목록 기준은 항상 모든 데스크가 동일」) — 설정에 「우선순위」가 있으면 그 값이 이기고, 없으면 이 기본값이다.
+  var 기본우선순위 = { 목적배수: 2, 기본: { 문자: [3, 3], 블로그: [2, 1], 할일: [1, 1] }, 답하면빠짐: true, 개수: 5 };
   function 우선할일목록(피, 내것, 규칙, 오늘, 사흘) {
+    규칙 = 규칙 || 기본우선순위;
+    var 이레 = new Date(new Date(오늘 + 'T00:00:00Z').getTime() + 7 * 864e5).toISOString().slice(0, 10);
     var 할 = [], 받 = (피 && 피.받은것) || [];
     // 종전 급(규칙이 없을 때) — 0 오늘 발송이 걸린 문자 · 1 기한 지남·오늘 · 2 기한 사흘 안 · 3 그 밖 할 일(기한 순) · 4 블로그 1순위
     받.filter(function (x) { return x.갈래 === '문자' && (x.단계 || '초안') === '초안' && !대체됐나(x); }).forEach(function (x) { 할.push({ 종류: '문자', 급: 0, 순: x.발송시각 || '', 가: '받은것', 속: 'data-문자="' + esc(x.id) + '"', 원: null, 항목: x, 제목: '문자 보고 「보내도 됩니다」 눌러 주기', 한줄: (x.제목 || '') + ' · 누르시면 ' + (x.발송시각 ? x.발송시각 + '에 ' : '') + '나가요' /* 2026-10-03 — 「오늘 14:00」이 날이 바뀌어도 남아 있었다. 날은 카드 제목에, 시각만 여기에 */ }); });
     (내것 || []).forEach(function (x) {
-      if (규칙 && 규칙.답하면빠짐 !== false && 답한묻기인가(x)) return;   // 이미 답하신 것 — 다시 위에 올리지 않는다
+      if (규칙.답하면빠짐 !== false && 답한묻기인가(x)) return;   // 이미 답하신 것 — 다시 위에 올리지 않는다
+      if (typeof 아직때아닌가 === 'function' && 아직때아닌가(x)) return;   // 우리가 정한 착수일이 아직 안 왔다
+      if (typeof 지금못하나 === 'function' && 지금못하나(x)) return;       // 기다림·막힘·선행 안 끝남 — 오늘 할 수 없다(「하실 것 전부」에는 있다)
+      var 날 = x.마감 || x.기한;
+      if (날 && 날 > 이레) return;                                          // 기한이 이레 넘게 남은 것은 첫 화면에 안 올린다(2026-09-28 유니스 — 압박만 된다)
       var 급 = x.기한 && x.기한 <= 오늘 ? 1 : x.기한 && x.기한 <= 사흘 ? 2 : 3;
       할.push({ 종류: '할일', 급: 급, 순: x.기한 || '9999', 가: '할일', 속: 'data-할일열기="' + esc(x.id) + '"', 원: x, 항목: x, 제목: x.제목, 한줄: x.기한 ? '기한 ' + x.기한 + (x.기한 < 오늘 ? ' — 지났어요' : x.기한 === 오늘 ? ' — 오늘' : '') : (x.한줄 || '') });
     });
     var 초안 = 받.filter(function (x) { return x.갈래 === '블로그' && (x.단계 || '초안') === '초안' && !대체됐나(x); }).sort(function (a, b) { return (a.순위 || 999) - (b.순위 || 999); });
     if (초안.length) 할.push({ 종류: '블로그', 급: 4, 순: '', 가: '받은것', 속: 'data-블로그열기="' + esc(초안[0].id) + '"', 원: null, 항목: 초안[0], 제목: '블로그 글 올리기 — ' + 초안[0].제목, 한줄: 초안[0].순위이유 || '본문을 복사해서 블로그에 붙여 넣으시면 돼요' });
-    if (!규칙) {
-      할.sort(function (a, b) { return a.급 - b.급 || (a.순 < b.순 ? -1 : a.순 > b.순 ? 1 : 0); });
-      return 할;
-    }
     var 배 = Number(규칙.목적배수) || 2, 기본 = 규칙.기본 || {};
     function 칸(t, 이름, i) { var v = t.항목 && t.항목[이름]; if (v === 0 || v) return Number(v) || 0; var d = 기본[t.종류] || 기본.할일 || [1, 1]; return Number(d[i]) || 0; }
     할.forEach(function (t) {
       t.점수 = 칸(t, '목적', 0) * 배 + 칸(t, '늦으면', 1);
       var x = t.원, 날 = x && (x.마감 || x.기한);
       t.맨위 = !!(날 && 날 <= 오늘 && !(typeof 우리가정한날 === 'function' && 우리가정한날(x)));   // 법·약속 기한이 오늘이거나 지남 — 우리가 정한 목표일은 빼고
+      t.막음 = (x && typeof 몇개를막나 === 'function') ? 몇개를막나(x) : 0;                       // 이 일이 끝나야 풀리는 일의 수
+      t.끈자리 = (x && typeof 순서목록 === 'function') ? 순서목록('할일').indexOf(x.id) : -1;     // 유니스가 끌어 둔 차례
     });
     할.sort(function (a, b) {
       if (a.맨위 !== b.맨위) return a.맨위 ? -1 : 1;
       if (a.맨위 && a.순 !== b.순) return a.순 < b.순 ? -1 : 1;
+      if ((a.막음 >= 2) !== (b.막음 >= 2)) return a.막음 >= 2 ? -1 : 1;     // 하나가 둘 이상을 막고 있으면 점수와 관계없이 먼저(제약이론)
       if (a.점수 !== b.점수) return b.점수 - a.점수;
+      if (a.막음 !== b.막음) return b.막음 - a.막음;                          // 점수가 같으면 여러 일을 막고 있는 것 먼저
+      if (a.끈자리 >= 0 || b.끈자리 >= 0) { if (a.끈자리 < 0) return 1; if (b.끈자리 < 0) return -1; if (a.끈자리 !== b.끈자리) return a.끈자리 - b.끈자리; }   // 그다음 사람이 끈 차례
       var qa = !!(a.항목 && a.항목.금방), qb = !!(b.항목 && b.항목.금방);   // 같은 점수면 1분 안에 끝나는 것(누르기·고르기) 먼저
       if (qa !== qb) return qa ? -1 : 1;
       return a.급 - b.급 || (a.순 < b.순 ? -1 : a.순 > b.순 ? 1 : 0);
     });
     return 할;
   }
-  // 몇 개 보이나(2026-10-11 유니스 「셋에서 다섯까지」) — 설정 「우선순위.개수」(1~10). 칸이 없으면 종전 3. 고르는 순서(우선할일목록)는 그대로고 자르는 자리만 이것이다
-  function 우선할일개수(규칙) { var n = Math.floor(Number(규칙 && 규칙.개수)); return n >= 1 ? Math.min(n, 10) : 3; }
+  // 몇 개 보이나(2026-10-11 유니스 「셋에서 다섯까지」) — 설정 「우선순위.개수」(1~10). 칸이 없으면 5(2026-10-12 유니스 「5개까지」). 고르는 순서(우선할일목록)는 그대로고 자르는 자리만 이것이다
+  function 우선할일개수(규칙) { var n = Math.floor(Number(규칙 && 규칙.개수)); return n >= 1 ? Math.min(n, 10) : 5; }
   function 원장님홈(내것) {
     var 피 = (자료 && 자료.피드) || {};
     // 원장님이 시키지 않았는데 해 둔 것(먼저)이 맨 앞 — 2026-09-30 유니스 「공유·요청되지 않은 것이 오히려 앞에 보이면」. 그 안에서는 최근 것부터.
@@ -1491,6 +1507,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     if (x.단계 === '얘기중') return 차 <= 7 ? 3 : 9;
     // 정하신 할 일 — 그다음은 남의 손이라 이번 주 맨 아래로(2026-10-06 GN 유니스 「이렇게 했으면 이제 아래로 내려가던가」)
     if (x.단계 === '결정') return 차 <= 7 ? 4 : 9;
+    if (우리가정한날(x) && 차 < 0) return 2;   // 저희가 정한 목표일이 지난 것은 「지남」 띠에 안 올린다 — 법·약속 기한만 지남이다(2026-10-12)
     if (차 < -7) return 3;
     if (차 < 0) return 0;
     return 차 <= 1 ? 1 : 차 <= 7 ? 2 : 9;
@@ -1505,11 +1522,14 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     });
   }
   function 대표홈(열린, 원장할일) {
-    var 내것전부 = 열린.filter(대표것인가), 급한 = 이번주것(내것전부), 오 = 오늘날();
+    var 내것전부 = 열린.filter(대표것인가), 오 = 오늘날();
+    // 원장님 홈과 같은 기준(우선할일목록 — 법·약속 기한 → 점수 → 막는 수 → 끈 차례)으로 고른다(2026-10-12 유니스 「모든 데스크가 동일한 기준」). 줄 수도 같은 설정 개수(5).
+    var 사흘날 = new Date(Date.now() + 3 * 864e5 - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    var 급한 = 우선할일목록({}, 내것전부, (설정 && 설정.우선순위) || null, 오, 사흘날).map(function (t) { return t.원; }).filter(Boolean), 몇 = 우선할일개수(설정 && 설정.우선순위);
     var 오늘날글 = 오늘날(), 지난 = 내것전부.filter(function (x) { var d = x.마감 || x.기한; return d && d < 오늘날글 && x.단계 !== '얘기중'; }).length, 그뒤 = 내것전부.length - 급한.length;
     var h = '<section class="카드 넓게"><h2>오늘 먼저 할 것 ' + 오늘표() + ' <button class="더" data-가="할일">하실 것 전부</button></h2>';
-    h += 급한.length ? 급한.slice(0, 3).map(function (x) { return 할일줄(x, true); }).join('') : '<div class="빈">이번 주 안에 기한이 걸린 것이 없어요.</div>';
-    if (급한.length > 3) h += '<div class="한줄" style="padding-left:0;border:0;margin-top:8px"><span data-가="할일" style="color:var(--강조);cursor:pointer">이번 주 것 ' + (급한.length - 3) + '개 더 보기 ›</span></div>';
+    h += 급한.length ? 급한.slice(0, 몇).map(function (x) { return 할일줄(x, true); }).join('') : '<div class="빈">오늘 먼저 하실 것이 없어요.</div>';
+    if (급한.length > 몇) h += '<div class="한줄" style="padding-left:0;border:0;margin-top:8px"><span data-가="할일" style="color:var(--강조);cursor:pointer">이어서 할 것 ' + (급한.length - 몇) + '개 더 보기 ›</span></div>';
     h += '</section>';
     // 블로그 — 올릴 차례(2026-09-30 유니스 「블로그는 내가 주 2~3회 기본으로 올리고 원장님은 올리고 싶으실 때」) — 추천 순위 둘 · 이번 주 올린 수
     var 블초 = ((자료 && 자료.피드.받은것) || []).filter(function (x) { return x.갈래 === '블로그' && (x.단계 || '초안') === '초안' && !대체됐나(x); }).sort(function (a, b) { return (a.순위 || 999) - (b.순위 || 999); });
@@ -1524,7 +1544,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
       줄.push('<div class="항" data-가="' + 가 + '"' + (스크롤 ? ' data-스크롤="' + 스크롤 + '"' : '') + ' style="cursor:pointer"><span class="때칸">' + 수 + '</span><span class="몸">' + esc(이름) + (덧 ? ' <span style="color:var(--보조)">· ' + 덧 + '</span>' : '') + '</span></div>');
     }
     var 탭 = 탭목록();
-    한줄('하실 것', 내것전부.length, '할일', (지난 ? '기한 지난 것 ' + 지난 + ' · ' : '') + '이번 주 ' + 급한.length + ' · 그 뒤 ' + 그뒤);
+    한줄('하실 것', 내것전부.length, '할일', (지난 ? '기한 지난 것 ' + 지난 + ' · ' : '') + '오늘 후보 ' + 급한.length + ' · 그 뒤 ' + 그뒤);
     if (구성원있나() && 원장할일.length) 한줄(말('구성원할일'), 원장할일.length, '할일', '', '원장님');
     if (탭.indexOf('받은것') >= 0) 한줄('받은 것', ((자료 && 자료.피드.받은것) || []).filter(function (x) { return !받은것끝났나(x) && x.갈래 !== '참고'; }).length, '받은것');
     if (자료 && 자료.피드.메일 && 자료.피드.메일.length && !메일따로()) 한줄('메일 — 봐야 할 것', 봐야할메일().length, '메일');
@@ -1708,6 +1728,24 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
   // ── 메일(2026-09-21) — 피드 「메일」(데스크_메일.py · 10분마다). 봐야함 = 사람이 봐야 할 것 · 처리했어요 = 끝냈어요(체크 csv) ──
   function 메일목록() { return ((자료 && 자료.피드.메일) || []).slice().sort(function (a, b) { return a.시각 < b.시각 ? 1 : -1; }); }
   function 봐야할메일() { return 메일목록().filter(function (x) { return x.봐야함 && !끝난할일(x.id); }); }
+  // 메일 본문은 열 때 받는다(2026-10-12 데스크 느림 개선 B) — 목록 자료에는 보낸 분·제목·시각·미리보기(한줄)만 오고 본문 자리에 본문있음:true 가 온다.
+  //   열면 p=feedone 으로 그 한 통만 받아 이 창에 둔다(30초마다 자료가 새로 와도 남는다). 옛 판 자료(본문이 그대로 든 것)도 그대로 읽힌다
+  var 본문캐시 = {}, 본문받는중 = {}, 본문못받음 = {};
+  function 메일본문(x) { return (x && (x.본문 || 본문캐시[x.id])) || ''; }
+  function 본문기다리나(x) { return !!(x && x.본문있음 && !x.본문 && 본문캐시[x.id] == null); }
+  function 본문받기(id) {
+    if (!id || 본문캐시[id] != null || 본문받는중[id]) return;
+    var x = 메일목록().filter(function (y) { return y.id === id; })[0];
+    if (!x || !x.본문있음 || x.본문) return;
+    본문받는중[id] = true; delete 본문못받음[id];
+    var 다시그림 = function () { if (열린메일 !== id) return; if (document.querySelector('.읽기창')) 읽기창새로(); else 그리기(); };
+    fetch(뒷단주소('p=feedone&id=' + encodeURIComponent(id)), { redirect: 'follow' }).then(function (r) { return r.json(); }).then(function (j) {
+      본문받는중[id] = false;
+      if (j && j.됨 && j.항목) 본문캐시[id] = String(j.항목.본문 || ''); else 본문못받음[id] = (j && j.왜) || '뒷단이 답을 안 줬어요';
+      다시그림();
+    }).catch(function () { 본문받는중[id] = false; 본문못받음[id] = '인터넷이 끊겼는지 봐 주세요'; 다시그림(); });
+  }
+  function 본문자리글(x) { return 본문못받음[x.id] ? '본문을 못 불러왔어요 — ' + 본문못받음[x.id] + '. 메일을 다시 누르시면 다시 불러와요.' : '본문을 불러오는 중이에요…'; }
   var 열린메일 = '', 답장쓰는id = '';
   // 메일 비서(2026-09-29 유니스 「온라인 아웃룩에서 하는 것처럼 너의 도움을 직접 받아서 메일 내용을 확인하거나 찾거나 정리하거나」)
   //   읽기 창·메일함 위에서 비서 방(me-나)에 머리를 붙인 글을 보낸다 — 「[메일 gm-… · 제목] 질문」·「[메일함] 질문」.
@@ -1747,8 +1785,9 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     if (자세히 && x.한줄) h += '<div class="한줄 접힘">' + esc(x.한줄) + '</div>';
     h += '<div class="때">' + 칩 + ' · ' + 때글(x.시각) + '</div>';
     if (자세히) {
-      if (x.본문 && 열린메일 === x.id) h += '<div class="메일본문">' + 링크살리기(x.본문) + '</div>';
-      else if (x.본문) h += '<div class="때" style="margin-top:6px"><span data-메일열기="' + esc(x.id) + '" style="color:var(--강조);cursor:pointer">전문 보기 ›</span></div>';
+      if (메일본문(x) && 열린메일 === x.id) h += '<div class="메일본문">' + 링크살리기(메일본문(x)) + '</div>';
+      else if (본문기다리나(x) && 열린메일 === x.id) h += '<div class="메일본문"><span style="color:var(--흐림)">' + esc(본문자리글(x)) + '</span></div>';
+      else if (메일본문(x) || x.본문있음) h += '<div class="때" style="margin-top:6px"><span data-메일열기="' + esc(x.id) + '" style="color:var(--강조);cursor:pointer">전문 보기 ›</span></div>';
       if (x.답장) h += '<div class="보낸답장"><b>보낸 답장</b> · ' + 때글(x.답장때 || '') + String.fromCharCode(10) + esc(x.답장) + '</div>';
       if (x.단계 === '답장') h += '<div class="때">' + 신호('살핌', '답장 보내는 중 — 10분 안에 나가요') + '</div>';
       if (x.단계 === '막힘') h += '<div class="때">' + 신호('막힘', esc(x.사유 || '못 했어요')) + '</div>';
@@ -1930,7 +1969,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     if (q) {
       var 말들 = q.split(/\s+/);
       목 = 메일목록().filter(function (x) {   // 찾을 때는 폴더를 가리지 않는다 — 아웃룩 「모든 사서함」처럼
-        var 바닥 = ((x.보낸이 || '') + ' ' + (x.주소 || '') + ' ' + (x.받는이 || '') + ' ' + (x.제목 || '') + ' ' + (x.첨부 || '') + ' ' + (x.본문 || '')).toLowerCase();
+        var 바닥 = ((x.보낸이 || '') + ' ' + (x.주소 || '') + ' ' + (x.받는이 || '') + ' ' + (x.제목 || '') + ' ' + (x.첨부 || '') + ' ' + (x.한줄 || '') + ' ' + 메일본문(x)).toLowerCase();
         return 말들.every(function (w) { return 바닥.indexOf(w) >= 0; });
       });
     }
@@ -2040,8 +2079,9 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
       else if (요 && 요.상태 === '못함') h += '<div class="한줄 알림줄">원래 모양은 못 불러왔어요' + (요.왜 ? ' — ' + esc(요.왜) : '') + '. 글로만 보여요.</div>';
       else if (요 && 요.상태 === '늦음') h += '<div class="한줄 알림줄">노트북이 답이 없어요(꺼져 있을 수 있어요). <button class="단추 작게 테" data-원본다시="1">다시 불러오기</button></div>';
     }
-    var 본문 = x.본문 || '';
-    return h + '<div class="메일본문">' + (본문 ? 링크살리기(본문) : '<span style="color:var(--흐림)">' + (x.열기 ? '광고·자동 메일은 본문을 안 실어 와요. 「메일함에서 열기」로 보실 수 있어요.' : 서버메일인가() && !서버.한통[x.id] ? '불러오는 중…' : '본문이 없어요.') + '</span>') + '</div>' +
+    var 본문 = 메일본문(x) || 메일본문(메일목록().filter(function (y) { return y.id === x.id; })[0]);
+    var 피드줄 = 본문 ? null : 메일목록().filter(function (y) { return y.id === x.id; })[0];
+    return h + '<div class="메일본문">' + (본문 ? 링크살리기(본문) : '<span style="color:var(--흐림)">' + (본문기다리나(피드줄) || (피드줄 && 본문못받음[피드줄.id]) ? esc(본문자리글(피드줄)) : x.열기 ? '광고·자동 메일은 본문을 안 실어 와요. 「메일함에서 열기」로 보실 수 있어요.' : 서버메일인가() && !서버.한통[x.id] ? '불러오는 중…' : '본문이 없어요.') + '</span>') + '</div>' +
       (본문.length >= 6000 ? '<div class="한줄" style="color:var(--흐림);font-size:13px;padding:0;border:0">긴 메일이라 글은 앞부분만 보여요. 전부는 원래 모양으로 보시면 돼요.</div>' : '');
   }
   function 읽기창(x) {
@@ -2149,6 +2189,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     열린메일 = id; 답장쓰는id = '';
     var x = 메일찾기(id);
     if (x && !읽었나(x)) 메일상태바꾸기([id], { 읽음: true });
+    본문받기(id);                                             // 목록에서 뺀 본문(B) — 피드 메일이면 한 통만 받는다
     if (서버메일인가() && !서버.한통[id]) 한통부르기(id);
     else if (서버메일인가()) 기다림확인(id);
   }
@@ -3061,7 +3102,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     var 첨부 = e.target.closest('[data-첨부부탁]'); if (첨부) { 원본부탁(첨부.getAttribute('data-메일id'), 첨부.getAttribute('data-첨부부탁')); return; }
     var 글만 = e.target.closest('[data-글만]'); if (글만) { var 원 = 서버.원본[열린메일]; if (원) { 원.글만 = 글만.getAttribute('data-글만') === '1'; 읽기창새로(); } return; }
     if (e.target.closest('[data-원본다시]')) { var 원2 = 서버.원본[열린메일]; if (원2) { delete 서버.기다림[열린메일 + '|html']; 원본부탁(열린메일, 'html'); } return; }
-    var 메열 = e.target.closest('[data-메일열기]'); if (메열) { var mi = 메열.getAttribute('data-메일열기'); 열린메일 = (열린메일 === mi) ? '' : mi; 그리기(); return; }
+    var 메열 = e.target.closest('[data-메일열기]'); if (메열) { var mi = 메열.getAttribute('data-메일열기'); 열린메일 = (열린메일 === mi) ? '' : mi; if (열린메일) 본문받기(열린메일); 그리기(); return; }
     var 답 = e.target.closest('[data-답장]'); if (답) { 답장쓰는id = 답.getAttribute('data-답장'); 열린메일 = 답장쓰는id; 그리기(); setTimeout(function () { var t = $('답장글'); if (t) t.focus(); }, 60); return; }
     if (e.target.closest('[data-답장취소]')) { 답장쓰는id = ''; 그리기(); return; }
     var 답보 = e.target.closest('[data-답장보내기]'); if (답보) {
