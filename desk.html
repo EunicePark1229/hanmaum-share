@@ -471,6 +471,51 @@ body.보기중 .입력줄 { display: none !important }
 .단추:disabled { opacity: .5; }
 .칩 { display: inline-block; padding: 2px 10px; border-radius: 999px; background: var(--강조연); color: var(--강조); font-size: 14px; margin-right: 6px; }
 .칩.끝 { background: #EEF2F3; color: var(--흐림); }
+/* 화면정리(2026-10-12 GN) — 홈·할 일·받은 것을 같은 기준으로. 설정 「화면정리」가 있는 조직만 이 칸들이 그려진다 */
+.차례기준 { font-size: 15px; color: var(--보조); background: var(--바탕); border-radius: 10px; padding: 8px 12px; margin: 0 0 10px; line-height: 1.5; }
+.정리줄 .제목 { line-height: 1.4; }
+.주제칩 { display: inline-block; font-size: 14px; font-weight: 600; color: var(--보조); border: 1px solid var(--선); border-radius: 6px; padding: 0 7px; margin-right: 6px; vertical-align: 1px; }
+.이유줄 { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.이유칩 { font-size: 14px; padding: 2px 10px; border-radius: 999px; background: var(--강조연); color: var(--강조); }
+.이유칩.급 { background: #FBE9E9; color: var(--막힘); }
+.정리줄 .칩, .이유칩:not(.급):not(.주의):not(.정함):not(.쉼), .정리줄 .열기말 { color: #9A4A06; }   /* 강조색 글씨를 옅은 바탕 위에서 한 단 진하게(대비 4.2→5.6 · 시각검사) */
+.이유칩.쉼 { background: #EEF2F3; color: var(--흐림); }
+.줄 .한줄.배경한줄, .배경한줄 { font-size: 15px; color: var(--보조); margin-top: 6px; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.45; }
+.내할것 { font-size: 15px; color: var(--글); margin-top: 6px; padding: 6px 10px; border-radius: 8px; background: var(--강조연); line-height: 1.45; }
+.내할것 b { color: var(--강조); font-weight: 600; margin-right: 4px; }
+.먼저꼬리 { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--선); font-size: 15px; color: var(--강조); cursor: pointer; }
+.접힌줄 { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 12px; }
+.접힌줄 button { background: var(--카드); border: 1px solid var(--선); border-radius: 999px; padding: 8px 14px; font-size: 15px; color: var(--보조); cursor: pointer; }
+.접힌줄 button.켬 { border-color: var(--강조); color: var(--강조); }
+.정리사유 { font-size: 15px; color: var(--보조); background: #EEF2F3; border-radius: 8px; padding: 8px 10px; margin: 6px 0 10px; }
+.정하기목록 li { margin: 4px 0; }
+.차례기준, .정리줄 .제목, .배경한줄, .내할것, .정리사유, .이유칩, .먼저꼬리, .정리줄 .때 { word-break: keep-all; overflow-wrap: break-word; }
+.정리줄 .댓글 .때 { font-size: 14px; }
+/* 화면정리 — 평이하지 않게(2026-10-12 유니스 「색과 구조가 다채롭지 않아 눈에 안 띈다」 · UI_디자인기준 7·8절)
+   색은 조직 강조색 하나 + 상태·이유 칩에만 상태색(빨강 기한 지남 · 노랑 기한 남음 · 파랑 정할 것 · 회색 기다림·목표일). 칩 색 뜻은 화면 아래 한 줄에 글로 */
+.히어로 { background: var(--강조); color: #fff; border-radius: 12px; padding: 16px 18px 14px; margin: -2px 0 12px; }
+.히어로 h2 { color: #fff !important; border: 0 !important; padding: 0 !important; margin: 0 0 12px !important; font-size: 22px; }
+.히어로 h2 span { color: rgba(255,255,255,.88) !important; }
+.타일줄 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.타일 { background: #fff; color: var(--글); border: 1px solid rgba(0,0,0,.06); border-radius: 10px; padding: 10px 12px; cursor: pointer; min-width: 0; }
+.진행막대 { height: 10px; background: rgba(255,255,255,.35); border-radius: 999px; margin-top: 12px; overflow: hidden; }
+.진행막대 span { display: block; height: 100%; background: #fff; border-radius: 999px; }
+.진행글 { font-size: 14px; color: #fff; margin-top: 6px; }
+.타일 .수 { display: block; font-size: 32px; font-weight: 700; line-height: 1.1; color: var(--강조); font-variant-numeric: tabular-nums; }
+.타일 .이름 { display: block; font-size: 14px; color: var(--보조); margin-top: 2px; word-break: keep-all; }
+.타일 .수.급 { color: #C62828; } .타일 .수.정함 { color: #1F4E8C; } .타일 .수.쉼 { color: #5F6E75; }
+.이유칩.주의 { background: #FBF1E3; color: #8A5300; }
+.이유칩.정함 { background: #E6EEF9; color: #1F4E8C; }
+.정리줄.정함상자 { background: #F1F5FC; border: 1px solid #C9D8EE; border-left: 5px solid #1F4E8C; border-radius: 10px; padding: 12px 14px; margin: 10px 0; }
+.정리줄.급줄 { border-left: 5px solid #C62828; padding-left: 12px; }
+.정리줄.첫줄 .제목 { font-size: 20px; }
+.정리줄.첫줄 { padding-top: 14px; padding-bottom: 14px; }
+.흐름줄 { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; padding: 0; margin: 0 0 10px; counter-reset: 흐름; }
+.흐름줄 li { counter-increment: 흐름; flex: 0 1 auto; font-size: 15px; color: var(--글); background: var(--카드); border: 1px solid var(--선); border-radius: 10px; padding: 4px 9px; word-break: keep-all; }
+.흐름줄 li::before { content: counter(흐름) '. '; font-weight: 700; color: #9A4A06; }
+.칩뜻 { font-size: 14px; color: var(--보조); margin-top: 10px; line-height: 1.6; word-break: keep-all; }
+.칩뜻 i { font-style: normal; display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin: 0 4px 0 8px; vertical-align: 0; }
+@media (max-width: 560px) { .타일줄 { grid-template-columns: repeat(2, 1fr); } }
   .댓글칸 { margin-top:10px; border-top:1px solid var(--선); padding-top:8px }
   .댓글 { font-size:13px; color:var(--보조); margin:6px 0; padding-left:8px; border-left:2px solid var(--선) }
   .댓글 b { color:var(--글); font-weight:600 }
@@ -541,6 +586,7 @@ body.띠있음 { --방줄위: 114px; }
 .알림카드 button, #푸시칸 button { flex: none; height: 32px; padding: 0 12px; font-size: 14px; border-radius: 8px; }
 #푸시칸.켬 { border: 0; padding: 0; margin: 0 0 8px; font-size: 13px; color: var(--좋음); background: none; }
 main.홈격자 > .알림카드 { column-span: all; }
+main.홈격자 > section.먼저카드 { column-span: all; max-width: 920px; }   /* 화면정리 홈은 카드 하나 — 반쪽 단에 갇히지 않게(2026-10-12) */
 #요청시트 .판 h2 { margin-bottom: 10px; }
 #요청시트 .라벨 { margin: 14px 0 6px; font-size: 15px; color: var(--보조); }
 #요청시트 .칩줄 { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -1012,7 +1058,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
   // ⛔ 2026-09-24 — 「기한」 한 칸에 두 가지가 담겨 있었다. 밖에서 온 **마감**(안 지키면 일이 난다)과
   //    우리가 스스로 정한 **목표일**(안 지켜도 아무 일도 안 난다). 둘을 같은 줄로 세우니 차례가 뒤집혔다.
   //    실측 — 한마음 열린 12건 중 기한 붙은 10건이 전부 우리 목표일이고, 재구매를 원하시는 손님이 그 아래 계셨다.
-  function 우리가정한날(x) { return !!(x && x.언제부터) || String((x && (x.출처 || x.어디서)) || '').indexOf('기한대장') >= 0; }
+  function 우리가정한날(x) { return !!(x && (x.언제부터 || x.목표일)) || String((x && (x.출처 || x.어디서)) || '').indexOf('기한대장') >= 0; }   // 목표일 — GN 원장 provisional(날짜는 제 제안 · 2026-10-12)
   // 일의 종류 — 유니스 2026-09-24 「그냥 액션만 하면 되는 것 / 논의가 먼저인 것 / 앞엣것이 끝나야 하는 것」.
   //   칸이 없는 옛 항목은 「함」으로 본다. 「기다림」·「막힘」은 지금 내가 못 하는 일이라 빨간 지남을 안 단다.
   var 종류말 = { 함: '', 정함: '정할 것', 얘기함: '얘기 먼저', 기다림: '기다리는 중', 막힘: '막힘' };
@@ -1068,7 +1114,14 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
   function 미룬할일인가(x) { return x.단계 === '보류'; }   // 「나중에」 — 열린 목록에서 내려가 맨 아래 「나중에」 칸에(2026-09-22 유니스)
   function 답한할일인가(x) { return x.단계 === '결정' && x.구분 !== '할일'; }   // 정할 것에 답했으면 끝난 것 — 열린 목록에 남아 보이던 것(대장 14 · 2026-09-22)
   function 닫힌할일인가(x) { return x.단계 === '완료' || 끝난할일(x.id) || 답한할일인가(x); }
-  function 열린할일() { return ((자료 && 자료.피드.할일) || []).filter(function (x) { return !닫힌할일인가(x) && !미룬할일인가(x); }).sort(기한차례); }
+  function 열린할일() { return ((자료 && 자료.피드.할일) || []).filter(function (x) { return !닫힌할일인가(x) && !미룬할일인가(x) && !정리중인가(x); }).sort(기한차례); }
+  // ── 화면정리(2026-10-12 GN 유니스 「구성·순서·일관성·로직·사용자 편의가 안 보인다」) — 설정 「화면정리」가 있는 조직만. 칸이 없으면(한마음·일상) 종전 화면 그대로 ──
+  //   ① 홈 = 오늘 먼저 할 것 한 카드 ② 할 일 탭 맨 위 = 홈과 같은 함수(하실것차례)·같은 차례 ③ 받은 것 = 유니스가 손댈 것만 ④ 할 일 자격이 없는 것(정리필요 칸)은 「정리 중」으로
+  function 화면정리() { return (설정 && 설정.화면정리) || null; }
+  function 정리중인가(x) { return !!(화면정리() && x && x.정리필요); }
+  function 며칠지났나(iso) { if (!iso) return 9999; var t = new Date(iso).getTime(); return isNaN(t) ? 9999 : Math.floor((Date.now() - t) / 864e5); }
+  // 끝낸 것은 끝낸 지 「끝낸것며칠」(7) 안만 보인다 — 날짜를 모르는 것은 오래된 것으로 본다(2026-10-12 유니스 「끝낸 것이 줄줄이 있어야 할 이유」)
+  function 최근끝낸것인가(x) { var 정 = 화면정리() || {}; var 끝 = x.끝낸때 || x.단계때 || ''; return !!끝 && 며칠지났나(끝) <= (Number(정.끝낸것며칠) || 7); }   // 모든 조직 — 설정이 없으면 이레(2026-10-12 한마음 화면점검)
 
   // ── 역할 · 탭 ──
   var 탭아이콘 = {
@@ -1125,17 +1178,18 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     var 전부 = 탭목록(), 열린 = 열린할일(), 나 = (자료 && 자료.누구) || '';
     var 할 = (자료 && 자료.피드.할일) || [];
     var 나중 = 할.filter(function (x) { return 미룬할일인가(x) && !끝난할일(x.id); }).length;
-    var 끝 = 할.filter(닫힌할일인가).length;
+    var 끝 = 할.filter(function (x) { return 닫힌할일인가(x) && 최근끝낸것인가(x); }).length;
     var 아래할일 = 대표인가()
       ? [{ 구역: '내할일', 이름: 말('내할일'), 수: 열린.filter(대표것인가).length }, { 구역: '원장님', 이름: 말('구성원할일'), 수: 열린.filter(function (x) { return !대표것인가(x); }).length, 숨김: !구성원있나() }]
       : [{ 구역: '하실것', 이름: '하실 것', 수: 열린.filter(function (x) { return !x.대상 || x.대상 === '모두' || x.대상 === 나; }).length }];
     아래할일 = 아래할일.concat([{ 구역: '나중에', 이름: '나중에', 수: 나중 }, { 구역: '끝낸것', 이름: '끝낸 것', 수: 끝 }]).filter(function (a) { return !a.숨김; });
+    if (화면정리() && 대표인가()) { var 차 = 하실것차례(열린.filter(대표것인가)); 아래할일 = [{ 구역: '내할일', 이름: '지금 할 것', 수: 차.위.length }, { 구역: '그뒤', 이름: '그 뒤', 수: 차.아래.length }]; }   // 홈·할 일 탭과 같은 함수로 센다(2026-10-12)
     var 목 = [];
     전부.forEach(function (k) {
       if (k === '재고' || k === '장부') return;   // 운영 묶음으로
       var 항 = { 키: k, 이름: 탭이름[k] || k, 아래: [] };
       if (k === '할일') 항.아래 = 아래할일;
-      if (k === '받은것') { 항.아래 = [{ 구역: '', 이름: '받은 것', 수: ((자료 && 자료.피드.받은것) || []).length }]; if (전부.indexOf('메일') >= 0 && !메일따로()) 항.아래.push({ 탭: '메일', 이름: '메일', 수: 봐야할메일().length }); 항.아래.push({ 알림: true, 이름: '알림', 수: 안읽은것().length }); }
+      if (k === '받은것') { 항.아래 = [화면정리() ? { 구역: '손댈것', 이름: '손댈 것', 수: 받은것나눔().손댈.length } : { 구역: '', 이름: '받은 것', 수: ((자료 && 자료.피드.받은것) || []).length }]; if (전부.indexOf('메일') >= 0 && !메일따로()) 항.아래.push({ 탭: '메일', 이름: '메일', 수: 봐야할메일().length }); 항.아래.push({ 알림: true, 이름: '알림', 수: 안읽은것().length }); }
       if (k === '메일' && !메일따로()) return;   // 받은 것 아래로(한마음)
       if (k === '메일') { var 폴 = 메일폴더수(); 항.아래 = [{ 탭: '메일', 메일폴더: '봐야', 이름: '봐야 할 것', 수: 폴.봐야[0] }, { 탭: '메일', 메일폴더: '받은', 이름: '받은편지함', 수: 폴.받은[1] || 폴.받은[0] }, { 탭: '메일', 메일폴더: '보낸', 이름: '보낸편지함', 수: 폴.보낸[0] }, { 탭: '메일', 메일폴더: '받은', 메일거름: '깃발', 이름: '깃발' }]; }
       if (k === '고객' && 고객목록().length) 항.아래 = [{ 구역: '', 이름: '명단', 수: 고객목록().length, 고객보기: '전부' }, { 구역: '', 이름: '이번 주 연락', 수: 연락남은().length, 고객보기: '연락' }, { 구역: '', 이름: '연락 안 함', 수: 고객목록().filter(제외됐나).length, 고객보기: '제외' }];
@@ -1557,6 +1611,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     // 원장님 홈 — 셋만(2026-09-27 유니스 「원장님이 지금 화면이 버거우신 것 같아」 · 「홈 화면은 이렇게만 남겨줘」)
     //   오늘 우선 할 일(설정 개수 · 한마음 다섯) · 진행된 일 · 바로가기. 나머지는 아래 탭에 그대로 있다(앱 피드백 48)
     if (!대표인가()) return 원장님홈(내것);
+    if (화면정리() && 화면정리().홈 === '먼저할것만') return 알림카드() + 정리홈(열린);   // GN(2026-10-12) — 나머지·바로가기·늘 쓰는 것·하신 것 카드 없이 한 카드
     return 알림카드() + 대표홈(열린, 원장할일);
   }
   // ── 대표 홈 — 먼저 할 것 셋 + 나머지는 한 줄씩 수와 링크만(2026-09-28 · 앱 피드백 48 을 대표에게도) ──
@@ -1588,6 +1643,66 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
       if (ia !== undefined || ib !== undefined) { if (ia === undefined) return 1; if (ib === undefined) return -1; return ia - ib; }
       return 기한차례(a, b);
     });
+  }
+  // 하실 것 차례 — 홈 「오늘 먼저 할 것」과 할 일 탭 「지금 할 것」이 이 함수 하나를 쓴다(2026-10-12 유니스 「홈 목록·순서가 할 일 탭과 일관되지 않다」).
+  //   위 = 우선할일목록(원장님 홈과 같은 기준)이 고른 것 그 차례 그대로 · 아래 = 그 밖(기한 이레 넘게 남음 · 기다림·막힘 · 착수일 전 · 답한 묻기) 기한 순.
+  //   홈은 위의 앞 다섯, 할 일 탭은 위 전부(같은 번호) + 아래(접힘). 그래서 홈 1~5번 = 할 일 탭 1~5번이다.
+  function 하실것차례(내것들) {
+    // 들어오는 차례를 먼저 고정한다 — 같은 급끼리는 들어온 차례를 따르는데, 홈(피드 차례)과 할 일 탭(뒤집은 차례)이 달라 5개 중 2개만 같았다(2026-10-12 화면점검)
+    내것들 = 내것들.slice().sort(function (a, b) { return 기한차례(a, b) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0); });
+    var 오 = 오늘날(), 사흘날 = new Date(Date.now() + 3 * 864e5 - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    var 위 = 우선할일목록({}, 내것들, (설정 && 설정.우선순위) || null, 오, 사흘날).map(function (t) { return t.원; }).filter(Boolean);
+    var 있 = {}; 위.forEach(function (x) { 있[x.id] = 1; });
+    return { 위: 위, 아래: 내것들.filter(function (x) { return !있[x.id]; }).sort(기한차례) };
+  }
+  // 화면에 읽히는 기준 한 줄 — 우선할일목록의 정렬 순서를 그대로 옮긴 것(바꾸면 둘을 같이 바꾼다)
+  var 차례기준글 = '차례 기준 — ① 법·약속 기한 오늘·지남 ② 다른 일을 둘 이상 막는 것 ③ 끌어 둔 차례 ④ 기한 가까운 순. 이레 넘게 남은 것·남의 답을 기다리는 것은 「그 뒤」로.';
+  function 날짧게(d) { var t = String(d || '').split('-'); return t.length === 3 ? (+t[1]) + '/' + (+t[2]) : String(d || ''); }
+  function 남은날(d) { return Math.round((new Date(d + 'T00:00:00') - new Date(오늘날() + 'T00:00:00')) / 864e5); }
+  // 줄마다 「왜 여기 있나」 칩 — 홈과 할 일 탭이 같은 말을 쓴다
+  function 이유칩들(x) {
+    var 칩 = [], d = x.마감 || x.기한, 목표 = 우리가정한날(x), 막 = 몇개를막나(x);
+    if (지금못하나(x)) 칩.push(['쉼', 일종류(x) === '막힘' ? '막힘' + (x.왜 ? ' — ' + String(x.왜).slice(0, 24) : '') : '기다리는 중' + (x.왜 ? ' — ' + String(x.왜).slice(0, 26) : '')]);
+    if (d) { var n = 남은날(d); 칩.push([목표 ? '쉼' : n <= 0 ? '급' : n <= 7 ? '주의' : '', (목표 ? '목표일(저희가 정한 날) ' : '기한 ') + 날짧게(d) + (n < 0 ? ' · ' + (-n) + '일 지남' : n === 0 ? ' · 오늘' : ' · ' + n + '일 남음')]); }
+    if (막 >= 1) 칩.push(['', '다른 일 ' + 막 + '개가 이것을 기다림']);
+    if (결정인가(x)) 칩.push(['정함', '정할 것 — 정하셔야 다음이 움직여요']);
+    if (순서목록('할일').indexOf(x.id) >= 0) 칩.push(['', '끌어 둔 차례']);
+    if (!칩.length) 칩.push(['', '기한 없음 · 지금 할 수 있어요']);
+    return 칩;
+  }
+  // 가운뎃점 뒤에 보이지 않는 끊을 자리 — 「Engagement·Platforms&Automation·Jabra」처럼 띄어쓰기 없이 이어진 영문이 낱말 중간에서 잘리지 않게(시각검사 10-12)
+  function 끊을자리(h) { return String(h).replace(/·/g, '·​').replace(/\)(?=[은는이가을를의에도만과와로])/g, ')⁠'); }   // 닫는 괄호 뒤 조사는 붙여 둔다(「…본문) / 로 와야」 · 시각검사)
+  function 주제빼고(x) { var t = String(x.제목 || ''), 주 = x.주제 || ''; if (주 && t.indexOf(주) === 0) t = t.slice(주.length).replace(/^\s*[·—:]\s*/, ''); return t; }
+  // 화면정리 줄 — 제목(주제 칩 + 무엇) · 이유 칩 · 배경 한 줄. 홈과 할 일 탭이 같이 쓴다(탭에서는 끌기·끝냈어요가 붙는다)
+  function 정리할일줄(x, 번, 탭에서) {
+    var 앞 = (번 ? 번 + '. ' : '') + (결정인가(x) ? 결정칩 : '') + (x.주제 ? '<span class="주제칩">' + esc(x.주제) + '</span>' : '');
+    var 칩 = '<div class="이유줄">' + 이유칩들(x).map(function (c) { return '<span class="이유칩' + (c[0] ? ' ' + c[0] : '') + '">' + esc(c[1]) + '</span>'; }).join('') + '</div>';
+    var 배경 = x.한줄 ? '<div class="한줄 배경한줄">' + 끊을자리(esc(x.한줄)) + '</div>' : '';
+    var 끝단 = (탭에서 && !결정인가(x) && !보기) ? '<button class="단추 테" data-끝="' + esc(x.id) + '" style="height:40px;font-size:15px">끝냈어요</button> ' : '';
+    var 몸 = '<div class="제목">' + (탭에서 ? 손잡이 : '') + 앞 + 끊을자리(esc(주제빼고(x))) + '</div>' + 칩 + 배경 + 연락칩(x) + '<div class="때" style="margin-top:8px">' + 끝단 + '<span class="열기말">열어서 보기 ›</span></div>';
+    var d = x.마감 || x.기한, 꼴 = (결정인가(x) ? ' 정함상자' : '') + (d && !우리가정한날(x) && 남은날(d) <= 0 ? ' 급줄' : '') + (번 === 1 && !탭에서 ? ' 첫줄' : '');   // 줄 모양에 리듬 — 정할 것은 파란 상자 · 기한 지남은 빨간 왼줄 · 홈 1번은 크게
+    if (탭에서) return '<div class="줄 할일줄 정리줄' + 꼴 + ' 끌수있음" data-차례무엇="할일" data-차례키="' + esc(x.id) + '" data-할일="' + esc(x.id) + '" data-id="' + esc(x.id) + '" style="cursor:pointer">' + 몸 + 댓글칸(x) + '</div>';
+    return '<div class="줄 정리줄' + 꼴 + '" data-가="할일" data-할일열기="' + esc(x.id) + '" data-초점="' + esc(x.id) + '" style="cursor:pointer">' + 몸 + '</div>';
+  }
+  // 화면정리 홈 — 「오늘 먼저 할 것」 한 카드(2026-10-12 유니스 「나머지·바로가기·늘 쓰는 것·다른 분이 하신 것을 왜 보여주는지 모르겠다」)
+  // 숫자 타일 넷 — 홈·할 일 탭 머리에 같은 기준으로(하실것차례). 누르면 할 일 탭 그 구역으로
+  function 할일타일(차, 몇) {
+    var 전 = 차.위.concat(차.아래), 오 = 오늘날();
+    var 지남 = 전.filter(function (x) { var d = x.마감 || x.기한; return d && !우리가정한날(x) && d <= 오; }).length;
+    var 정 = 전.filter(결정인가).length, 기 = 차.아래.filter(지금못하나).length;
+    var 타 = [['', 몇 ? Math.min(몇, 차.위.length) : 차.위.length, 몇 ? '오늘 먼저' : '지금 할 것', '내할일'], ['급', 지남, '기한 오늘·지남', '내할일'], ['정함', 정, '정하실 것', '내할일'], ['쉼', 기, '기다리는 중', '그뒤']];
+    var 끝수 = ((자료 && 자료.피드.할일) || []).filter(function (x) { return 대표것인가(x) && 닫힌할일인가(x) && 최근끝낸것인가(x); }).length, 남수 = 전.length, 비 = (끝수 + 남수) ? Math.round(끝수 * 100 / (끝수 + 남수)) : 0;
+    // 진행 막대 — 최근 이레에 끝낸 것과 남은 것(2026-10-12 UI 기준 8절 「막대·진행 바는 CSS 로」)
+    return '<div class="타일줄">' + 타.map(function (t) { return '<div class="타일" data-가="할일" data-스크롤="' + t[3] + '"><div class="수' + (t[0] ? ' ' + t[0] : '') + '">' + t[1] + '</div><div class="이름">' + esc(t[2]) + '</div></div>'; }).join('') + '</div>' +
+      '<div class="진행막대" role="img" aria-label="최근 이레 끝낸 것 ' + 끝수 + ' · 남은 것 ' + 남수 + '"><span style="width:' + 비 + '%"></span></div><div class="진행글">최근 이레에 끝낸 것 ' + 끝수 + ' · 남은 것 ' + 남수 + '</div>';
+  }
+  var 칩뜻글 = '<div class="칩뜻">칩 색 —<i style="background:#FBE9E9;border:1px solid #C62828"></i>기한 오늘·지남<i style="background:#FBF1E3;border:1px solid #8A5300"></i>기한 이레 안<i style="background:#E6EEF9;border:1px solid #1F4E8C"></i>정할 것<i style="background:#EEF2F3;border:1px solid #5F6E75"></i>기다리는 중·저희가 정한 목표일</div>';
+  function 정리홈(열린) {
+    var 차 = 하실것차례(열린.filter(대표것인가)), 몇 = 우선할일개수(설정 && 설정.우선순위);
+    var h = '<section class="카드 넓게 먼저카드"><div class="히어로"><h2>오늘 먼저 할 것 ' + 오늘표() + '</h2>' + 할일타일(차, 몇) + '</div><div class="차례기준">' + esc(차례기준글) + '</div>';
+    h += 차.위.length ? 차.위.slice(0, 몇).map(function (x, i) { return 정리할일줄(x, i + 1); }).join('') : '<div class="빈">오늘 먼저 하실 것이 없어요.</div>';
+    h += '<div class="먼저꼬리" data-가="할일">할 일 탭 — 지금 할 것 ' + 차.위.length + ' · 그 뒤 ' + 차.아래.length + ' 보기 ›</div>' + 칩뜻글;
+    return h + '</section>';
   }
   function 대표홈(열린, 원장할일) {
     var 내것전부 = 열린.filter(대표것인가), 오 = 오늘날();
@@ -1625,7 +1740,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     var 장 = 장부항목();
     if (장 && 탭.indexOf('장부') >= 0) 한줄('이번 달 매출', 만원(장.판매 && 장.판매.금액), '장부', '손익 ' + 만원(장.손익));
     var 새 = 안읽은것(); if (새.length) 한줄('새로 온 것', 새.length, '알림');
-    h += '<section class="카드 넓게 나머지줄"><h2>나머지</h2>' + 줄.join('') + '</section>';
+    h += '<section class="카드 넓게 나머지줄"><h2>탭마다 남은 것</h2>' + 줄.join('') + '</section>';
     h += 바로가기카드();
     h += 늘쓰는것카드('홈');
     var 한 = 한일카드();                                     // 다른 분이 하신 것 — 접어 둔다(누르면 펼침)
@@ -2648,6 +2763,23 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
       '<label>메모(없어도 돼요)<textarea id="적기_메모" rows="2" maxlength="500"></textarea></label>' +
       '<div class="줄"><button class="단추" data-할일적기보내기="1">적기</button><button class="단추 테" data-할일적기="0">그만두기</button></div></section>';
   }
+  // 화면정리 할 일 탭(2026-10-12 유니스 「하실 것·나중에·끝낸 것이 줄줄이 있어야 할 이유를 모르겠다」)
+  //   기본 = 지금 할 것(홈과 같은 함수·같은 번호) · 그 뒤는 한 줄로 접음 · 나중에·끝낸 것(7일 안)·정리 중은 맨 아래 접힌 한 줄
+  var 접힌열림 = {};
+  function 정리할일탭(열림, 나중, 끝, 정리, 끝줄) {
+    var 차 = 하실것차례(열림.filter(대표것인가)), 원장것 = 열림.filter(function (x) { return !대표것인가(x); });
+    var h = '<section class="카드" data-구역="내할일"><div class="히어로"><h2>지금 할 것 ' + 차.위.length + '</h2>' + 할일타일(차, 0) + '</div><div class="차례기준">' + esc(차례기준글) + ' 줄을 길게 누르거나 ⋮⋮ 를 잡고 끌면 차례가 바뀌고 홈도 같이 바뀌어요.</div>';
+    h += 차.위.length ? 차.위.map(function (x, i) { return 정리할일줄(x, i + 1, true); }).join('') : '<div class="빈">지금 할 것이 없어요.</div>';
+    h += 칩뜻글 + '</section>';
+    if (차.아래.length) h += '<section class="카드" data-구역="그뒤"><h2>그 뒤 ' + 차.아래.length + '</h2>' + (펼침더['그뒤'] ? 차.아래.map(function (x) { return 정리할일줄(x, 0, true); }).join('') : '<div class="더보기줄"><button data-더보기="그뒤">기한이 이레 넘게 남았거나 · 남의 답을 기다리는 것 ' + 차.아래.length + '개 보기</button></div>') + '</section>';
+    if (원장것.length && 구성원있나()) h += '<section class="카드" data-구역="원장님"><h2>' + esc(말('구성원할일')) + ' ' + 원장것.length + '</h2>' + 원장것.map(function (x) { return 정리할일줄(x, 0, true); }).join('') + '</section>';
+    var 접 = [['나중에', '나중에 두신 것', 나중], ['끝낸것', '끝낸 것(' + ((화면정리() && 화면정리().끝낸것며칠) || 7) + '일 안)', 끝], ['정리중', '정리 중', 정리]].filter(function (a) { return a[2].length; });
+    if (접.length) h += '<div class="접힌줄">' + 접.map(function (a) { return '<button data-접힌="' + a[0] + '" class="' + (접힌열림[a[0]] ? '켬' : '') + '">' + esc(a[1]) + ' ' + a[2].length + (접힌열림[a[0]] ? ' ▲' : ' ▾') + '</button>'; }).join('') + '</div>';
+    if (접힌열림['나중에'] && 나중.length) h += '<section class="카드" data-구역="나중에"><h2>나중에 두신 것 ' + 나중.length + '</h2>' + 나중.map(function (x) { return 정리할일줄(x, 0, true); }).join('') + '</section>';
+    if (접힌열림['끝낸것'] && 끝.length) h += '<section class="카드" data-구역="끝낸것"><h2>끝낸 것 ' + 끝.length + '</h2>' + 끝.map(function (x) { return 끝줄(x, true); }).join('') + '</section>';
+    if (접힌열림['정리중'] && 정리.length) h += '<section class="카드" data-구역="정리중"><h2>정리 중 ' + 정리.length + '</h2><div class="차례기준">할 일로 보기엔 무엇을 할지가 비어 있는 것이에요. GN 창이 내용을 채우거나 닫아요 — 그때까지 홈·숫자에서 빠져 있어요.</div>' + 정리.map(function (x) { return '<div class="줄" data-할일="' + esc(x.id) + '" data-id="' + esc(x.id) + '" style="cursor:pointer"><div class="제목">' + esc(x.제목) + '</div><div class="정리사유">' + esc(x.정리필요) + '</div></div>'; }).join('') + '</section>';
+    return h;
+  }
   function 할일() {
     var 목록 = ((자료 && 자료.피드.할일) || []).slice().reverse();
     if (!목록.length) return 할일적기칸() + '<div class="카드"><div class="빈">하실 것이 없어요. 새로 생기면 종이 켜져요.</div></div>';
@@ -2658,11 +2790,12 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
         (끝났나 ? '<div style="margin-top:8px"><span class="칩 끝">' + (답한할일인가(x) ? '답함' + (x.사유 ? ' · ' + esc(x.사유.slice(0, 30)) : '') : '끝냈어요') + '</span></div>' : (결정인가(x) ? '' : '<div style="margin-top:10px"><button class="단추 테" data-끝="' + esc(x.id) + '">끝냈어요</button></div>')) + 댓글칸(x) + '</div>';
     }
     if (열린할일id) { var 하나 = 목록.filter(function (y) { return y.id === 열린할일id; })[0]; if (하나) return 할일상세(하나); if (자료) 열린할일id = ''; }
-    var 열림전부 = 순서정렬(목록.filter(function (x) { return !닫힌할일인가(x) && !미룬할일인가(x); }).sort(기한차례), '할일', function (x) { return x.id; });
+    var 열림전부 = 순서정렬(목록.filter(function (x) { return !닫힌할일인가(x) && !미룬할일인가(x) && !정리중인가(x); }).sort(기한차례), '할일', function (x) { return x.id; });
     var 열림 = 상대거르기(열림전부);
-    var 나중 = 상대거르기(목록.filter(function (x) { return 미룬할일인가(x) && !끝난할일(x.id); }));
-    var 끝 = 상대거르기(목록.filter(닫힌할일인가));
+    var 나중 = 상대거르기(목록.filter(function (x) { return 미룬할일인가(x) && !끝난할일(x.id) && !정리중인가(x); }));
+    var 끝 = 상대거르기(목록.filter(function (x) { return 닫힌할일인가(x) && 최근끝낸것인가(x); }));
     var h = 상대줄(열림전부) + 할일적기칸();
+    if (화면정리() && 대표인가()) return h + 정리할일탭(열림, 나중, 끝, 상대거르기(목록.filter(function (x) { return 정리중인가(x) && !닫힌할일인가(x); })), 한줄);
     // 끌어서 차례 바꾸기 — 열린 것끼리. 줄을 길게 누르거나 오른쪽 ⋮⋮ 를 잡는다(2026-09-21)
     var 원한줄 = 한줄;
     한줄 = function (x, 끝났나) { var t = 원한줄(x, 끝났나); t = t.replace('<div class="한줄 접힘">', 상대칩들(x) + (끝났나 ? '' : 연락칩(x)) + '<div class="한줄 접힘">'); if (끝났나) return t; return t.replace('<div class="줄 할일줄" data-할일=', '<div class="줄 할일줄 끌수있음" data-차례무엇="할일" data-차례키="' + esc(x.id) + '" data-할일=').replace('<div class="제목">', 손잡이 + '<div class="제목">'); };
@@ -2673,17 +2806,20 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     }
     if (대표인가()) {
       var 내것들 = 열림.filter(대표것인가), 결정수 = 내것들.filter(결정인가).length, 원장것 = 열림.filter(function (x) { return !대표것인가(x); });
-      // 이번 주(지남 · 이레 안)만 펼치고 그 뒤는 접는다(2026-09-28 · 앱 피드백 48)
-      var 이번주 = 이번주것(내것들), 이번주id = {}; 이번주.forEach(function (x) { 이번주id[x.id] = 1; });
-      var 뒤것 = 내것들.filter(function (x) { return !이번주id[x.id]; });
-      h += '<section class="카드" data-구역="내할일"><h2>' + esc(말('내할일')) + ' — 이번 주 ' + 이번주.length + '</h2>' + (결정수 ? '<div class="한줄" style="color:var(--보조);margin-bottom:8px;padding-left:0;border:0">「결정」이 붙은 것은 열어서 정해 주시면 돼요. 줄을 길게 누르거나 ⋮⋮ 를 잡고 끌면 차례가 바뀌어요.</div>' : '') + (이번주.length ? 줄들(이번주, '내할일') : '<div class="빈">이번 주 안에 기한이 걸린 것이 없어요.</div>') + '</section>';
-      if (뒤것.length) h += '<section class="카드" data-구역="그뒤"><h2>그 뒤 ' + 뒤것.length + '</h2>' + (펼침더['그뒤'] ? 줄들(뒤것, '그뒤') : '<div class="더보기줄"><button data-더보기="그뒤">기한이 이레 넘게 남았거나 없는 것 ' + 뒤것.length + '개 보기</button></div>') + '</section>';
-      if (원장것.length || 구성원있나()) h += '<section class="카드" data-구역="원장님"><h2>' + esc(말('구성원할일')) + ' ' + 원장것.length + '</h2>' + (원장것.length ? 줄들(원장것, '원장님') : '<div class="빈">없어요.</div>') + '</section>';
+      // 차례는 홈과 같은 함수(하실것차례) — 홈 1~N = 이 목록 1~N(2026-10-12 화면점검 「홈 상위와 할 일 탭 상위가 다르다」 · 종전 이번주것). 그 뒤(이레 넘게 남음·기다림·착수일 전)는 접는다
+      var 차 = 하실것차례(내것들), 이번주 = 차.위, 뒤것 = 차.아래;
+      h += '<section class="카드" data-구역="내할일"><h2>' + esc(말('내할일')) + ' — 지금 ' + 이번주.length + '</h2>' + (결정수 ? '<div class="한줄" style="color:var(--보조);margin-bottom:8px;padding-left:0;border:0">「결정」이 붙은 것은 열어서 정해 주시면 돼요. 줄을 길게 누르거나 ⋮⋮ 를 잡고 끌면 차례가 바뀌어요.</div>' : '') + (이번주.length ? 줄들(이번주, '내할일') : '<div class="빈">지금 할 것이 없어요.</div>') + '</section>';
+      if (뒤것.length) h += '<section class="카드" data-구역="그뒤"><h2>그 뒤 ' + 뒤것.length + '</h2>' + (펼침더['그뒤'] ? 줄들(뒤것, '그뒤') : '<div class="더보기줄"><button data-더보기="그뒤">기한이 이레 넘게 남았거나 기다리는 것 ' + 뒤것.length + '개 보기</button></div>') + '</section>';
+      if (원장것.length || 구성원있나()) { var 원차 = 하실것차례(원장것); h += '<section class="카드" data-구역="원장님"><h2>' + esc(말('구성원할일')) + ' ' + 원장것.length + '</h2>' + (원장것.length ? 줄들(원차.위.concat(원차.아래), '원장님') : '<div class="빈">없어요.</div>') + '</section>'; }
     } else {
-      h += '<section class="카드" data-구역="하실것"><h2>하실 것 ' + 열림.length + '</h2>' + (열림.length ? 줄들(열림, '하실것') : '<div class="빈">다 하셨어요.</div>') + '</section>';
+      var 하차 = 하실것차례(열림), 하전부 = 하차.위.concat(하차.아래);   // 원장님 홈 「오늘 우선 할 일」과 같은 차례(같은 함수)
+      h += '<section class="카드" data-구역="하실것"><h2>하실 것 ' + 열림.length + '</h2>' + (열림.length ? 줄들(하전부, '하실것') : '<div class="빈">다 하셨어요.</div>') + '</section>';
     }
-    if (나중.length) h += '<section class="카드" data-구역="나중에"><h2>나중에 ' + 나중.length + '</h2><div class="한줄" style="color:var(--보조);margin-bottom:8px;padding-left:0;border:0">「나중에」로 두신 것. 열어서 다시 정하시면 위로 올라가요.</div>' + 줄들(나중, '나중에') + '</section>';
-    if (끝.length) h += '<section class="카드" data-구역="끝낸것"><h2>끝낸 것 ' + 끝.length + '</h2>' + 줄들(끝, '끝낸것', true) + '</section>';
+    // 나중에·끝낸 것(끝낸 지 이레 안)은 접힌 한 줄 — 누르면 펼침(2026-10-12 화면점검 「기본 보기에 끝낸 것 줄 20」 · 모든 조직)
+    var 접 = [['나중에', '나중에', 나중], ['끝낸것', '끝낸 것', 끝]].filter(function (a) { return a[2].length; });
+    if (접.length) h += '<div class="접힌줄">' + 접.map(function (a) { return '<button data-접힌="' + a[0] + '" class="' + (접힌열림[a[0]] ? '켬' : '') + '">' + esc(a[1]) + ' ' + a[2].length + (접힌열림[a[0]] ? ' ▲' : ' ▾') + '</button>'; }).join('') + '</div>';
+    if (접힌열림['나중에'] && 나중.length) h += '<section class="카드" data-구역="나중에"><h2>나중에 ' + 나중.length + '</h2><div class="한줄" style="color:var(--보조);margin-bottom:8px;padding-left:0;border:0">「나중에」로 두신 것. 열어서 다시 정하시면 위로 올라가요.</div>' + 줄들(나중, '나중에') + '</section>';
+    if (접힌열림['끝낸것'] && 끝.length) h += '<section class="카드" data-구역="끝낸것"><h2>끝낸 것 ' + 끝.length + '</h2>' + 줄들(끝, '끝낸것', true) + '</section>';
     return h;
   }
   var 재고정렬 = { 키: '남음', 방향: -1 };
@@ -2913,14 +3049,41 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     return h;
   }
   var 열린할일id = '';
+  // 화면정리 할 일 상세 머리(2026-10-12 유니스 「무엇에 대한 것인지 · 무엇을 정하나는 줄바꿈」) — 정할 것이면 선택지·제 권고·정하면 풀리는 것을 불릿으로,
+  //   할 것이면 「무엇에 대한 것인가」 · 배경은 어댑터가 줄로 나눠 준 것(마크다운 불릿) · 원문(관련 초안·받은 것·문서 앞부분)을 바로 연다
+  function 정리상세머리(x) {
+    var h = '<div class="이유줄" style="margin:4px 0 10px">' + 이유칩들(x).map(function (c) { return '<span class="이유칩' + (c[0] ? ' ' + c[0] : '') + '">' + esc(c[1]) + '</span>'; }).join('') + '</div>';
+    if (x.정리필요) h += '<div class="정리사유">정리 중 — ' + esc(x.정리필요) + '. GN 창이 채우거나 닫을 때까지 홈·숫자에서 빠져 있어요.</div>';
+    if (결정인가(x)) {
+      var 줄 = ['<li><b>정할 것</b> — ' + esc(주제빼고(x)) + '</li>'];
+      if ((x.선택지 || []).length) 줄.push('<li><b>선택지</b><ul>' + x.선택지.map(function (o) { return '<li>' + esc(o) + '</li>'; }).join('') + '</ul></li>');
+      else 줄.push('<li><b>선택지</b> — 아직 안 적혀 있어요(아래 배경에서 고르시거나 「이렇게 바꿔서」에 적어 주세요)</li>');
+      if (x.권고) 줄.push('<li><b>제 권고</b> — ' + esc(x.권고) + '</li>');
+      if (x.풀리는것) 줄.push('<li><b>정하면 풀리는 것</b> — ' + esc(x.풀리는것) + '</li>');
+      h += '<h3>무엇을 정하나</h3><div class="본문글"><ul class="정하기목록">' + 줄.join('') + '</ul></div>';
+      if (x.배경) h += '<h3>배경</h3><div class="본문글">' + 마크다운(x.배경) + '</div>';
+    } else h += '<h3>무엇에 대한 것인가</h3><div class="본문글">' + (x.배경 ? 마크다운(x.배경) : '<p>' + esc(x.한줄 || '') + '</p>') + '</div>';
+    h += 원문열기줄(x);
+    return h;
+  }
+  function 원문열기줄(x) {
+    var 출 = String(x.출처 || ''), 단 = [];
+    초안목록().forEach(function (d) { if (d.파일 && 출.indexOf(d.파일) >= 0 && 단.length < 3) 단.push('<button class="단추 테" data-가="초안" data-초안바로="' + esc(d.id) + '">초안 열기 — ' + esc(String(d.제목 || '').slice(0, 24)) + '</button>'); });
+    var m = 출.match(/_받은것\/([^\s·]+)\.md/);
+    if (m) { var rid = 'r-gn-' + m[1].slice(0, 70); if (((자료 && 자료.피드.받은것) || []).some(function (y) { return y.id === rid; })) 단.push('<button class="단추 테" data-받은것열기="' + esc(rid) + '">받은 것 열기</button>'); }
+    var h = 단.length ? '<div class="단추줄" style="margin-top:10px">' + 단.join('') + '</div>' : '';
+    if (x.원문문서 && x.원문문서.글) h += '<details style="margin-top:10px"><summary>원문 보기 — ' + esc(x.원문문서.이름) + '</summary><div class="본문글">' + 마크다운(x.원문문서.글) + (x.원문문서.잘림 ? '<p style="color:var(--흐림)">앞부분만 실었어요 · 전체는 ' + esc(x.원문문서.길) + '</p>' : '') + '</div></details>';
+    return h;
+  }
   (function () { var m = decodeURIComponent(location.search || '').match(/[?&]할일=([^&]+)/); if (m) { 열린할일id = m[1]; 탭 = '할일'; } })();
   function 할일상세(x) {
     var h = '<section class="카드 블로그상세"><button class="더" data-할일닫기="1">‹ 목록으로</button><h2 style="margin-top:8px">' + esc(x.제목) + '</h2>';
     h += '<div class="한줄" style="margin-bottom:8px">' + esc(x.어디서 || x.출처 || '') + (x.덧 ? ' · ' + esc(x.덧) : '') + (x.기한 ? ' · ' + esc(x.기한) + ' 까지' : '') + '</div>';
     if (x.단계 && x.단계 !== '작성') h += '<div style="margin:6px 0 10px">' + (x.단계 === '결정' ? 신호('좋음', '정하셨어요 · ' + (x.사유 || '')) : x.단계 === '보류' ? 신호('모름', '나중에 · ' + (x.사유 || '')) : x.단계 === '얘기중' ? 신호('살핌', '얘기 중 · ' + (x.사유 || '')) : x.단계 === '완료' ? 신호('좋음', '끝냈어요') : 신호('모름', x.단계)) + '</div>';
-    if (x.배경) h += '<h3>무엇을 정하나</h3><div class="본문글">' + 마크다운(x.배경) + '</div>';
+    if (화면정리()) h += 정리상세머리(x);   // GN(2026-10-12) — 정할 것/할 것 · 이유 · 배경(줄바꿈) · 원문 열기
+    else if (x.배경) h += '<h3>무엇을 정하나</h3><div class="본문글">' + 마크다운(x.배경) + '</div>';
     if (x.할일전문) h += '<h3>제안 · 할 일</h3><div class="본문글">' + 마크다운(x.할일전문) + '</div>';
-    if (!x.배경 && !x.할일전문) h += '<div class="본문글"><p>' + esc(x.한줄 || '') + '</p></div>';
+    if (!x.배경 && !x.할일전문 && !화면정리()) h += '<div class="본문글"><p>' + esc(x.한줄 || '') + '</p></div>';
     if (x.초안) h += '<details><summary>답장 초안 보기</summary><div class="본문글">' + 마크다운(x.초안) + '</div></details>';
     if (x.원문) h += '<details><summary>받은 그대로 보기</summary><div class="본문글"><pre>' + esc(x.원문) + '</pre></div></details>';
     if (대표것인가(x) && x.단계 !== '완료') {
@@ -3107,9 +3270,48 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     h += '<div class="본문글">' + 마크다운(x.본문 || '') + '</div>';
     return h + '</section>';
   }
+  // ── 화면정리 받은 것(2026-10-12 유니스 「238개나 보이는데 의미가 없다 · 액션이라 된 것도 무슨 액션인지 불명확」) ──
+  //   받은 것 = 알림함이 아니라 「유니스가 손댈 것이 남은 받은 것」 대기함. 손댈 것 = 갈래 액션 + 내할것(어댑터가 「## 할 일」에서 뽑은 한 줄) + 「액션며칠」 안.
+  //   참고는 접고(「참고며칠」 안만), 내려감(어댑터가 더는 안 주는 줄)·끝난 것·대체된 것은 뺀다. 오래 안 닫힌 손댈 것은 따로 접어 GN 창이 닫게 한다.
+  function 받은것나눔() {
+    var 정 = 화면정리() || {}, 액일 = Number(정.액션며칠) || 14, 참일 = Number(정.참고며칠) || 14;
+    var 전부 = ((자료 && 자료.피드.받은것) || []).filter(function (x) { return !x.내려감 && !대체됐나(x) && x.갈래 !== '블로그' && x.갈래 !== '당근' && x.갈래 !== '문자'; });
+    var 손댈 = 전부.filter(function (x) { return x.갈래 === '액션' && x.내할것 && x.단계 !== '완료'; });
+    var 새 = 손댈.filter(function (x) { return 며칠지났나(x.시각) <= 액일; }), 묵은 = 손댈.filter(function (x) { return 며칠지났나(x.시각) > 액일; });
+    var 참고 = 전부.filter(function (x) { return 손댈.indexOf(x) < 0 && x.단계 !== '완료' && 며칠지났나(x.시각) <= 참일; });
+    var 최신 = function (a, b) { return a.시각 < b.시각 ? 1 : -1; };
+    return { 손댈: 새.sort(최신), 묵은: 묵은.sort(최신), 참고: 참고.sort(최신) };
+  }
+  function 정리받은것줄(x) {
+    var 며 = 며칠지났나(x.시각);
+    return '<div class="줄 정리줄" data-받은것열기="' + esc(x.id) + '" data-id="' + esc(x.id) + '" style="cursor:pointer"><div class="제목">' + esc(x.제목) + '</div>' +
+      (x.내할것 ? '<div class="내할것"><b>유니스가 할 것</b>' + esc(x.내할것) + '</div>' : (x.한줄 ? '<div class="배경한줄">' + esc(x.한줄) + '</div>' : '')) +
+      '<div class="때" style="margin-top:6px">' + 때글(x.시각) + ' 받음' + (며 >= 1 && 며 < 9999 ? ' · ' + 며 + '일째' : '') + (x.덧 ? ' · ' + esc(x.덧) : '') + ' · <span style="color:var(--강조)">열어서 보기 ›</span></div></div>';
+  }
+  function 정리받은것() {
+    var 나 = 받은것나눔(), 정 = 화면정리() || {};
+    var h = 고정된것().length ? 늘쓰는것카드('받은것') : '';   // 고정한 것이 있을 때만(유니스가 직접 고른 것)
+    h += '<section class="카드" data-구역="손댈것"><div class="히어로"><h2>손댈 것 ' + 나.손댈.length + '</h2><div class="타일줄" style="grid-template-columns:repeat(3,1fr)">' +
+      [['', 나.손댈.length, '손댈 것', '손댈것', ''], ['쉼', 나.참고.length, '참고', '', '참고'], ['급', 나.묵은.length, (Number(정.액션며칠) || 14) + '일 넘게 안 닫힘', '', '묵은']].map(function (t) { return '<div class="타일"' + (t[4] ? ' data-접힌="' + t[4] + '"' : '') + '><div class="수' + (t[0] ? ' ' + t[0] : '') + '">' + t[1] + '</div><div class="이름">' + esc(t[2]) + '</div></div>'; }).join('') + '</div></div><ol class="흐름줄"><li>메일·사진·녹음이 옴</li><li>「유니스가 할 것」 한 줄을 붙임</li><li>할 일로 옮기거나 끝나면 빠짐</li></ol>';
+    h += 나.손댈.length ? 나.손댈.map(정리받은것줄).join('') : '<div class="빈">지금 손대실 받은 것이 없어요.</div>';
+    h += '</section>';
+    var 접 = [['참고', '참고 ' + (Number(정.참고며칠) || 14) + '일 안', 나.참고], ['묵은', '손댈 것 중 ' + (Number(정.액션며칠) || 14) + '일 넘게 안 닫힌 것', 나.묵은]].filter(function (a) { return a[2].length; });
+    if (접.length) h += '<div class="접힌줄">' + 접.map(function (a) { return '<button data-접힌="' + a[0] + '" class="' + (접힌열림[a[0]] ? '켬' : '') + '">' + esc(a[1]) + ' ' + a[2].length + (접힌열림[a[0]] ? ' ▲' : ' ▾') + '</button>'; }).join('') + '</div>';
+    if (접힌열림['참고'] && 나.참고.length) h += '<section class="카드" data-구역="참고"><h2>참고 ' + 나.참고.length + '</h2>' + 나.참고.map(정리받은것줄).join('') + '</section>';
+    if (접힌열림['묵은'] && 나.묵은.length) h += '<section class="카드" data-구역="묵은"><h2>' + (Number(정.액션며칠) || 14) + '일 넘게 안 닫힌 것 ' + 나.묵은.length + '</h2><div class="차례기준">대부분 할 일 탭으로 옮겨졌거나 이미 끝난 것이라 GN 창이 확인해서 닫아요.</div>' + 나.묵은.map(정리받은것줄).join('') + '</section>';
+    return h;
+  }
+  function 정리받은것상세(x) {
+    var h = '<section class="카드 블로그상세"><button class="더" data-블로그닫기="1">‹ 목록으로</button><h2 style="margin-top:8px">' + esc(x.제목) + '</h2>';
+    h += '<div class="한줄" style="margin-bottom:8px">' + 때글(x.시각) + ' 받음' + (x.한줄 ? ' · ' + esc(x.한줄) : '') + '</div>';
+    h += x.내할것 ? '<div class="내할것" style="margin-bottom:10px"><b>유니스가 할 것</b>' + esc(x.내할것) + '</div>' : '<div class="정리사유">참고로 둔 것이에요 — 손대실 것은 없어요.</div>';
+    h += '<div class="본문글">' + 마크다운(x.본문 || '') + '</div>';
+    return h + 댓글칸(x) + '</section>';
+  }
   function 받은것() {
     var 목록 = ((자료 && 자료.피드.받은것) || []).slice().reverse();
-    if (열린블로그) { var x = 목록.filter(function (y) { return y.id === 열린블로그; })[0]; if (x) return x.갈래 === '문자' ? 문자상세(x) : 블로그상세(x); if (자료) 열린블로그 = ''; }
+    if (열린블로그) { var x = 목록.filter(function (y) { return y.id === 열린블로그; })[0]; if (x) return x.갈래 === '문자' ? 문자상세(x) : (화면정리() && x.갈래 !== '블로그' && x.갈래 !== '당근') ? 정리받은것상세(x) : 블로그상세(x); if (자료) 열린블로그 = ''; }
+    if (화면정리()) return 정리받은것();
     var 갈래들 = (설정.받은것갈래 || []);
     var h = 늘쓰는것카드('받은것');
     h += '<div class="갈래줄"><button class="' + (갈래 ? '' : '켬') + '" data-갈래="">전부</button>' + 갈래들.map(function (g) { return '<button class="' + (갈래 === g ? '켬' : '') + '" data-갈래="' + esc(g) + '">' + esc(g) + '</button>'; }).join('') + '</div>';
@@ -3117,7 +3319,10 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     // 대체된 것(구버전)은 목록에서 뺀다 — 「지난 것 N개 보기」를 눌러야 나온다 (2026-09-24 유니스).
     var 골 = 지난것보기 ? 골전부 : 골전부.filter(function (x) { return !대체됐나(x); });
     var 지난수 = 골전부.filter(대체됐나).length;
-    var 문자 = 골.filter(function (x) { return x.갈래 === '문자'; });
+    var 문자전부 = 골.filter(function (x) { return x.갈래 === '문자'; });
+    // 답하신·보낸 문자는 접힌 한 줄로(2026-10-12 한마음 화면점검 「기본 보기 36줄 중 참고·끝난 것 19」) — 대체된 것은 「지난 것」 단추 그대로
+    var 문자 = 문자전부.filter(function (x) { return 대체됐나(x) || !받은것끝났나(x); }), 문자끝 = 문자전부.filter(function (x) { return !대체됐나(x) && 받은것끝났나(x); }), 받접 = [];
+    if (문자끝.length) 받접.push(['답한문자', '답하신 문자', 문자끝.map(function (x) { return '<div class="줄" data-문자="' + esc(x.id) + '"><div class="제목">' + esc(x.제목) + '</div><div class="때">' + 문자상태(x) + ' · ' + 때글(x.시각) + '</div></div>'; }).join('')]);
     if (문자.length) {
       h += '<section class="카드"><h2>고객 문자</h2>' + 문자.slice().sort(function (a, b) { return (대체됐나(a) ? 2 : a.단계 === '초안' ? 0 : 1) - (대체됐나(b) ? 2 : b.단계 === '초안' ? 0 : 1); }).map(function (x) {
         return '<div class="줄" data-문자="' + esc(x.id) + '"><div class="제목">' + esc(x.제목) + '</div><div class="한줄">' + esc(x.한줄 || '') + '</div><div class="때">' + 문자상태(x) + ' · ' + 때글(x.시각) + ' · <span style="color:var(--강조)">열어 보기 ›</span></div></div>';
@@ -3127,19 +3332,22 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     if (블로그.length) {
       var 초안 = 블로그.filter(function (x) { return (x.단계 || '초안') === '초안'; }).sort(function (a, b) { var ra = a.순위 || 999, rb = b.순위 || 999; return a.시각 === b.시각 ? ra - rb : (a.시각 < b.시각 ? 1 : -1); }), 쓴 = 블로그.filter(function (x) { return x.단계 === '썼어요'; }).sort(최신순(function (x) { return x.단계때; })), 보류 = 블로그.filter(function (x) { return x.단계 === '보류'; });
       h += '<section class="카드"><h2>블로그 초안 ' + 초안.length + '</h2><div class="한줄" style="color:var(--보조);margin-bottom:8px">가장 최근에 쓴 글이 위에 있어요. 검색 추천 순위는 글마다 작은 글씨로 보여요. 올리시면 저희가 블로그에서 확인해 「쓴 글」로 옮기고 다음 글을 채워 둡니다.</div>' + (초안.length ? 초안.map(블로그카드).join('') : '<div class="빈">새 초안을 만드는 중이에요.</div>') + '</section>';
-      if (보류.length) h += '<section class="카드"><h2>안 쓰기로 한 글 ' + 보류.length + '</h2>' + 보류.map(블로그카드).join('') + '</section>';
-      if (쓴.length) h += '<section class="카드"><h2>쓴 글 ' + 쓴.length + '</h2>' + 쓴.map(블로그카드).join('') + '</section>';
+      if (쓴.length) 받접.push(['쓴글', '쓴 글', 쓴.map(블로그카드).join('')]);
+      if (보류.length) 받접.push(['안쓴글', '안 쓰기로 한 글', 보류.map(블로그카드).join('')]);
     }
     if (당근.length) {
       // 2026-09-21 원장님 「당근에 주기적으로 올릴 예시글 제공해줘. 채팅창에서 못찾았어」 — 텔레그램에만 있던 당근 소식이 여기 한 자리에 쌓인다
       var 당초안 = 당근.filter(function (x) { return (x.단계 || '초안') === '초안'; }), 당쓴 = 당근.filter(function (x) { return x.단계 === '썼어요'; }), 당보류 = 당근.filter(function (x) { return x.단계 === '보류'; });
       h += '<section class="카드"><h2>당근 소식 ' + 당초안.length + '</h2><div class="한줄" style="color:var(--보조);margin-bottom:8px">열어서 「본문 복사」를 누르고 당근 「소식」 글쓰기에 붙여 넣으시면 돼요. 올리신 뒤 「썼어요」를 누르시면 다음 글을 채워 둡니다.</div>' + (당초안.length ? 당초안.map(블로그카드).join('') : '<div class="빈">새 글을 만드는 중이에요.</div>') + '</section>';
-      if (당보류.length) h += '<section class="카드"><h2>안 쓰기로 한 당근 글 ' + 당보류.length + '</h2>' + 당보류.map(블로그카드).join('') + '</section>';
-      if (당쓴.length) h += '<section class="카드"><h2>올린 당근 글 ' + 당쓴.length + '</h2>' + 당쓴.map(블로그카드).join('') + '</section>';
+      if (당쓴.length) 받접.push(['올린당근', '올린 당근 글', 당쓴.map(블로그카드).join('')]);
+      if (당보류.length) 받접.push(['안쓴당근', '안 쓰기로 한 당근 글', 당보류.map(블로그카드).join('')]);
     }
     // 20건 넘으면 「더 보기」(2026-09-22 — GN 받은 것 82건이 폰 15,520px 였다)
     var 나머지보임 = 펼침더['받은것'] ? 나머지 : 나머지.slice(0, 20);
     if (나머지.length || (!블로그.length && !당근.length)) h += '<section class="카드">' + (나머지.length ? 나머지보임.map(function (x) { return 받은것줄(x); }).join('') + (나머지.length > 나머지보임.length ? '<div class="더보기줄"><button data-더보기="받은것">' + (나머지.length - 나머지보임.length) + '개 더 보기</button></div>' : '') : '<div class="빈">아직 없어요. 블로그 초안·문자 문안·명단·자료가 오면 여기에 모여요.</div>') + '</section>';
+    // 끝난 것(쓴 글 · 올린 당근 글 · 안 쓰기로 한 것 · 답하신 문자)은 접힌 한 줄 — 누르면 그 묶음이 펼쳐진다(2026-10-12)
+    if (받접.length) h += '<div class="접힌줄">' + 받접.map(function (a) { var n = (a[2].match(/class="(줄|블로그카드)/g) || []).length; return '<button data-접힌="' + a[0] + '" class="' + (접힌열림[a[0]] ? '켬' : '') + '">' + esc(a[1]) + ' ' + n + (접힌열림[a[0]] ? ' ▲' : ' ▾') + '</button>'; }).join('') + '</div>';
+    받접.forEach(function (a) { if (접힌열림[a[0]]) h += '<section class="카드" data-구역="' + a[0] + '"><h2>' + esc(a[1]) + '</h2>' + a[2] + '</section>'; });
     // 구버전(대체된 것)은 접어 둔다 — 아주 없애지는 않는다. 「어제 그거 어디 갔지」를 위해 한 번에 펼친다 (2026-09-24 유니스)
     if (지난수 || 지난것보기) h += '<div class="더보기줄"><button data-지난것="' + (지난것보기 ? '0' : '1') + '">' + (지난것보기 ? '지난 것 접기' : '지난 것 ' + 지난수 + '개 보기') + '</button></div>';
     return h;
@@ -3256,6 +3464,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     }
     if (e.target.closest('[data-할일닫기]')) { if (!닫고돌아가기()) { 열린할일id = ''; 그리기(); } return; }
     var 할 = e.target.closest('[data-할일]'); if (할 && !e.target.closest('button, [data-전화]')) { var hx = ((자료 && 자료.피드.할일) || []).filter(function (y) { return y.id === 할.getAttribute('data-할일'); })[0]; if (hx && (hx.배경 || hx.할일전문 || 대표것인가(hx))) { 열린할일id = hx.id; 탭 = '할일'; 그리기(); window.scrollTo(0, 0); } return; }
+    var 받열 = e.target.closest('[data-받은것열기]'); if (받열 && !e.target.closest('a, [data-고정], .댓글칸 button')) { 상세모두닫기(); 열린블로그 = 받열.getAttribute('data-받은것열기'); 탭 = '받은것'; 그리기(); window.scrollTo(0, 0); return; }   // 화면정리 받은 것 상세(2026-10-12)
+    var 초바 = e.target.closest('[data-초안바로]'); if (초바) { 상세모두닫기(); 열린초안 = 초바.getAttribute('data-초안바로'); 탭 = '초안'; 그리기(); window.scrollTo(0, 0); return; }
     var 블 = e.target.closest('[data-블로그],[data-문자]'); if (블) { 열린블로그 = 블.getAttribute('data-블로그') || 블.getAttribute('data-문자'); 소식꼴선택 = ''; 탭 = '받은것'; 그리기(); window.scrollTo(0, 0); return; }
     if (e.target.closest('[data-블로그닫기]')) { if (!닫고돌아가기()) { 열린블로그 = ''; 그리기(); } return; }
     var 지 = e.target.closest('[data-지난것]'); if (지) { 지난것보기 = 지.getAttribute('data-지난것') === '1'; 그리기(); return; }
@@ -3306,6 +3516,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     var 고객줄el = e.target.closest('[data-고객]'); if (고객줄el) { 열린고객 = 고객줄el.getAttribute('data-고객'); 탭 = '고객'; 그리기(); window.scrollTo(0, 0); return; }
     var 단 = e.target.closest('[data-단계]'); if (단) { var 단계 = 단.getAttribute('data-단계'), 사유 = ''; if (단계 === '보류') { 사유 = window.prompt('안 쓰시는 이유를 한 줄 적어 주시면 다음 글에 반영해요(안 적어도 돼요)', '') || ''; } 단.disabled = true; 보내기짐({ 종류: '단계', id: 단.getAttribute('data-id'), 단계: 단계, 사유: 사유 }).then(function (j) { if (!j || !j.됨) throw new Error(); 토스트(단계 === '썼어요' ? '고마워요. 다음 글을 채워 둘게요.' : 단계 === '보류' ? '적어 두었어요.' : '다시 초안으로 두었어요.'); 받아오기(); }).catch(function (e) { 단.disabled = false; 못했어요(e, '블로그 단계'); }); return; }
     var 더보 = e.target.closest('[data-더보기]'); if (더보) { 펼침더[더보.getAttribute('data-더보기')] = true; 그리기(); return; }
+    var 접힌 = e.target.closest('[data-접힌]'); if (접힌) { var 접키 = 접힌.getAttribute('data-접힌'); 접힌열림[접키] = !접힌열림[접키]; 그리기(); return; }   // 화면정리 — 나중에·끝낸 것·정리 중·참고(2026-10-12)
     var 더 = e.target.closest('[data-가]'); if (더) { if (더.getAttribute('data-할일상대')) { 할일상대 = 더.getAttribute('data-할일상대'); 열린할일id = ''; } if (더.getAttribute('data-고객보기')) { 고객보기 = 더.getAttribute('data-고객보기'); 고객검색 = ''; 열린고객 = ''; } if (더.getAttribute('data-블로그열기')) 열린블로그 = 더.getAttribute('data-블로그열기'); if (더.getAttribute('data-할일열기')) 열린할일id = 더.getAttribute('data-할일열기'); if (더.getAttribute('data-가') === '메일' && 더.getAttribute('data-초점')) 메일열기(더.getAttribute('data-초점')); if (더.hasAttribute('data-메일폴더열기')) { 메일폴더 = 더.getAttribute('data-메일폴더열기'); 메일거름 = 더.getAttribute('data-메일거름열기') || ''; 메일검색 = ''; 메일보일수 = 150; } 가기(더.getAttribute('data-가'), 더.getAttribute('data-초점'), 더.getAttribute('data-펼침열기'), 더.getAttribute('data-스크롤')); return; }
     var 진펼 = e.target.closest('[data-진행펼침]'); if (진펼 && !e.target.closest('a')) { var jid = 진펼.getAttribute('data-진행펼침'); 펼친진행[jid] = !펼친진행[jid]; 그리기(); return; }
     if (e.target.closest('[data-참고토글]')) { 참고보기 = !참고보기; 그리기(); return; }
@@ -3639,6 +3850,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
   function 가기(어디, 초점, 펼칠것, 구역) {
     if (어디 === '알림') { 알림열기(초점); return; }
     if (펼칠것) 펼침[펼칠것] = true;
+    if (구역 && /^(나중에|끝낸것|정리중|참고|묵은|그뒤)$/.test(구역)) { if (구역 === '그뒤') 펼침더['그뒤'] = true; else 접힌열림[구역] = true; }   // 메뉴에서 접힌 구역으로 가면 펼쳐 둔다(2026-10-12)
     탭 = 어디 || '홈'; 그리기();
     var 대상 = null;
     if (초점) 대상 = document.querySelector('[data-id="' + 초점.replace(/"/g, '') + '"]');
