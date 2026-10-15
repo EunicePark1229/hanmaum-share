@@ -3216,7 +3216,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
   }
   function 사진이름들(x) {
     // 파일 이름만 보고 순서와 대표 사진을 알아보게 한다(2026-10-15 유니스 「대표 사진은 한눈에 봐도 알 수 있게」).
-    // 01_대표사진 = 글 맨 앞 사진(표지) · 02_【사진 2】 … 순서 = 글 속 【사진 N】 순서 · 글에 안 들어간 것은 맨 뒤 「더」.
+    // NN_대표이미지_목록에보임 = 목록에 뜨는 대표 · NN_사진N … 순서 = 글 속 【사진 N】 순서 · 글에 안 들어간 것은 맨 뒤 「더」.
     // 저장 순서 = 글 속 【사진 N】 순서(2026-10-05 유니스 블로그 올리다 — 목록 순서로 받아 사진3 이 【사진 3】 자리가 아니었다).
     var 목록 = x.사진 || [], 글속 = (메모뺀본문(x).match(/^!\[[^\]]*\]\(([^)]+)\)/gm) || []).map(function (l) { return l.replace(/^!\[[^\]]*\]\(/, '').replace(/\)$/, ''); });
     var 들 = 글속.map(function (u) { return { 주소: u }; })
@@ -3224,11 +3224,16 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     // 당근 그림은 글 속 자리가 없다 — 목록 차례대로(2026-10-08)
     if (x.갈래 === '당근') { 들 = 목록.map(function (p) { return { 주소: p.주소 }; }); 글속 = 들.map(function (p) { return p.주소; }); }
     var 두 = function (n) { return (n < 10 ? '0' : '') + n; };
+    // 대표 이미지 = 블로그 목록(글을 누르기 전)에 보이는 그림. 초안에서 「대표 이미지로 지정」이라 적은 사진이고, 없으면 네이버가 고르는 글 맨 앞 사진이다
+    // (2026-10-15 유니스 「대표사진은 목록에서 보이는 것」 — 맨 앞 사진이 아니라 표지가 대표인 글이 많다).
+    var 대표 = -1;
+    들.forEach(function (p, i) { var m = 목록.filter(function (q) { return q.주소 === p.주소; })[0]; if (대표 < 0 && !p.더 && m && /대표 이미지로 지정/.test(m.설명 || '')) 대표 = i; });
+    if (대표 < 0) 대표 = 0;
     들.forEach(function (p, i) {
       var 끝 = (String(p.주소).split('?')[0].split('.').pop() || 'png').toLowerCase();
       if (x.갈래 === '당근') p.이름 = '그림' + (i + 1) + '.' + 끝;
       else if (p.더) p.이름 = '더' + (i + 1 - 글속.length) + '_바꿔쓸때만.' + 끝;
-      else if (i === 0) p.이름 = '01_대표사진_맨위.' + 끝;
+      else if (i === 대표) p.이름 = 두(i + 1) + '_대표이미지_목록에보임.' + 끝;
       else p.이름 = 두(i + 1) + '_사진' + (i + 1) + '.' + 끝;
     });
     return { 들: 들, 글속: 글속 };
@@ -3241,7 +3246,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     var i = 0;
     (function 다음() {
       if (i >= 들.length && x.갈래 === '당근') { 토스트('그림 ' + 들.length + '장을 저장했어요. 당근 소식 쓰실 때 사진으로 넣으시면 돼요.'); return; }
-      if (i >= 들.length) { 토스트('사진 ' + 글속.length + '장을 저장했어요. 「01_대표사진_맨위」가 맨 위 사진이고, 번호 순서가 【사진 N】 자리예요.' + (들.length > 글속.length ? ' 「더」로 시작하는 것은 바꿔 쓰실 때만 보세요.' : '')); return; }
+      if (i >= 들.length) { 토스트('사진 ' + 글속.length + '장을 저장했어요. 「대표이미지」라고 적힌 사진이 글 목록에 보이는 대표 이미지고, 번호 순서가 【사진 N】 자리예요.' + (들.length > 글속.length ? ' 「더」로 시작하는 것은 바꿔 쓰실 때만 보세요.' : '')); return; }
       var p = 들[i]; i += 1;
       fetch(p.주소).then(function (r) { return r.blob(); }).then(function (b) {
         var a = document.createElement('a');
