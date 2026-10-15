@@ -1720,7 +1720,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
       var 주시작 = (function () { var d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d.toISOString().slice(0, 10); })();
       var 이번주 = ((자료 && 자료.피드.받은것) || []).filter(function (x) { return x.갈래 === '블로그' && x.단계 === '썼어요' && String(x.단계때 || '').slice(0, 10) >= 주시작; }).length;
       h += '<section class="카드 넓게"><h2>블로그 — 올릴 차례 <span style="font-size:14px;font-weight:400;color:var(--보조)">이번 주 ' + 이번주 + ' / 2~3편</span></h2>' +
-        블초.slice(0, 2).map(function (x, i) { return '<div class="줄" data-가="받은것" data-블로그열기="' + esc(x.id) + '" style="cursor:pointer"><div class="제목">' + (i + 1) + '. ' + esc(x.제목) + '</div><div class="한줄">누르면 본문 복사 · 사진 저장 · 올린 뒤 「썼어요」</div></div>'; }).join('') + '</section>';
+        블초.slice(0, 2).map(function (x, i) { return '<div class="줄" data-가="받은것" data-블로그열기="' + esc(x.id) + '" style="cursor:pointer"><div class="제목">' + (i + 1) + '. ' + esc(x.제목) + '</div><div class="한줄">누르면 본문 복사 · 사진 한 번에 저장 · 올린 뒤 「썼어요」</div></div>'; }).join('') + '</section>';
     }
     var 줄 = [];
     function 한줄(이름, 수, 가, 덧, 스크롤) {
@@ -3214,28 +3214,68 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
       return 굵게줄들(l.replace(/^>\s?/, '')).map(function (줄) { return '<p style="' + 꼴 + 'font-size:16px">' + 줄 + '</p>'; }).join('');
     }).join('');
   }
-  function 사진저장(x) {
-    // 사진을 폰에 한 장씩 내려받는다(같은 주소라 바로 저장된다). 블로그 앱에서 【사진 N】 자리에 순서대로 넣으시면 된다.
+  function 사진이름들(x) {
+    // 파일 이름만 보고 순서와 대표 사진을 알아보게 한다(2026-10-15 유니스 「대표 사진은 한눈에 봐도 알 수 있게」).
+    // 01_대표사진 = 글 맨 앞 사진(표지) · 02_【사진 2】 … 순서 = 글 속 【사진 N】 순서 · 글에 안 들어간 것은 맨 뒤 「더」.
     // 저장 순서 = 글 속 【사진 N】 순서(2026-10-05 유니스 블로그 올리다 — 목록 순서로 받아 사진3 이 【사진 3】 자리가 아니었다).
-    // 글에 안 들어간 것(글씨 없는 표지 같은 대안)은 맨 뒤에 「더」 이름으로 받는다.
     var 목록 = x.사진 || [], 글속 = (메모뺀본문(x).match(/^!\[[^\]]*\]\(([^)]+)\)/gm) || []).map(function (l) { return l.replace(/^!\[[^\]]*\]\(/, '').replace(/\)$/, ''); });
-    var 들 = 글속.map(function (u) { return 목록.filter(function (p) { return p.주소 === u; })[0] || { 주소: u }; })
+    var 들 = 글속.map(function (u) { return { 주소: u }; })
       .concat(목록.filter(function (p) { return 글속.indexOf(p.주소) < 0; }).map(function (p) { return { 주소: p.주소, 더: true }; }));
-    if (!들.length) { 토스트('이 글에는 넣을 사진이 없어요.'); return; }
-    // 당근 그림은 글 속 자리가 없다 — 목록 차례대로 그림1·그림2·그림3(2026-10-08)
+    // 당근 그림은 글 속 자리가 없다 — 목록 차례대로(2026-10-08)
     if (x.갈래 === '당근') { 들 = 목록.map(function (p) { return { 주소: p.주소 }; }); 글속 = 들.map(function (p) { return p.주소; }); }
-    var 이름머리 = x.갈래 === '당근' ? '당근그림' : '사진';
-    var i = 0;
-    (function 다음() {
-      if (i >= 들.length && x.갈래 === '당근') { 토스트('그림 ' + 들.length + '장을 저장했어요. 당근 소식 쓰실 때 사진으로 넣으시면 돼요.'); return; }
-      if (i >= 들.length) { 토스트('사진 ' + 글속.length + '장을 저장했어요. 사진1 은 【사진 1】 자리, 사진2 는 【사진 2】 자리에 넣으시면 돼요.' + (들.length > 글속.length ? ' 「더」로 시작하는 것은 바꿔 쓰실 때만 보세요.' : '')); return; }
-      var p = 들[i], 번 = p.더 ? '더' + (i + 1 - 글속.length) : String(i + 1); i += 1;
-      fetch(p.주소).then(function (r) { return r.blob(); }).then(function (b) {
-        var a = document.createElement('a'), 끝 = (String(p.주소).split('.').pop() || 'png').split('?')[0];
-        a.href = URL.createObjectURL(b); a.download = 이름머리 + 번 + '.' + 끝; document.body.appendChild(a); a.click();
-        setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500); setTimeout(다음, 600);
-      }).catch(function () { window.open(p.주소, '_blank'); setTimeout(다음, 600); });
-    })();
+    var 두 = function (n) { return (n < 10 ? '0' : '') + n; };
+    들.forEach(function (p, i) {
+      var 끝 = (String(p.주소).split('?')[0].split('.').pop() || 'png').toLowerCase();
+      if (x.갈래 === '당근') p.이름 = '그림' + (i + 1) + '.' + 끝;
+      else if (p.더) p.이름 = '더' + (i + 1 - 글속.length) + '_바꿔쓸때만.' + 끝;
+      else if (i === 0) p.이름 = '01_대표사진_맨위.' + 끝;
+      else p.이름 = 두(i + 1) + '_사진' + (i + 1) + '.' + 끝;
+    });
+    return { 들: 들, 글속: 글속 };
+  }
+  var 크크 = null;
+  function 크크값(b) {
+    if (!크크) { 크크 = []; for (var n = 0; n < 256; n++) { var c = n; for (var k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); 크크[n] = c >>> 0; } }
+    var c2 = 0xFFFFFFFF; for (var i = 0; i < b.length; i++) c2 = 크크[(c2 ^ b[i]) & 0xFF] ^ (c2 >>> 8); return (c2 ^ 0xFFFFFFFF) >>> 0;
+  }
+  function 압축묶기(파일들) {
+    // 압축 없이 담기만 하는 가장 단순한 zip(사진은 이미 압축돼 있다). 이름은 UTF-8 표시를 켜 한글이 깨지지 않는다.
+    var 인코, 조각 = [], 목차 = [], 자리 = 0, 인코 = new TextEncoder();
+    function u16(v) { return [v & 255, (v >> 8) & 255]; } function u32(v) { return [v & 255, (v >> 8) & 255, (v >> 16) & 255, (v >>> 24) & 255]; }
+    파일들.forEach(function (f) {
+      var 이 = 인코.encode(f.이름), 값 = 크크값(f.바이트);
+      var 머리 = new Uint8Array([0x50, 0x4B, 3, 4].concat(u16(20), u16(0x0800), u16(0), u16(0), u16(0x21), u32(값), u32(f.바이트.length), u32(f.바이트.length), u16(이.length), u16(0)));
+      조각.push(머리, 이, f.바이트);
+      목차.push({ 이: 이, 값: 값, 길이: f.바이트.length, 자리: 자리 }); 자리 += 머리.length + 이.length + f.바이트.length;
+    });
+    var 시작 = 자리, 목차크기 = 0;
+    목차.forEach(function (m) {
+      var h = new Uint8Array([0x50, 0x4B, 1, 2].concat(u16(20), u16(20), u16(0x0800), u16(0), u16(0), u16(0x21), u32(m.값), u32(m.길이), u32(m.길이), u16(m.이.length), u16(0), u16(0), u16(0), u16(0), u32(0), u32(m.자리)));
+      조각.push(h, m.이); 목차크기 += h.length + m.이.length;
+    });
+    조각.push(new Uint8Array([0x50, 0x4B, 5, 6].concat(u16(0), u16(0), u16(목차.length), u16(목차.length), u32(목차크기), u32(시작), u16(0))));
+    return new Blob(조각, { type: 'application/zip' });
+  }
+  function 사진저장(x) {
+    // 사진을 한 번에 담는다 — 이름 붙인 폴더째 zip 하나로 내려받는다(2026-10-15 유니스 「하나하나 받지 말고 한 번에」).
+    // 폰이 여러 파일을 공유창으로 받을 수 있으면 그 길도 함께 둔다(data-사진공유).
+    var 정 = 사진이름들(x), 들 = 정.들, 글속 = 정.글속;
+    if (!들.length) { 토스트('이 글에는 넣을 사진이 없어요.'); return; }
+    토스트('사진 ' + 들.length + '장을 한 묶음으로 만드는 중이에요…');
+    Promise.all(들.map(function (p) { return fetch(p.주소).then(function (r) { return r.arrayBuffer(); }).then(function (ab) { return { 이름: p.이름, 바이트: new Uint8Array(ab) }; }); })).then(function (파일들) {
+      var 묶음 = 압축묶기(파일들), a = document.createElement('a');
+      var 제목 = String(x.제목 || '').replace(/^\s*\[[^\]]*\]\s*/, '').replace(/[\/:*?"<>|\s]+/g, '_').slice(0, 20);
+      a.href = URL.createObjectURL(묶음); a.download = (x.갈래 === '당근' ? '당근그림_' : '블로그사진_') + 제목 + '.zip';
+      document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 3000);
+      토스트(x.갈래 === '당근' ? '그림 ' + 들.length + '장을 zip 하나로 저장했어요. 풀어서 당근 소식에 넣으시면 돼요.' : '사진 ' + 들.length + '장을 zip 하나로 저장했어요. 풀면 「01_대표사진_맨위」가 맨 위 사진이고, 번호 순서가 【사진 N】 자리예요.' + (들.length > 글속.length ? ' 「더」로 시작하는 것은 바꿔 쓰실 때만 보세요.' : ''));
+    }).catch(function () { 토스트('사진을 한 번에 담지 못했어요. 잠시 뒤 다시 눌러 주세요.'); });
+  }
+  function 사진공유(x) {
+    var 정 = 사진이름들(x);
+    Promise.all(정.들.map(function (p) { return fetch(p.주소).then(function (r) { return r.blob(); }).then(function (b) { return new File([b], p.이름, { type: b.type || 'image/png' }); }); })).then(function (fs) {
+      if (!navigator.canShare || !navigator.canShare({ files: fs })) { 토스트('이 폰에서는 공유로 한꺼번에 못 보내요. zip 저장을 써 주세요.'); return; }
+      return navigator.share({ files: fs, title: x.제목 || '' });
+    }).catch(function () { });
   }
   function 블로그카드(x) {
     var 급 = x.단계 === '썼어요' ? 신호('좋음', '썼어요') : x.단계 === '보류' ? 신호('모름', '안 쓸래요') : 신호('살핌', '초안');
@@ -3248,7 +3288,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     if ((x.제목후보 || []).length > 1) h += '<div class="한줄" style="margin-bottom:8px">제목 후보 · 눌러서 복사</div>' + x.제목후보.map(function (t, i) { return '<div style="margin:0 0 6px"><button class="단추 테" style="height:auto;min-height:40px;padding:6px 12px;text-align:left;white-space:normal;line-height:1.35" data-제목복사="' + esc(x.id) + '" data-번="' + i + '">' + esc(t) + '</button></div>'; }).join('');
     h += '<div style="margin:8px 0 12px">' + (x.단계 === '썼어요' ? 신호('좋음', 썼어요글(x)) : x.단계 === '보류' ? 신호('모름', '안 쓸래요' + (x.사유 ? ' · ' + esc(x.사유) : '')) : 신호('살핌', '초안')) + '</div>';
     h += 소식꼴줄(x);
-    h += '<div class="단추줄"><button class="단추" data-제목복사="' + esc(x.id) + '" data-번="0">제목 복사</button><button class="단추" data-복사="' + esc(x.id) + '">본문 복사</button>' + (((x.갈래 === '블로그' || x.갈래 === '당근') && (x.사진 || []).length) ? '<button class="단추 테" data-사진저장="' + esc(x.id) + '">' + (x.갈래 === '당근' ? '그림 ' : '사진 ') + x.사진.length + '장 저장</button>' : '') + (x.단계 !== '썼어요' ? '<button class="단추 테" data-단계="썼어요" data-id="' + esc(x.id) + '">썼어요</button>' : '') + (x.단계 === '초안' ? '<button class="단추 테" data-단계="보류" data-id="' + esc(x.id) + '">안 쓸래요</button>' : '') + (x.단계 !== '초안' ? '<button class="단추 테" data-단계="초안" data-id="' + esc(x.id) + '">다시 초안으로</button>' : '') + '</div>';
+    h += '<div class="단추줄"><button class="단추" data-제목복사="' + esc(x.id) + '" data-번="0">제목 복사</button><button class="단추" data-복사="' + esc(x.id) + '">본문 복사</button>' + (((x.갈래 === '블로그' || x.갈래 === '당근') && (x.사진 || []).length) ? '<button class="단추 테" data-사진저장="' + esc(x.id) + '">' + (x.갈래 === '당근' ? '그림 ' : '사진 ') + x.사진.length + '장 한 번에 저장(zip)</button>' + (typeof navigator !== 'undefined' && navigator.canShare ? '<button class="단추 테" data-사진공유="' + esc(x.id) + '">사진 한꺼번에 공유</button>' : '') : '') + (x.단계 !== '썼어요' ? '<button class="단추 테" data-단계="썼어요" data-id="' + esc(x.id) + '">썼어요</button>' : '') + (x.단계 === '초안' ? '<button class="단추 테" data-단계="보류" data-id="' + esc(x.id) + '">안 쓸래요</button>' : '') + (x.단계 !== '초안' ? '<button class="단추 테" data-단계="초안" data-id="' + esc(x.id) + '">다시 초안으로</button>' : '') + '</div>';
     var 꼴 = (x.갈래 === '당근' && 소식꼴선택 && 소식꼴선택 !== x.갈래) ? 소식꼴선택 : '';
     h += '<div class="본문글">' + (꼴 ? '<pre style="white-space:pre-wrap;font:inherit;margin:0">' + esc(꼴본문(x, 꼴)) + '</pre>' : (x.갈래 === '블로그' ? ((본문메모들(x).length ? '<div class="고정힌트" style="text-align:left"><b>원장님 확인해 주실 것 ' + 본문메모들(x).length + '</b> — 글에는 안 들어가요<br>' + 본문메모들(x).map(function (m, i) { return (i + 1) + '. ' + esc(m); }).join('<br>') + '</div>' : '') + 복사용HTML(x)) : 마크다운(x.본문))) + '</div>';
     if ((x.태그 || []).length) h += '<div class="한줄" style="margin-top:12px">' + x.태그.map(esc).join(' ') + '</div>';
@@ -3471,6 +3511,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     if (e.target.closest('[data-블로그닫기]')) { if (!닫고돌아가기()) { 열린블로그 = ''; 그리기(); } return; }
     var 지 = e.target.closest('[data-지난것]'); if (지) { 지난것보기 = 지.getAttribute('data-지난것') === '1'; 그리기(); return; }
     var 사저 = e.target.closest('[data-사진저장]'); if (사저) { var sid = 사저.getAttribute('data-사진저장'), sx = ((자료 && 자료.피드.받은것) || []).filter(function (y) { return y.id === sid; })[0]; if (sx) 사진저장(sx); return; }
+    var 사공 = e.target.closest('[data-사진공유]'); if (사공) { var gid = 사공.getAttribute('data-사진공유'), gx = ((자료 && 자료.피드.받은것) || []).filter(function (y) { return y.id === gid; })[0]; if (gx) 사진공유(gx); return; }
     var 그복 = e.target.closest('[data-그림복사]'); if (그복) { var gx = ((자료 && 자료.피드.받은것) || []).filter(function (y) { return y.id === 그복.getAttribute('data-그림복사'); })[0]; var g = gx && (gx.그림들 || [])[Number(그복.getAttribute('data-번'))]; if (g) (navigator.clipboard ? navigator.clipboard.writeText(g.글) : Promise.reject()).then(function () { 토스트('프롬프트를 복사했어요. 그림 앱에 붙여 넣으세요.'); }, function () { 토스트('복사가 안 돼요. 글을 길게 눌러 복사해 주세요.'); }); return; }
     if (e.target.closest('#날고_열기')) { 날짜고침열림 = !날짜고침열림; 그리기(); return; }
     var 날고 = e.target.closest('[data-날고]'); if (날고) { var nid = 날고.getAttribute('data-날고'), 칸 = document.querySelector('[data-날고값="' + nid + '"]'), 새 = 칸 && 칸.value; if (!/^\d{4}-\d{2}-\d{2}$/.test(새 || '')) { 토스트('날짜를 골라 주세요.'); return; } 날고.disabled = true; 보내기짐({ 종류: '입력', 갈래: '장부수정', 짐: { id: nid, 날짜: 새 } }).then(function () { 토스트('날짜를 ' + 새 + ' 로 바꿔 달라고 보냈어요. 1분 안에 장부·재고·엑셀에 반영돼요.'); }, function (err) { 날고.disabled = false; 못했어요(err, '날짜 바꾸기'); }); return; }
