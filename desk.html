@@ -3149,6 +3149,19 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     return 나온.join('\n');
   }
   function 본문메모들(x) { return (String(x.본문 || '').split('\n').filter(function (l) { return !/^\s*!\[/.test(l); }).join('\n').match(/\[원장님[^\]]*\]/g) || []).map(function (m) { return m.replace(/^\[원장님\s*(확인)?\s*[—-]?\s*/, '').replace(/\]$/, ''); }); }
+  // 글 안의 주소 줄 = 네이버 편집기에서 사람이 직접 걸어야 하는 링크(2026-10-15 유니스 「주소가 맞아도 링크는 올릴 때 직접 설정해야 하잖아 — 그렇게 하라고 말해 줘야」).
+  // 문구 = 주소 바로 앞의 말 줄(👉 …). 지도 주소는 편집기 「장소」 카드라 여기서 뺀다.
+  function 링크걸곳(x) {
+    var 줄 = String(x.본문 || '').split('\n'), 나온 = [];
+    for (var i = 0; i < 줄.length; i++) {
+      if (/^#\s+(확인해|쓰지)/.test(줄[i])) break;
+      var m = 줄[i].trim().match(/^(https?:\/\/\S+)$/);
+      if (!m || /map\.naver\.com/.test(m[1])) continue;
+      var 앞 = ''; for (var j = i - 1; j >= 0 && j > i - 4; j--) { if (줄[j].trim()) { 앞 = 줄[j].trim(); break; } }
+      나온.push({ 문구: 앞.replace(/^[^\w가-힣"']+/, '').replace(/^\[|\]$/g, ''), 주소: m[1] });
+    }
+    return 나온;
+  }
   function 굵게줄들(글) {
     // **굵게** 가 줄 나눔에 걸려 두 줄로 갈라지면 ** 가 글자로 새어 나갔다(2026-09-28 유니스 「** 이런 거 안 나오게」).
     // 줄을 나누기 전에 굵은 구간을 표시로 바꾸고, 나눈 뒤 줄마다 <b> 를 다시 여닫는다.
@@ -3271,6 +3284,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     h += '<div style="margin:8px 0 12px">' + (x.단계 === '썼어요' ? 신호('좋음', 썼어요글(x)) : x.단계 === '보류' ? 신호('모름', '안 쓸래요' + (x.사유 ? ' · ' + esc(x.사유) : '')) : 신호('살핌', '초안')) + '</div>';
     h += 소식꼴줄(x);
     h += '<div class="단추줄"><button class="단추" data-제목복사="' + esc(x.id) + '" data-번="0">제목 복사</button><button class="단추" data-복사="' + esc(x.id) + '">본문 복사</button>' + (((x.갈래 === '블로그' || x.갈래 === '당근') && (x.사진 || []).length) ? '<button class="단추 테" data-사진저장="' + esc(x.id) + '">' + (x.갈래 === '당근' ? '그림 ' : '사진 ') + x.사진.length + '장 저장</button>' : '') + (x.단계 !== '썼어요' ? '<button class="단추 테" data-단계="썼어요" data-id="' + esc(x.id) + '">썼어요</button>' : '') + (x.단계 === '초안' ? '<button class="단추 테" data-단계="보류" data-id="' + esc(x.id) + '">안 쓸래요</button>' : '') + (x.단계 !== '초안' ? '<button class="단추 테" data-단계="초안" data-id="' + esc(x.id) + '">다시 초안으로</button>' : '') + '</div>';
+    var 링 = x.갈래 === '블로그' ? 링크걸곳(x) : [];
+    if (링.length) h += '<div class="고정힌트" style="text-align:left;margin:10px 0"><b>링크 걸 곳 ' + 링.length + '군데</b> — 본문을 붙여 넣은 뒤 네이버 편집기에서 직접 걸어 주세요<br>글에서 아래 문구를 드래그해 고르고 → 위쪽 링크 단추 → 주소를 붙여 넣고 확인.<br>' + 링.map(function (a, i) { return '<div style="margin-top:8px">' + (i + 1) + '. ' + esc(a.문구 || '(문구는 글에서 확인)') + '<br><button class="단추 테" data-주소복사="' + esc(a.주소) + '" style="margin-top:4px">' + (i + 1) + '번 주소 복사</button></div>'; }).join('') + '</div>';
     var 꼴 = (x.갈래 === '당근' && 소식꼴선택 && 소식꼴선택 !== x.갈래) ? 소식꼴선택 : '';
     h += '<div class="본문글">' + (꼴 ? '<pre style="white-space:pre-wrap;font:inherit;margin:0">' + esc(꼴본문(x, 꼴)) + '</pre>' : (x.갈래 === '블로그' ? ((본문메모들(x).length ? '<div class="고정힌트" style="text-align:left"><b>원장님 확인해 주실 것 ' + 본문메모들(x).length + '</b> — 글에는 안 들어가요<br>' + 본문메모들(x).map(function (m, i) { return (i + 1) + '. ' + esc(m); }).join('<br>') + '</div>' : '') + 복사용HTML(x)) : 마크다운(x.본문))) + '</div>';
     if ((x.태그 || []).length) h += '<div class="한줄" style="margin-top:12px">' + x.태그.map(esc).join(' ') + '</div>';
@@ -3498,6 +3513,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     var 날고 = e.target.closest('[data-날고]'); if (날고) { var nid = 날고.getAttribute('data-날고'), 칸 = document.querySelector('[data-날고값="' + nid + '"]'), 새 = 칸 && 칸.value; if (!/^\d{4}-\d{2}-\d{2}$/.test(새 || '')) { 토스트('날짜를 골라 주세요.'); return; } 날고.disabled = true; 보내기짐({ 종류: '입력', 갈래: '장부수정', 짐: { id: nid, 날짜: 새 } }).then(function () { 토스트('날짜를 ' + 새 + ' 로 바꿔 달라고 보냈어요. 1분 안에 장부·재고·엑셀에 반영돼요.'); }, function (err) { 날고.disabled = false; 못했어요(err, '날짜 바꾸기'); }); return; }
     if (e.target.closest('[data-진행더]')) { 진행전부 = !진행전부; 그리기(); return; }
     if (e.target.closest('[data-진행열기]')) { 진행열림 = !진행열림; if (!진행열림) 진행전부 = false; 그리기(); return; }
+    var 주복 = e.target.closest('[data-주소복사]'); if (주복) { var 주 = 주복.getAttribute('data-주소복사'); (navigator.clipboard ? navigator.clipboard.writeText(주) : Promise.reject()).then(function () { 토스트('주소를 복사했어요. 편집기 링크 칸에 붙여 넣으세요.'); }, function () { 토스트('복사가 안 돼요. 주소를 길게 눌러 복사해 주세요: ' + 주); }); return; }
     var 제복 = e.target.closest('[data-제목복사]'); if (제복) { var 제x = ((자료 && 자료.피드.받은것) || []).filter(function (y) { return y.id === 제복.getAttribute('data-제목복사'); })[0]; if (제x) { var 번 = Number(제복.getAttribute('data-번')), 제글 = 번 ? (제x.제목후보 || [])[번] : 제x.제목; (navigator.clipboard ? navigator.clipboard.writeText(제글 || '') : Promise.reject()).then(function () { 토스트('제목을 복사했어요. 블로그 제목칸에 붙여 넣으세요.'); }, function () { 토스트('복사가 안 돼요. 제목을 길게 눌러 복사해 주세요.'); }); } return; }
     var 복 = e.target.closest('[data-복사]'); if (복) { var id = 복.getAttribute('data-복사'), x = ((자료 && 자료.피드.받은것) || []).filter(function (y) { return y.id === id; })[0]; if (x) { var 꼴k = (x.갈래 === '당근' && 소식꼴선택) ? 소식꼴선택 : ''; var t = 꼴k ? 꼴본문(x, 꼴k) : 복사용글(x); var 안 = 꼴k && 설정.소식꼴 && 설정.소식꼴[꼴k] && 설정.소식꼴[꼴k].안내; ((!꼴k && x.갈래 === '블로그' && navigator.clipboard && window.ClipboardItem) ? navigator.clipboard.write([new ClipboardItem({ 'text/plain': new Blob([t], { type: 'text/plain' }), 'text/html': new Blob([복사용HTML(x)], { type: 'text/html' }) })]).catch(function () { return navigator.clipboard.writeText(t); }) : (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject())).then(function () { 토스트('본문을 복사했어요. ' + (안 || (x.갈래 === '당근' ? '당근 「소식」 글쓰기에 붙여 넣으세요.' : '블로그 글쓰기에 붙여 넣으세요.'))); }, function () { 토스트('복사가 안 돼요. 글을 길게 눌러 복사해 주세요.'); }); } return; }
     var 꼴단 = e.target.closest('[data-소식꼴]'); if (꼴단) { 소식꼴선택 = 꼴단.getAttribute('data-소식꼴'); 그리기(); return; }
