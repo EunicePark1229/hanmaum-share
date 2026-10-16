@@ -558,6 +558,7 @@ body.띠있음 { --방줄위: 114px; }
 .여기줄 .점.끊김 { background: #C9B8A8; }
 .말 .때 .읽음 { color: var(--강조); }
 .말 .때 { font-size: 13px; color: var(--흐림); margin-top: 6px; }
+.말 .때 .번호 { font-weight: 600; }
 .말 .제목 { font-size: 17px; margin-bottom: 4px; }
 .말 img { max-width: 100%; border-radius: 12px; display: block; }
 .입력줄 { position: fixed; left: 0; right: 0; bottom: calc(60px + env(safe-area-inset-bottom)); background: var(--카드); border-top: 1px solid var(--선); padding: 10px 12px; display: none; gap: 8px; align-items: flex-end; z-index: 5; }
@@ -1795,19 +1796,20 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     var 읽음글 = 남읽음.length ? (이름까지 ? esc(남읽음.join(', ')) + ' 읽음' : '읽음') : '';
     // 입구 카드는 글 아래에 둔다(2026-10-16 유니스 「열자마자 가장 최근 대화가 보이게」) — 위에 두면 열었을 때 카드만 보이고 최신 글은 밑으로 내려야 보였다
     if (!줄들.length) return 방줄() + '<div class="카드"><div class="빈">아래에 적어 보내시면 됩니다. 사진과 음성도 돼요.</div></div>' + 입구();
-    return 방줄() + '<div class="대화">' + 줄들.map(function (x) {
+    var 번칩 = function (i) { return '<span class="번호">' + (i + 1) + '번</span> · '; };   // 글마다 번호(2026-10-16 유니스 「내용으로 안 물어보게 넘버링」) — 그 방의 글을 시각 순으로 센 차례라 새 글은 맨 뒤에 붙고 앞 번호는 안 바뀐다
+    return 방줄() + '<div class="대화">' + 줄들.map(function (x, 순) {
       if (x.누가 === '나' || x.누가 === '남') {
         var 몸 = x.종류 === '사진' ? '<div>사진 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '음성' ? '<div>음성 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '파일' ? '<div>파일 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '장부입력' ? 장부한줄(x.글) : esc(x.글);   // 장부입력은 2026-09-24 부터 대화로 안 온다 — 옛 줄만 보인다
         if (x.미리보기) 몸 = '<img class="썸" src="' + x.미리보기 + '" alt="보낸 사진">';
         else if (x.종류 === '사진' && x.id && 설정 && 설정.뒷단.indexOf('script.google') < 0) 몸 = '<img class="썸" loading="lazy" src="' + 뒷단주소('p=file&id=' + encodeURIComponent(x.id)) + '" alt="보낸 사진">';
         if ((x.종류 === '사진' || x.종류 === '파일') && (x.글 || '').indexOf('[영수증') === 0) 몸 = '<div><span class="칩">영수증</span> ' + esc((x.글 || '').replace('[영수증]', '').trim()) + '</div>' + 몸;
         var 이름줄 = x.누가 === '남' ? '<div class="이름">' + esc(x.이름) + '</div>' : '';
-        return '<div class="말 ' + x.누가 + '">' + 이름줄 + 몸 + '<div class="때">' + 때글(x.시각) + (x.누가 === '나' ? ' · ' + (x.상태 === '보내는중' ? '보내는 중' : (x === 마지막내것 && 읽음글 ? '<span class="읽음">' + 읽음글 + '</span>' : '받았어요')) : '') + '</div></div>';
+        return '<div class="말 ' + x.누가 + '">' + 이름줄 + 몸 + '<div class="때">' + 번칩(순) + 때글(x.시각) + (x.누가 === '나' ? ' · ' + (x.상태 === '보내는중' ? '보내는 중' : (x === 마지막내것 && 읽음글 ? '<span class="읽음">' + 읽음글 + '</span>' : '받았어요')) : '') + '</div></div>';
       }
-      if (x.누가 === '우리' && !x.제목 && x.종류) return '<div class="말 우리" data-id="' + esc(x.id || '') + '"><div class="이름">' + esc(비서이름()) + '</div>' + esc(x.글 || '') + '<div class="때">' + 때글(x.시각) + '</div></div>';
+      if (x.누가 === '우리' && !x.제목 && x.종류) return '<div class="말 우리" data-id="' + esc(x.id || '') + '"><div class="이름">' + esc(비서이름()) + '</div>' + esc(x.글 || '') + '<div class="때">' + 번칩(순) + 때글(x.시각) + '</div></div>';
       // 그림은 바로 보이게(2026-09-30 유니스 「클릭 안 되는 것 같은데」) — 누르면 크게 열린다
       var 파일 = (x.파일 || []).map(function (f) { if (f.사진id && 설정 && 설정.뒷단.indexOf('script.google') < 0) { var u = 뒷단주소('p=file&id=' + encodeURIComponent(f.사진id)); return '<a href="' + u + '" target="_blank" rel="noopener" style="display:block"><img loading="lazy" src="' + u + '" alt="' + esc(f.이름) + '" style="display:block;width:100%;max-width:420px;height:auto;border-radius:10px;margin-top:8px"></a><div class="때">누르면 크게 보여요</div>'; } if (f.파일id && 설정 && 설정.뒷단.indexOf('script.google') < 0) return '<a class="단추" style="display:inline-block;margin-top:8px" href="' + 뒷단주소('p=file&id=' + encodeURIComponent(f.파일id)) + '" target="_blank" rel="noopener">' + esc(f.이름) + ' 열기</a>'; return '<div>파일 · ' + esc(f.이름) + '</div>'; }).join('');
-      return '<div class="말 우리" data-id="' + esc(x.id || '') + '">' + (x.받는이 ? '<div class="이름">' + esc(비서이름()) + ' → ' + esc(x.받는이) + '</div>' : '') + (x.제목 ? '<div class="제목">' + esc(x.제목) + '</div>' : '') + 메일링크(esc(x.글)) + 파일 + '<div class="때">' + 때글(x.시각) + '</div></div>';
+      return '<div class="말 우리" data-id="' + esc(x.id || '') + '">' + (x.받는이 ? '<div class="이름">' + esc(비서이름()) + ' → ' + esc(x.받는이) + '</div>' : '') + (x.제목 ? '<div class="제목">' + esc(x.제목) + '</div>' : '') + 메일링크(esc(x.글)) + 파일 + '<div class="때">' + 번칩(순) + 때글(x.시각) + '</div></div>';
     }).join('') + '</div>' + 입구();
   }
   // ── 일정(2026-09-20 유니스 「캘린더 기능도 만들자」) — 예약(네이버 예약 메일) · 기한(기한대장) · 참고(메일 이력의 되풀이) ──
@@ -3421,7 +3423,10 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     document.body.classList.toggle('대화중', 탭 === '대화' && !보기);
     보기띠그리기();
     배지그리기();
-    if (탭 === '대화' && !보기) { if (그전탭 !== '대화' || 바닥근처 || !입구켜짐()) window.scrollTo(0, document.body.scrollHeight); 소켓열기(); 읽음보내기(); } else 소켓닫기();
+    if (탭 === '대화') {   // 보기(유니스가 원장님 화면을 여는 열쇠)에서도 맨 아래로 — 종전엔 !보기 안에 있어 유니스 화면은 늘 맨 위였다(2026-10-16 유니스 「여전히 안 된다」)
+      if (그전탭 !== '대화' || 바닥근처) { 바닥붙임까지 = Date.now() + 3000; window.scrollTo(0, document.body.scrollHeight); }
+    }
+    if (탭 === '대화' && !보기) { 소켓열기(); 읽음보내기(); } else 소켓닫기();
     그전탭 = 탭;
     안내자동();
     공지살피기();
@@ -3943,6 +3948,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
   // ── 업무는 앱으로(2026-10-06) — 원장님이 하시는 일을 네 가지 입구로 · 「대표님께도 전해 주세요」를 누른 것만 유니스께 간다 ──
   //   설정 「입구」 가 켜진 조직(한마음)의 원장 화면에만 보인다. 글·사진은 종전 대화 보내기(보내기)로 그대로 간다 — 받는 쪽(방들_처리)은 「[만들어 주세요 · 블로그 글]」 같은 머리표를 읽는다.
   var 그전탭 = '';
+  var 바닥붙임까지 = 0;   // 대화 탭을 연 뒤 3초 동안은 사진이 늦게 뜨며 키가 자라도 맨 아래로 다시 붙인다
+  document.addEventListener('load', function (e) { if (Date.now() < 바닥붙임까지 && e.target && e.target.tagName === 'IMG' && 탭 === '대화') window.scrollTo(0, document.body.scrollHeight); }, true);
   var 입구종류 = {
     만들기: { 제목: '만들어 주세요', 설명: '블로그 · 문자 · 전단 · 그림', 칩: ['블로그 글', '당근 글', '문자', '전단·명함', '그림', '그 밖'], 물음: '어떻게 만들면 될까요? 한두 줄이면 돼요', 사진: '참고할 사진이 있으면', 언제: true },
     알아보기: { 제목: '알아봐 주세요', 설명: '비교 · 추천 · 해야 하나', 칩: ['추천', '비교', '해야 하나요', '그 밖'], 물음: '궁금한 것을 한 줄로 적어 주세요', 사진: '참고할 사진이 있으면', 언제: true },
