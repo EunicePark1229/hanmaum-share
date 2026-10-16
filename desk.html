@@ -563,6 +563,7 @@ body.띠있음 { --방줄위: 114px; }
 .말 img { max-width: 100%; border-radius: 12px; display: block; }
 .입력줄 { position: fixed; left: 0; right: 0; bottom: calc(60px + env(safe-area-inset-bottom)); background: var(--카드); border-top: 1px solid var(--선); padding: 10px 12px; display: none; gap: 8px; align-items: flex-end; z-index: 5; }
 .입력줄.보임 { display: flex; }
+body.대화중 { padding-bottom: calc(52px + env(safe-area-inset-bottom)); }   /* 폰에서 마지막 글 아래 35px 가 입력줄에 가려졌다(GN 10-16 시험 · 스크롤은 맨 끝인데 글 바닥 748 > 입력줄 위 713) - 입력줄 높이만큼 여백 */
 .입력줄 textarea { flex: 1; min-height: 48px; max-height: 140px; padding: 12px 14px; border: 1px solid var(--선); border-radius: 12px; resize: none; background: var(--바탕); }
 .입력줄 .둥 { width: 48px; height: 48px; border-radius: 12px; border: 1px solid var(--선); background: var(--카드); display: grid; place-items: center; }
 .입력줄 .둥 svg { width: 24px; height: 24px; fill: none; stroke: var(--글); stroke-width: 1.8; }
