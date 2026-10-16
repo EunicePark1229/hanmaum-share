@@ -2787,7 +2787,9 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
   function 정리할일탭(열림, 나중, 끝, 정리, 끝줄) {
     var 차 = 하실것차례(열림.filter(대표것인가)), 원장것 = 열림.filter(function (x) { return !대표것인가(x); });
     var h = '<section class="카드" data-구역="내할일"><div class="히어로"><h2>지금 할 것 ' + 차.위.length + '</h2>' + 할일타일(차, 0) + '</div><div class="차례기준">' + esc(차례기준글) + ' 줄을 길게 누르거나 ⋮⋮ 를 잡고 끌면 차례가 바뀌고 홈도 같이 바뀌어요.</div>';
-    h += 차.위.length ? 차.위.map(function (x, i) { return 정리할일줄(x, i + 1, true); }).join('') : '<div class="빈">지금 할 것이 없어요.</div>';
+    // 20건 넘으면 「더 보기」(2026-10-17 — 화면정리 길에는 이 접기가 빠져 있어 GN 지금 할 것 24건이 한꺼번에 떴다 · 아래 일반 길 줄들() 과 같은 기준)
+    var 보임 = 펼침더['내할일'] ? 차.위 : 차.위.slice(0, 20);
+    h += 차.위.length ? 보임.map(function (x, i) { return 정리할일줄(x, i + 1, true); }).join('') + (차.위.length > 20 && !펼침더['내할일'] ? '<div class="더보기줄"><button data-더보기="내할일">' + (차.위.length - 20) + '개 더 보기</button></div>' : '') : '<div class="빈">지금 할 것이 없어요.</div>';
     h += 칩뜻글 + '</section>';
     if (차.아래.length) h += '<section class="카드" data-구역="그뒤"><h2>그 뒤 ' + 차.아래.length + '</h2>' + (펼침더['그뒤'] ? 차.아래.map(function (x) { return 정리할일줄(x, 0, true); }).join('') : '<div class="더보기줄"><button data-더보기="그뒤">기한이 이레 넘게 남았거나 · 남의 답을 기다리는 것 ' + 차.아래.length + '개 보기</button></div>') + '</section>';
     if (원장것.length && 구성원있나()) h += '<section class="카드" data-구역="원장님"><h2>' + esc(말('구성원할일')) + ' ' + 원장것.length + '</h2>' + 원장것.map(function (x) { return 정리할일줄(x, 0, true); }).join('') + '</section>';
