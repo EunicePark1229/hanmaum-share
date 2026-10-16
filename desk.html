@@ -916,9 +916,10 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-10-12s';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-10-16a';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 첫불러옴실패 = false;   // 처음 여는 기기(저장된 자료 없음)에서 자료가 아직 안 왔거나 못 왔을 때 — 빈 홈(「할 일 없어요」)을 먼저 그리지 않는다(2026-10-12)
+  var 열람고정 = false;   // 설정 「열람전용」 조직(한마음)에서 대표 열쇠는 늘 원장님 화면을 보기만 한다 — 「내 화면」이 없고 쓰기는 블로그 단계뿐(2026-10-16 유니스)
   var 보기 = '', 보기전 = null;   // 다른 사람 화면으로 보는 중이면 그 이름(2026-09-21) — 이 폰에 안 남긴다. 다시 열면 내 화면
   (function () { var q = decodeURIComponent(location.search || ''); var m = q.match(/[?&]탭=([^&]+)/); if (m) 탭 = m[1]; var b = q.match(/[?&]보기=([^&]+)/); if (b) 보기 = b[1]; var t2 = (location.search || '').match(/[?&]tab=([a-z]+)/); var 별 = { draft: '초안', home: '홈', chat: '대화', todo: '할일', mail: '메일', inbox: '받은것', cal: '일정', stock: '재고' }; if (t2 && 별[t2[1]]) 탭 = 별[t2[1]]; })();   // 한글 없는 탭 링크(?tab=draft) — 한글이 섞이면 채팅 앱이 링크를 중간에 끊는다(2026-10-07 유니스 링크가 ?%ED%83%AD 에서 잘림)   // 알림·링크로 특정 탭을 바로 열 때(?탭=재고) · ?보기=원장님 은 대표가 그 사람 화면으로 바로
   var $ = function (id) { return document.getElementById(id); };
@@ -984,6 +985,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
         return;
       }
       if (물을때보기 !== 보기) return;                       // 그 사이 내 화면으로 돌아왔으면 버린다
+      if (설정 && 설정.열람전용 && j.보기 && !보기) { 보기 = j.보기; 열람고정 = true; 저장.set('자료', ''); 방 = ''; 탭 = '홈'; }   // 서버가 「보기 전용」이라고 알려 준 열쇠 — 이 폰에 내 화면을 남기지 않는다
       if (j.같음) { if (자료 && 자료.판 === j.판) 공지새자료 = true; return; }   // 바뀐 것 없음 — 지금 화면이 뒷단과 같다. 다시 그리지 않는다
       j.판키 = 물은키;
       공지새자료 = true;
@@ -995,8 +997,14 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
       그리기();
     }).catch(function () { /* 조용히 — 다음 30초에 다시 */ if (!자료 && !첫불러옴실패) { 첫불러옴실패 = true; 그리기(); } });
   }
+  function 열람허용인가(짐) {   // 보기 전용에서 쓸 수 있는 것: 블로그 초안의 썼어요·안 쓸래요·다시 초안으로 — 서버도 같은 것만 받는다(desk.js 열람단계)
+    if (짐.종류 !== '단계' || ['썼어요', '보류', '초안'].indexOf(짐.단계) < 0) return false;
+    var x = ((자료 && 자료.피드 && 자료.피드.받은것) || []).filter(function (y) { return y.id === 짐.id; })[0];
+    return !!(x && x.갈래 === '블로그');
+  }
   function 보내기짐(짐) {
-    if (보기 && 짐.종류 !== '기록') { 토스트(보기 + ' 화면을 보는 중이라 여기서는 못 바꿔요. 「내 화면으로」를 누른 뒤에 해 주세요.'); return Promise.reject(new Error('보기')); }
+    if (보기 && 열람고정 && 짐.종류 !== '기록' && !열람허용인가(짐)) { 토스트('이 화면은 보기만 돼요. 여기서 누른 것은 반영되지 않아요. (블로그 글의 「썼어요」만 기록돼요)'); return Promise.reject(new Error('보기')); }
+    if (보기 && !열람고정 && 짐.종류 !== '기록') { 토스트(보기 + ' 화면을 보는 중이라 여기서는 못 바꿔요. 「내 화면으로」를 누른 뒤에 해 주세요.'); return Promise.reject(new Error('보기')); }
     짐.k = 열쇠;
     if (자료 && 짐.종류 !== '기록') 자료.판 = '';               // 무엇이 바뀌었을 수 있다 — 다음 받기는 통째로(C)
     if (!열쇠) return Promise.reject(new Error('열쇠가 이 기기에 없어요 — 받으신 링크로 다시 열어 주세요'));
@@ -1026,7 +1034,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     받아오기();
   }
   function 보기끝() {
-    if (!보기) return;
+    if (!보기 || 열람고정) return;
     보기 = ''; 자료 = (보기전 && 보기전.자료) || null; 방 = (보기전 && 보기전.방) || ''; 열린할일id = ''; 열린블로그 = ''; 정렬모드 = {}; 탭 = '홈'; 보기전 = null;
     if (설정) 테마입히기(설정);                                   // 내 색으로 되돌린다
     그리기(); window.scrollTo(0, 0); 받아오기();
@@ -1034,6 +1042,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
   function 보기띠그리기() {
     var 띠 = $('보기띠'), 눈 = $('눈');
     document.body.classList.toggle('보기중', !!보기);
+    if (보기 && 열람고정) { 띠.innerHTML = '<span><b>' + esc(보기) + '</b> 화면을 보기만 하는 중이에요 — 여기서 누른 것은 반영되지 않아요. 블로그 글의 「썼어요」만 기록돼요.</span>'; 띠.classList.add('보임'); document.body.classList.add('띠있음'); 눈.classList.add('숨김'); return; }
     if (보기) { 띠.innerHTML = '<span><b>' + esc(보기) + '</b> 화면으로 보는 중 — 그분이 보시는 그대로예요. 여기서는 보기만 돼요.</span><button data-보기끝="1">내 화면으로</button>'; 띠.classList.add('보임'); document.body.classList.add('띠있음'); 눈.classList.add('숨김'); return; }
     띠.classList.remove('보임'); document.body.classList.remove('띠있음');
     var 들 = (자료 && 자료.사람들) || [];
@@ -4233,7 +4242,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     if (j.강조색) document.documentElement.style.setProperty('--강조', j.강조색);
     테마입히기(j);
     try { 자료 = JSON.parse(저장.get('자료') || 'null'); } catch (e) { 자료 = null; }
-    if (보기) { 보기전 = { 자료: 자료, 방: 방, 탭: 탭 }; 방 = ''; 자료 = null; }   // ?보기=원장님 — 내 자료는 되돌아올 때 쓰려고 들고 있는다
+    if (j.열람전용 && (저장.get('데스크역할') || '') === '대표') { 보기 = j.열람전용; 열람고정 = true; 저장.set('자료', ''); 자료 = null; }   // 예전에 폰에 남은 대표 화면은 쓰지 않는다 — 원장님 화면으로 바로(2026-10-16)
+    if (보기 && !열람고정) { 보기전 = { 자료: 자료, 방: 방, 탭: 탭 }; 방 = ''; 자료 = null; }   // ?보기=원장님 — 내 자료는 되돌아올 때 쓰려고 들고 있는다
     그리기();
     if (!열쇠) { $('본문').innerHTML = '<div class="카드"><div class="제목">대표님께 받은 링크로 열어 주세요.</div><div class="한줄" style="color:var(--보조)">링크에 열쇠가 들어 있어요. 한 번 열면 이 폰에 남아요.</div></div>'; return; }
     받아오기().then(알림항목열기).catch(알림항목열기);   // 자료가 온 뒤라야 그 줄을 찾을 수 있다
