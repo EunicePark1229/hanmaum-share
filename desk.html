@@ -571,7 +571,7 @@ body.띠있음 { --방줄위: 114px; }
 .시트 .판 { position: absolute; left: 0; right: 0; bottom: 0; background: var(--카드); border-radius: 20px 20px 0 0; padding: 16px 16px 28px; max-height: 80vh; overflow: auto; }
 .시트 .판 h2 { margin: 0 0 8px; font-size: 20px; font-weight: 400; }
 /* 업무는 앱으로(2026-10-06 유니스 「원장님은 한마음이와 대화하시고 업무는 앱을 통해서만」) — 대화 탭 입구 · 알림 켜기 카드 · 요청 시트 */
-.입구 { margin: 0 0 16px; }
+.입구 { margin: 16px 0; }
 .입구 h2 { font-size: 22px; font-weight: 400; margin: 4px 0 12px; }
 .입구 .큰단추들 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .입구 .큰단추 { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; border: 2px solid var(--강조); background: var(--카드); color: var(--글); border-radius: 18px; padding: 16px 14px; min-height: 104px; cursor: pointer; font-family: inherit; }
@@ -1793,8 +1793,9 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     //   대표·관리자에게는 누가 읽었는지가 일이라 그대로 이름을 보인다.
     var 이름까지 = (자료 && (자료.역할 === '대표' || 자료.역할 === '관리자'));
     var 읽음글 = 남읽음.length ? (이름까지 ? esc(남읽음.join(', ')) + ' 읽음' : '읽음') : '';
-    if (!줄들.length) return 입구() + 방줄() + '<div class="카드"><div class="빈">아래에 적어 보내시면 됩니다. 사진과 음성도 돼요.</div></div>';
-    return 입구() + 방줄() + '<div class="대화">' + 줄들.map(function (x) {
+    // 입구 카드는 글 아래에 둔다(2026-10-16 유니스 「열자마자 가장 최근 대화가 보이게」) — 위에 두면 열었을 때 카드만 보이고 최신 글은 밑으로 내려야 보였다
+    if (!줄들.length) return 방줄() + '<div class="카드"><div class="빈">아래에 적어 보내시면 됩니다. 사진과 음성도 돼요.</div></div>' + 입구();
+    return 방줄() + '<div class="대화">' + 줄들.map(function (x) {
       if (x.누가 === '나' || x.누가 === '남') {
         var 몸 = x.종류 === '사진' ? '<div>사진 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '음성' ? '<div>음성 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '파일' ? '<div>파일 · ' + esc(x.파일이름 || '') + '</div>' : x.종류 === '장부입력' ? 장부한줄(x.글) : esc(x.글);   // 장부입력은 2026-09-24 부터 대화로 안 온다 — 옛 줄만 보인다
         if (x.미리보기) 몸 = '<img class="썸" src="' + x.미리보기 + '" alt="보낸 사진">';
@@ -1807,7 +1808,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
       // 그림은 바로 보이게(2026-09-30 유니스 「클릭 안 되는 것 같은데」) — 누르면 크게 열린다
       var 파일 = (x.파일 || []).map(function (f) { if (f.사진id && 설정 && 설정.뒷단.indexOf('script.google') < 0) { var u = 뒷단주소('p=file&id=' + encodeURIComponent(f.사진id)); return '<a href="' + u + '" target="_blank" rel="noopener" style="display:block"><img loading="lazy" src="' + u + '" alt="' + esc(f.이름) + '" style="display:block;width:100%;max-width:420px;height:auto;border-radius:10px;margin-top:8px"></a><div class="때">누르면 크게 보여요</div>'; } if (f.파일id && 설정 && 설정.뒷단.indexOf('script.google') < 0) return '<a class="단추" style="display:inline-block;margin-top:8px" href="' + 뒷단주소('p=file&id=' + encodeURIComponent(f.파일id)) + '" target="_blank" rel="noopener">' + esc(f.이름) + ' 열기</a>'; return '<div>파일 · ' + esc(f.이름) + '</div>'; }).join('');
       return '<div class="말 우리" data-id="' + esc(x.id || '') + '">' + (x.받는이 ? '<div class="이름">' + esc(비서이름()) + ' → ' + esc(x.받는이) + '</div>' : '') + (x.제목 ? '<div class="제목">' + esc(x.제목) + '</div>' : '') + 메일링크(esc(x.글)) + 파일 + '<div class="때">' + 때글(x.시각) + '</div></div>';
-    }).join('') + '</div>';
+    }).join('') + '</div>' + 입구();
   }
   // ── 일정(2026-09-20 유니스 「캘린더 기능도 만들자」) — 예약(네이버 예약 메일) · 기한(기한대장) · 참고(메일 이력의 되풀이) ──
   var 참고보기 = false;
@@ -3409,6 +3410,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     // 초안 칸을 고치는 중에 다시 그리면(Ctrl+S 저장 등) 그 칸·커서·스크롤을 되살린다(2026-10-07)
     var 초점 = document.activeElement, 초점칸 = (초점 && 초점.getAttribute && 초점.getAttribute('data-초안칸')) ? { 칸: 초점.getAttribute('data-초안칸'), id: 초점.getAttribute('data-id') || '', s: 초점.selectionStart, e: 초점.selectionEnd, 위: 초점.scrollTop, 창위: window.scrollY } : null;
     var 자료기다림 = !자료 && 열쇠 && !보기;
+    var 바닥근처 = (document.body.scrollHeight - window.scrollY - window.innerHeight) < 160;   // 대화 탭을 읽는 중이면 새 글이 와도 끌어내리지 않는다(입구 카드를 누르는 중일 수 있다)
     본.innerHTML = 자료기다림 ? '<div class="카드"><div class="빈">' + (첫불러옴실패 ? '아직 못 불러왔어요. 인터넷이 느린지 봐 주세요. 30초마다 다시 해 보고 있어요.' : '불러오는 중이에요…') + '</div></div>' : 화면[탭]() + ((탭 !== '대화' && !보기 && 자료) ? '<div class="화면꼬리">이 화면, 고칠 데 있으면 <button data-가="대화">대화</button>에 적어 주세요.</div>' : '');
     본.classList.toggle('홈격자', 탭 === '홈');
     $('이름').textContent = (window.innerWidth >= 900) ? ((탭이름[탭] || 탭) + (자료 && 자료.누구 ? ' · ' + 자료.누구 + (자료.역할 ? '(' + 자료.역할 + ')' : '') : '')) : ((설정 && (설정.짧은이름 || '한마음')) + ' 데스크');
@@ -3419,7 +3421,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     document.body.classList.toggle('대화중', 탭 === '대화' && !보기);
     보기띠그리기();
     배지그리기();
-    if (탭 === '대화' && !보기) { if (입구켜짐()) { if (그전탭 !== '대화') window.scrollTo(0, 0); } else window.scrollTo(0, document.body.scrollHeight); 소켓열기(); 읽음보내기(); } else 소켓닫기();
+    if (탭 === '대화' && !보기) { if (그전탭 !== '대화' || 바닥근처 || !입구켜짐()) window.scrollTo(0, document.body.scrollHeight); 소켓열기(); 읽음보내기(); } else 소켓닫기();
     그전탭 = 탭;
     안내자동();
     공지살피기();
