@@ -918,7 +918,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-10-16a';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-10-17a';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 첫불러옴실패 = false;   // 처음 여는 기기(저장된 자료 없음)에서 자료가 아직 안 왔거나 못 왔을 때 — 빈 홈(「할 일 없어요」)을 먼저 그리지 않는다(2026-10-12)
   var 열람고정 = false;   // 설정 「열람전용」 조직(한마음)에서 대표 열쇠는 늘 원장님 화면을 보기만 한다 — 「내 화면」이 없고 쓰기는 블로그 단계뿐(2026-10-16 유니스)
@@ -1200,7 +1200,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
       if (k === '재고' || k === '장부') return;   // 운영 묶음으로
       var 항 = { 키: k, 이름: 탭이름[k] || k, 아래: [] };
       if (k === '할일') 항.아래 = 아래할일;
-      if (k === '받은것') { 항.아래 = [화면정리() ? { 구역: '손댈것', 이름: '손댈 것', 수: 받은것나눔().손댈.length } : { 구역: '', 이름: '받은 것', 수: ((자료 && 자료.피드.받은것) || []).length }]; if (전부.indexOf('메일') >= 0 && !메일따로()) 항.아래.push({ 탭: '메일', 이름: '메일', 수: 봐야할메일().length }); 항.아래.push({ 알림: true, 이름: '알림', 수: 안읽은것().length }); }
+      if (k === '받은것') { 항.아래 = [화면정리() ? { 구역: '손댈것', 이름: '손댈 것', 수: 받은것나눔().손댈.length } : { 구역: '', 이름: '받은 것', 수: 받은것할것수() }]; if (전부.indexOf('메일') >= 0 && !메일따로()) 항.아래.push({ 탭: '메일', 이름: '메일', 수: 봐야할메일().length }); 항.아래.push({ 알림: true, 이름: '알림', 수: 안읽은것().length }); }
       if (k === '메일' && !메일따로()) return;   // 받은 것 아래로(한마음)
       if (k === '메일') { var 폴 = 메일폴더수(); 항.아래 = [{ 탭: '메일', 메일폴더: '봐야', 이름: '봐야 할 것', 수: 폴.봐야[0] }, { 탭: '메일', 메일폴더: '받은', 이름: '받은편지함', 수: 폴.받은[1] || 폴.받은[0] }, { 탭: '메일', 메일폴더: '보낸', 이름: '보낸편지함', 수: 폴.보낸[0] }, { 탭: '메일', 메일폴더: '받은', 메일거름: '깃발', 이름: '깃발' }]; }
       if (k === '고객' && 고객목록().length) 항.아래 = [{ 구역: '', 이름: '명단', 수: 고객목록().length, 고객보기: '전부' }, { 구역: '', 이름: '이번 주 연락', 수: 연락남은().length, 고객보기: '연락' }, { 구역: '', 이름: '연락 안 함', 수: 고객목록().filter(제외됐나).length, 고객보기: '제외' }];
@@ -1841,8 +1841,13 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
   function 일정목록보기(전부, 오늘) {
     var 보임 = 전부.filter(function (x) { return 날짜키(x.시작) >= 오늘 || (x.갈래 === '예약' && 날짜키(x.시작) >= 날짜키(new Date(Date.now() - 7 * 86400000).toISOString())); });
     if (!보임.length) return '<div class="빈">앞으로 잡힌 일정이 없어요. 네이버 예약이 들어오면 여기에 바로 떠요.</div>';
+    // 20건이 넘으면 두 주 안 · 20건까지만 펴고 그 뒤는 「더 보기」 한 줄(2026-10-17 목록과다 — GN 일정 목록 61줄이 폰 12,412px · UI 기준 4절 「20건 넘으면 N개 더 보기」)
+    var 두주 = 날짜키(new Date(Date.now() + 14 * 86400000).toISOString());
+    var 앞 = 보임.filter(function (x) { return 날짜키(x.시작) <= 두주; }).slice(0, 20); if (!앞.length) 앞 = 보임.slice(0, 20);
+    var 그려 = (펼침더['일정목록'] || 보임.length <= 20) ? 보임 : 앞, 남 = 보임.length - 그려.length;
     var h = '', 키 = '';
-    보임.forEach(function (x) { var k = 날짜키(x.시작); if (k !== 키) { 키 = k; h += '<div class="날머리' + (k === 오늘 ? ' 오늘' : '') + '">' + esc(날머리글(k)) + '</div>'; } h += 일정줄(x); });
+    그려.forEach(function (x) { var k = 날짜키(x.시작); if (k !== 키) { 키 = k; h += '<div class="날머리' + (k === 오늘 ? ' 오늘' : '') + '">' + esc(날머리글(k)) + '</div>'; } h += 일정줄(x); });
+    if (남 > 0) h += '<div class="더보기줄"><button data-더보기="일정목록">그 뒤 일정 ' + 남 + '개 더 보기</button></div>';
     return h;
   }
   function 일정1일보기(전부, 오늘) {
@@ -3363,6 +3368,20 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     h += '<div class="본문글">' + 마크다운(x.본문 || '') + '</div>';
     return h + 댓글칸(x) + '</section>';
   }
+  // 받은 것 중 블로그·당근·문자 밖의 것을 셋으로 — 할 것(유니스·원장님이 손댈 것) · 참고(두고 보시는 자료) · 끝(완료·보류) (2026-10-17 목록과다)
+  //   할 것 = 「내할것」 한 줄이 있거나 · 갈래가 액션이거나 · 답을 기다리는 것(답기다리나 — 종 배지와 같은 기준)
+  function 받은것나머지나눔(목록) {
+    var 끝 = 목록.filter(function (x) { return x.단계 === '완료' || x.단계 === '보류'; });
+    var 할 = 목록.filter(function (x) { return 끝.indexOf(x) < 0 && (x.내할것 || x.갈래 === '액션' || 답기다리나(x)); });
+    var 참고 = 목록.filter(function (x) { return 끝.indexOf(x) < 0 && 할.indexOf(x) < 0; });
+    return { 할: 할, 참고: 참고, 끝: 끝 };
+  }
+  // 메뉴 「받은 것 N」 = 기본 보기에 펴진 할 것 수(화면정리 조직은 손댈 것 수 — 받은것나눔). 전부를 세면 화면과 수가 어긋난다(숫자일치)
+  function 받은것할것수() {
+    var 목록 = ((자료 && 자료.피드.받은것) || []).filter(function (x) { return !대체됐나(x); });
+    var 세갈래 = 목록.filter(function (x) { return x.갈래 === '블로그' || x.갈래 === '당근' || x.갈래 === '문자'; });
+    return 세갈래.filter(function (x) { return !받은것끝났나(x); }).length + 받은것나머지나눔(목록.filter(function (x) { return 세갈래.indexOf(x) < 0; })).할.length;
+  }
   function 받은것() {
     var 목록 = ((자료 && 자료.피드.받은것) || []).slice().reverse();
     if (열린블로그) { var x = 목록.filter(function (y) { return y.id === 열린블로그; })[0]; if (x) return x.갈래 === '문자' ? 문자상세(x) : (화면정리() && x.갈래 !== '블로그' && x.갈래 !== '당근') ? 정리받은것상세(x) : 블로그상세(x); if (자료) 열린블로그 = ''; }
@@ -3397,9 +3416,14 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
       if (당쓴.length) 받접.push(['올린당근', '올린 당근 글', 당쓴.map(블로그카드).join('')]);
       if (당보류.length) 받접.push(['안쓴당근', '안 쓰기로 한 당근 글', 당보류.map(블로그카드).join('')]);
     }
+    // 기본 보기 = 할 것만(2026-10-17 목록과다 재발 · 대장 78 86 90 96) — 자료·홍보물·명단·안내는 손댈 것만 펴고 참고·끝낸 것은 접힌 한 줄.
+    //   갈래 칩으로 한 갈래를 고르시면 그 갈래는 다 편다(고른 것이 곧 보겠다는 뜻).
+    var 나눈 = 받은것나머지나눔(나머지), 나머지할 = 갈래 ? 나머지 : 나눈.할;
+    if (!갈래 && 나눈.참고.length) 받접.push(['자료참고', '자료·참고', 나눈.참고.map(function (x) { return 받은것줄(x); }).join('')]);
+    if (!갈래 && 나눈.끝.length) 받접.push(['끝낸자료', '끝냈거나 미룬 것', 나눈.끝.map(function (x) { return 받은것줄(x); }).join('')]);
     // 20건 넘으면 「더 보기」(2026-09-22 — GN 받은 것 82건이 폰 15,520px 였다)
-    var 나머지보임 = 펼침더['받은것'] ? 나머지 : 나머지.slice(0, 20);
-    if (나머지.length || (!블로그.length && !당근.length)) h += '<section class="카드">' + (나머지.length ? 나머지보임.map(function (x) { return 받은것줄(x); }).join('') + (나머지.length > 나머지보임.length ? '<div class="더보기줄"><button data-더보기="받은것">' + (나머지.length - 나머지보임.length) + '개 더 보기</button></div>' : '') : '<div class="빈">아직 없어요. 블로그 초안·문자 문안·명단·자료가 오면 여기에 모여요.</div>') + '</section>';
+    var 나머지보임 = 펼침더['받은것'] ? 나머지할 : 나머지할.slice(0, 20);
+    if (나머지할.length || (!블로그.length && !당근.length && !문자.length)) h += '<section class="카드">' + (나머지할.length ? 나머지보임.map(function (x) { return 받은것줄(x); }).join('') + (나머지할.length > 나머지보임.length ? '<div class="더보기줄"><button data-더보기="받은것">' + (나머지할.length - 나머지보임.length) + '개 더 보기</button></div>' : '') : '<div class="빈">' + (나머지.length ? '지금 손대실 받은 것이 없어요. 자료·참고는 아래 접힌 줄에 있어요.' : '아직 없어요. 블로그 초안·문자 문안·명단·자료가 오면 여기에 모여요.') + '</div>') + '</section>';
     // 끝난 것(쓴 글 · 올린 당근 글 · 안 쓰기로 한 것 · 답하신 문자)은 접힌 한 줄 — 누르면 그 묶음이 펼쳐진다(2026-10-12)
     if (받접.length) h += '<div class="접힌줄">' + 받접.map(function (a) { var n = (a[2].match(/class="(줄|블로그카드)/g) || []).length; return '<button data-접힌="' + a[0] + '" class="' + (접힌열림[a[0]] ? '켬' : '') + '">' + esc(a[1]) + ' ' + n + (접힌열림[a[0]] ? ' ▲' : ' ▾') + '</button>'; }).join('') + '</div>';
     받접.forEach(function (a) { if (접힌열림[a[0]]) h += '<section class="카드" data-구역="' + a[0] + '"><h2>' + esc(a[1]) + '</h2>' + a[2] + '</section>'; });
