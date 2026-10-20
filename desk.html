@@ -674,6 +674,7 @@ main.홈격자 > section.먼저카드 { column-span: all; max-width: 920px; }   
 .요청한장:first-of-type { border-top: 0; }
 .요청제목 { font-size: 21px; font-weight: 700; line-height: 1.4; margin-bottom: 6px; }
 .요청글 { font-size: 18px; line-height: 1.55; color: var(--글); }
+.요청한장 .더 { font-size: 18px; font-weight: 700; min-height: 44px; display: inline-flex; align-items: center; }   /* 10-20 — 「전부 보기」가 제목(21px)과 한눈에 같은 무게로 보이게: 크기·굵기만 */
 .요청글.접힘 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .요청때 { font-size: 17px; color: var(--강조); margin-top: 6px; }
 .요청단추줄 { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
@@ -1367,7 +1368,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-10-20b';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-10-20c';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 첫불러옴실패 = false;   // 처음 여는 기기(저장된 자료 없음)에서 자료가 아직 안 왔거나 못 왔을 때 — 빈 홈(「할 일 없어요」)을 먼저 그리지 않는다(2026-10-12)
   var 열람고정 = false;   // 설정 「열람전용」 조직(한마음)에서 대표 열쇠는 늘 원장님 화면을 보기만 한다 — 「내 화면」이 없고 쓰기는 블로그 단계뿐(2026-10-16 유니스)
@@ -2094,6 +2095,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     if (보기) h += '<div class="한줄" style="color:var(--보조)">보기만 하는 화면이라 「봤어요」는 원장님만 누르실 수 있어요.</div>';
     return h + '</section>';
   }
+  function 요청열람기록(id) { if (보기 || !열쇠) return; try { 보내기짐({ 종류: '기록', 무엇: ('요청:전부보기:' + id).slice(0, 40), 상세: id }).catch(function () {}); } catch (e) {} }   // 접힌 요청의 「전부 보기」 눌림 — 공지기록과 같은 길(기록 → 한일 · 누른 사람 열쇠 이름). 보기 전용(유니스)은 원장님 열람으로 안 센다. 10-20 게시판 #1487
   function 요청봤어요(id, b) {
     if (보기라못보냄()) return;
     b.disabled = true; b.textContent = '적는 중';
@@ -2931,6 +2933,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     var id = 대.split(' · ')[0], 사유 = 대.indexOf(' · ') >= 0 ? 대.slice(대.indexOf(' · ') + 3) : '';
     var 제 = 제목찾기(id);
     if (무 === '열림') return '앱을 열어 봤어요';
+    if (무.indexOf('요청:전부보기:') === 0) return '요청 <b>' + esc(제목찾기(id) || 제목찾기(무.slice(8)) || '글') + '</b> 전부 보셨어요';
     if (무.indexOf('공지:') === 0) {   // 공지 팝업(2026-10-11) — 「공지:열림:<id>」
       var 공 = 무.split(':'), 공제 = 제목찾기(공.slice(2).join(':'));
       return (공제 ? '공지 <b>' + esc(공제) + '</b> ' : '공지를 ') + ({ 열림: '보셨어요', 닫기: '닫으셨어요(내일 다시)', 끔: '다시 보지 않기로 하셨어요', 누름: '눌러서 처리하셨어요' }[공[1]] || esc(공[1]));
@@ -3995,7 +3998,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     var 영구 = e.target.closest('[data-영수증구분]'); if (영구) { var p영 = 영구.getAttribute('data-영수증구분').split('|'); 영수증값읽기(p영[0]); (영수증고름[p영[0]] = 영수증고름[p영[0]] || {}).구분 = p영[1]; 그리기(); return; }
     var 영고 = e.target.closest('[data-영수증고객]'); if (영고) { var 영id = 영고.getAttribute('data-영수증고객'), 영g = (영수증고름[영id] = 영수증고름[영id] || {}); 영수증값읽기(영id); var 영이름 = 영고.getAttribute('data-이름'); if (영g.고객 === 영이름) { 영g.고객 = ''; 영g.고객id = ''; 영g.새고객 = false; } else { 영g.고객 = 영이름; 영g.고객id = 영고.getAttribute('data-고객id') || ''; 영g.새고객 = 영고.getAttribute('data-새고객') === '1' && 영수증새이름되나(영이름); } 영수증찾기[영id] = ''; 그리기(); return; }
     var 요봄 = e.target.closest('[data-요청봤어요]'); if (요봄) { 요청봤어요(요봄.getAttribute('data-요청봤어요'), 요봄); return; }
-    var 요펴 = e.target.closest('[data-요청펼침]'); if (요펴) { var 요id = 요펴.getAttribute('data-요청펼침'); 요청글펼침[요id] = !요청글펼침[요id]; 그리기(); return; }
+    var 요펴 = e.target.closest('[data-요청펼침]'); if (요펴) { var 요id = 요펴.getAttribute('data-요청펼침'); 요청글펼침[요id] = !요청글펼침[요id]; if (요청글펼침[요id]) 요청열람기록(요id); 그리기(); return; }
     if (e.target.closest('[data-요청더]')) { 유니스요청전부 = !유니스요청전부; 그리기(); return; }
     var 영넣 = e.target.closest('[data-영수증넣기]'); if (영넣) { 영수증넣기(영넣.getAttribute('data-영수증넣기'), 영넣); return; }
     var 영버 = e.target.closest('[data-영수증버리기]'); if (영버) { 영수증버리기(영버.getAttribute('data-영수증버리기'), 영버); return; }
