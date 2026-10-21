@@ -611,6 +611,10 @@ main.홈격자 > section.먼저카드 { column-span: all; max-width: 920px; }   
 #글시트 .사진들 .썸칸 { position: relative; }
 #글시트 .사진들 img { width: 64px; height: 64px; object-fit: cover; border-radius: 10px; display: block; }
 #글시트 .사진들 .빼 { position: absolute; top: -8px; right: -8px; width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--선); background: var(--카드); color: var(--글); font-size: 16px; line-height: 1; cursor: pointer; }
+#글시트 .글시트날짜묶음 { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+#글시트 .글시트날짜묶음 label { display: flex; flex-direction: column; gap: 4px; flex: 1 1 140px; min-width: 0; font-size: 15px; color: var(--보조); }
+#글시트 .글시트날짜묶음 input { height: 44px; font-size: 17px; border: 1px solid var(--선); border-radius: 10px; padding: 0 10px; background: var(--바탕); color: var(--글); box-sizing: border-box; min-width: 0; width: 100%; }
+#글시트.날짜모드 textarea { min-height: 64px; }
 #글시트 .보내기줄 { display: flex; gap: 10px; margin-top: 18px; }
 #글시트 .보내기줄 .단추 { flex: 1; height: 54px; font-size: 19px; }
 /* 날짜 말로 치기(2026-10-20) — 달력은 그대로 두고 그 아래에 말 칸과 칩을 더한다 */
@@ -789,10 +793,11 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 <!-- 한 줄 남기기 · 끝냈어요 결과 시트(2026-10-20 — 종전 window.prompt 는 사진·캡처를 못 붙였다 · 앱 피드백 63 · 전수표 권장 3) -->
 <div class="시트" id="글시트"><div class="판" role="dialog" aria-labelledby="글시트제목"><h2 id="글시트제목"></h2>
   <div class="한줄" id="글시트도움" style="color:var(--보조)"></div>
+  <div id="글시트날짜줄" class="숨김"><div class="날말묶음 글시트날짜묶음"><label>언제<input type="date" id="글시트날짜"></label><label id="글시트시각칸">몇 시(없어도 돼요)<input type="time" id="글시트시각"></label></div><div id="글시트말칸"></div><div class="한줄" id="글시트과거안내" style="color:var(--보조)"></div></div>
   <textarea id="글시트글" rows="3" maxlength="400" placeholder="여기에 적어 주세요"></textarea>
   <div class="글시트사진줄"><div class="사진들" id="글시트사진들"></div>
     <button class="단추 테" id="글시트사진고르기" type="button">사진 붙이기</button></div>
-  <div class="한줄" style="color:var(--보조);margin-top:6px">캡처는 Ctrl+V 로 붙여 넣어도 돼요. 닫아도 적던 글은 남아 있어요.</div>
+  <div class="한줄" id="글시트힌트" style="color:var(--보조);margin-top:6px">캡처는 Ctrl+V 로 붙여 넣어도 돼요. 닫아도 적던 글은 남아 있어요.</div>
   <div class="보내기줄"><button class="단추 테" id="글시트취소" type="button">닫기</button><button class="단추" id="글시트보내" type="button">보내기</button></div>
   <input type="file" id="글시트파일" accept="image/*" multiple class="숨김"></div></div>
 <div class="시트" id="안내시트"><div class="판"><h2 id="안내제목">처음 오셨어요? 이렇게 생겼어요</h2>
@@ -1368,7 +1373,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-10-21a';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-10-21b';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 첫불러옴실패 = false;   // 처음 여는 기기(저장된 자료 없음)에서 자료가 아직 안 왔거나 못 왔을 때 — 빈 홈(「할 일 없어요」)을 먼저 그리지 않는다(2026-10-12)
   var 열람고정 = false;   // 설정 「열람전용」 조직(한마음)에서 대표 열쇠는 늘 원장님 화면을 보기만 한다 — 「내 화면」이 없고 쓰기는 블로그 단계뿐(2026-10-16 유니스)
@@ -3829,16 +3834,25 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     $('알림목록').innerHTML = '<div class="한줄" style="color:var(--보조);margin-bottom:8px">누구 화면으로 보시겠어요? 그 사람이 지금 보는 그대로 보여요(보기만).</div>' + 들.map(function (p) { return '<div class="줄" data-보기="' + esc(p.이름) + '"><div class="제목">' + esc(p.이름) + '</div><div class="한줄">' + esc(p.역할) + '</div></div>'; }).join('');
     $('푸시칸').classList.add('숨김'); $('알림시트').classList.add('보임');
   }
+  // 결정·연락 단추를 보낸 뒤 — 바로 보낸 길과 시트로 보낸 길이 같이 쓴다
+  function 결정뒤(id, 단계, 사유) {
+    var x = ((자료 && 자료.피드.할일) || []).concat((자료 && 자료.피드.받은것) || []).filter(function (y) { return y.id === id; })[0];
+    if (단계 === '얘기중' && x) { var 글 = '[정하실 것 · ' + x.제목 + '] ' + 사유; 보내기({ 종류: '글', 글: 글 }, { 누가: '나', 종류: '글', 글: 글, 시각: 지금iso(), 임시: Date.now() }); 열린할일id = ''; return; }
+    토스트(단계 === '결정' ? (사유.indexOf('보내도 됩니다') >= 0 ? '고마워요. 정하신 시각에 나갑니다.' : '정하신 대로 처리할게요.') : 단계 === '보류' ? '나중에 다시 올릴게요.' : '끝낸 것으로 적었어요.'); 열린할일id = ''; 열린블로그 = ''; 받아오기();
+  }
+  function 연락뒤(고id, 결과, 메모) {
+    var x = 고객목록().filter(function (y) { return y.id === 고id; })[0]; if (x) { x.단계 = 결과; x.단계때 = 지금iso(); x.사유 = 메모; }
+    토스트('적었어요 — ' + 결과 + '. 다음 주 명단에서 빠져요.'); 그리기();
+  }
   $('본문').addEventListener('click', function (e) {
     var 결 = e.target.closest('[data-결정]'); if (결) {
       var 단계 = 결.getAttribute('data-결정'), id = 결.getAttribute('data-id'), 사유 = 결.getAttribute('data-사유') || '';
-      if (결.getAttribute('data-메모')) { var 메 = window.prompt(단계 === '얘기중' ? '어떤 점을 더 얘기할까요? 한 줄이면 돼요.' : 단계 === '보류' ? '언제쯤 다시 볼까요? (예: 10월 초 · 원장님 답 뒤)' : '어떻게 바꿔서 진행할까요?', ''); if (메 === null) return; 사유 = (단계 === '결정' ? '바꿔서 · ' : '') + 메; }
+      // 메모가 붙은 단추(나중에 · 더 얘기하자 · 이렇게 바꿔서 · 문자 둘째 이후 선택지)만 작은 시트로 — 종전 window.prompt (2026-10-21). 메모 없는 단추(「보내도 됩니다」 포함)는 길을 안 바꾸고 바로 보낸다
+      if (결.getAttribute('data-메모')) { 글시트열기('결정', id, 결); return; }
       결.disabled = true;
-      var x = ((자료 && 자료.피드.할일) || []).concat((자료 && 자료.피드.받은것) || []).filter(function (y) { return y.id === id; })[0];
       보내기짐({ 종류: '단계', id: id, 단계: 단계, 사유: 사유 }).then(function (j) {
         if (!j || !j.됨) throw new Error();
-        if (단계 === '얘기중' && x) { var 글 = '[정하실 것 · ' + x.제목 + '] ' + 사유; 보내기({ 종류: '글', 글: 글 }, { 누가: '나', 종류: '글', 글: 글, 시각: 지금iso(), 임시: Date.now() }); 열린할일id = ''; return; }
-        토스트(단계 === '결정' ? (사유.indexOf('보내도 됩니다') >= 0 ? '고마워요. 정하신 시각에 나갑니다.' : '정하신 대로 처리할게요.') : 단계 === '보류' ? '나중에 다시 올릴게요.' : '끝낸 것으로 적었어요.'); 열린할일id = ''; 열린블로그 = ''; 받아오기();
+        결정뒤(id, 단계, 사유);
       }).catch(function (e) { 결.disabled = false; 못했어요(e, '결정'); });
       return;
     }
@@ -3894,12 +3908,11 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     if (e.target.closest('[data-고객닫기]')) { if (!닫고돌아가기()) { 열린고객 = ''; 그리기(); } return; }
     var 결과단 = e.target.closest('[data-연락결과]'); if (결과단) {
       var 결과 = 결과단.getAttribute('data-연락결과'), 고id = 결과단.getAttribute('data-id'), 메모 = '';
-      if (결과 === '방문 약속' || 결과 === '다음에 다시') { var 답 = window.prompt(결과 === '방문 약속' ? '언제 오시기로 했나요? (예: 목요일 2시)' : '언제쯤 다시 연락드릴까요? (안 적어도 돼요)', ''); if (답 === null) return; 메모 = 답; }
+      if (결과 === '방문 약속' || 결과 === '다음에 다시') { 글시트열기('연락', 고id, 결과단); return; }   // 종전 window.prompt — 날짜는 달력·말, 시각 칸 (2026-10-21)
       결과단.disabled = true;
       보내기짐({ 종류: '단계', id: 고id, 단계: 결과, 사유: 메모 }).then(function (j) {
         if (!j || !j.됨) throw new Error();
-        var x = 고객목록().filter(function (y) { return y.id === 고id; })[0]; if (x) { x.단계 = 결과; x.단계때 = 지금iso(); x.사유 = 메모; }
-        토스트('적었어요 — ' + 결과 + '. 다음 주 명단에서 빠져요.'); 그리기();
+        연락뒤(고id, 결과, 메모);
       }).catch(function (e) { 결과단.disabled = false; 못했어요(e, '연락결과'); });
       return;
     }
@@ -4393,16 +4406,56 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     var 목 = (시트상태 && 시트사진[시트상태.키]) || [];
     $('글시트사진들').innerHTML = 목.map(function (x, i) { return '<span class="썸칸"><img src="' + x.dataUrl + '" alt="붙인 사진 ' + (i + 1) + '"><button type="button" class="빼" data-시트사진빼기="' + i + '" aria-label="이 사진 빼기">×</button></span>'; }).join('');
   }
+  //   2026-10-21 모드 둘 더 — 「결정」(나중에 · 더 얘기하자 · 이렇게 바꿔서 · 문자 둘째 이후 선택지) · 「연락」(방문 약속 · 다음에 다시). 날짜 줄(달력 · 말 칸 · 칩 · 시각)은 필요한 모드에만.
+  //   서버로 가는 짐은 종전 그대로 {종류:'단계', id, 단계, 사유} — 사유 글만 이 시트가 만든다(시트사유)
+  var 시트요일 = ['일', '월', '화', '수', '목', '금', '토'];
+  function 시트날짜글(iso) { var p = iso.split('-').map(Number); return iso + '(' + 시트요일[new Date(p[0], p[1] - 1, p[2]).getDay()] + ')'; }
+  function 시트사유(s) {
+    var 글 = $('글시트글').value.trim(), 말칸 = $('글시트말칸').querySelector('.말날짜글'), 말글 = 말칸 ? 말칸.value.trim() : '';
+    var 날 = s.날짜줄 ? $('글시트날짜').value : '', 시 = s.시각칸 ? $('글시트시각').value : '', 읽힘 = (s.날짜줄 && 말글) ? 말날짜읽기(말글) : null;
+    if (s.날짜줄 && !날 && 읽힘) 날 = 읽힘;                                  // 말 칸이 읽혔는데 달력 칸이 비었으면 말을 따른다
+    var 메모 = [(s.날짜줄 && 말글 && !읽힘) ? 말글 : '', 글].filter(Boolean).join(' · ');   // 날짜로 못 읽은 말은 버리지 않고 사유 글에 남긴다
+    var 때 = 날 ? 시트날짜글(날) + (시 ? ' ' + 시 : '') : (시 || '');
+    var 본 = [때, 메모].filter(Boolean).join(' · ');
+    var 머리 = s.단계 === '결정' ? (s.미리사유 || '바꿔서') : '';
+    return [머리, 본].filter(Boolean).join(' · ');
+  }
+  function 시트과거안내() {
+    var s = 시트상태; if (!s) return;
+    var 날 = s.날짜줄 ? $('글시트날짜').value : '', 오 = 지금iso().slice(0, 10);
+    $('글시트과거안내').textContent = (s.모드 === '연락' && s.단계 === '방문 약속' && 날 && 날 < 오) ? '지난 날이에요 — 맞으면 그대로 적기를 누르세요.' : '';
+  }
   function 글시트열기(모드, id, b, 말) {
     if (보기라못보냄()) return;                                    // 보기 화면(열람 전용 · 남의 화면 보기)은 시트도 안 연다 — 적고 나서 막히지 않게
-    var 키 = 시트키(모드, id);
-    시트상태 = { 모드: 모드, id: id, 키: 키, b: b, 말: 말, 제목: 항목제목(id) };
-    $('글시트제목').textContent = 모드 === '끝' ? '끝내셨군요' : '한 줄 남기기';
-    $('글시트도움').textContent = 모드 === '끝' ? '결과를 한 줄이나 사진으로 남기시겠어요? 안 남기셔도 끝낼 수 있어요. (예: 예약번호 BHY3XK · 15만원 입금)' : '결과든 메모든 편하게 적으세요. (예: 예약번호 BHY3XK · 통화했는데 다음 주에 다시)';
+    var 단계 = '', 미리 = '', 날짜줄 = false, 시각칸 = false, 사진줄 = true, 키모드 = 모드;
+    if (모드 === '결정') { 단계 = b.getAttribute('data-결정'); 미리 = b.getAttribute('data-사유') || ''; 날짜줄 = 단계 === '보류'; 키모드 = '결정_' + 단계 + '_' + 미리; }
+    if (모드 === '연락') { 단계 = b.getAttribute('data-연락결과'); 날짜줄 = true; 시각칸 = 단계 === '방문 약속'; 사진줄 = false; 키모드 = '연락_' + 단계; }
+    var 키 = 시트키(키모드, id);
+    시트상태 = { 모드: 모드, id: id, 키: 키, b: b, 말: 말, 제목: 항목제목(id), 단계: 단계, 미리사유: 미리, 날짜줄: 날짜줄, 시각칸: 시각칸 };
+    var 글제목 = '한 줄 남기기', 도움 = '결과든 메모든 편하게 적으세요. (예: 예약번호 BHY3XK · 통화했는데 다음 주에 다시)', 보냄글 = '보내기';
+    if (모드 === '끝') { 글제목 = '끝내셨군요'; 도움 = '결과를 한 줄이나 사진으로 남기시겠어요? 안 남기셔도 끝낼 수 있어요. (예: 예약번호 BHY3XK · 15만원 입금)'; 보냄글 = '끝냈어요'; }
+    if (모드 === '결정') {
+      if (단계 === '보류') { 글제목 = '나중에 다시 볼게요'; 도움 = '언제 다시 볼지 고르시거나 한 줄로 적어 주세요. 둘 다 비워도 돼요.'; 보냄글 = '나중에로 두기'; }
+      else if (단계 === '얘기중') { 글제목 = '더 얘기할게요'; 도움 = '어떤 점을 더 얘기할까요? 한 줄이면 돼요.'; }
+      else if (미리) { 글제목 = 미리.length > 40 ? 미리.slice(0, 40) + '…' : 미리; 도움 = '덧붙일 말이 있으면 적어 주세요. 안 적으셔도 돼요.'; }
+      else { 글제목 = '이렇게 바꿔서'; 도움 = '어떻게 바꿔서 진행할까요?'; }
+    }
+    if (모드 === '연락') { 글제목 = 단계 === '방문 약속' ? '언제 오시기로 했나요' : '언제쯤 다시 연락드릴까요'; 도움 = 단계 === '방문 약속' ? '날짜를 고르시거나 말로 적어 주세요. 시각이나 메모는 안 적으셔도 돼요.' : '안 적어도 돼요.'; 보냄글 = '적기'; }
+    $('글시트제목').textContent = 글제목;
+    $('글시트도움').textContent = 도움;
+    $('글시트').classList.toggle('날짜모드', 날짜줄);
+    $('글시트날짜줄').classList.toggle('숨김', !날짜줄); $('글시트시각칸').classList.toggle('숨김', !시각칸);
+    if (날짜줄) {
+      if (!$('글시트말칸').firstChild) $('글시트말칸').innerHTML = 말날짜칸('#글시트날짜');
+      $('글시트날짜').value = ''; $('글시트시각').value = ''; $('글시트과거안내').textContent = '';
+      var 칸 = $('글시트말칸').querySelector('.말날짜글'); 칸.value = ''; $('글시트말칸').querySelector('.말날짜안내').textContent = '';
+    }
+    document.querySelector('#글시트 .글시트사진줄').classList.toggle('숨김', !사진줄); $('글시트힌트').classList.toggle('숨김', !사진줄);
+    $('글시트글').placeholder = (모드 === '연락' || 단계 === '보류') ? '메모(안 적으셔도 돼요)' : '여기에 적어 주세요';
     $('글시트글').value = 저장.get(키);
-    $('글시트보내').textContent = 모드 === '끝' ? '끝냈어요' : '보내기'; $('글시트보내').disabled = false;
+    $('글시트보내').textContent = 보냄글; $('글시트보내').disabled = false;
     시트사진그리기(); $('글시트').classList.add('보임');
-    setTimeout(function () { var t = $('글시트글'); if (t && $('글시트').classList.contains('보임')) t.focus(); }, 50);
+    setTimeout(function () { var t = 날짜줄 ? $('글시트말칸').querySelector('.말날짜글') : $('글시트글'); if (t && $('글시트').classList.contains('보임')) t.focus(); }, 50);
   }
   function 글시트닫기() { $('글시트').classList.remove('보임'); 시트상태 = null; }   // 글·사진은 지우지 않는다(실수로 닫혀도 안 잃게)
   function 글시트사진더하기(files) {
@@ -4415,7 +4468,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
   function 글시트보내기() {
     if (보기라못보냄()) return;
     var s = 시트상태; if (!s) return;
-    var 글 = $('글시트글').value.trim(), 목 = 시트사진[s.키] = 시트사진[s.키] || [];
+    var 글 = $('글시트글').value.trim(), 목 = (s.모드 === '연락') ? [] : (시트사진[s.키] = 시트사진[s.키] || []);
+    var 단계사유 = (s.모드 === '결정' || s.모드 === '연락') ? 시트사유(s) : '';
     if (s.모드 === '댓글' && !글 && !목.length) { 토스트('한 줄이나 사진 하나는 넣어 주세요.'); return; }
     var 보낸 = $('글시트보내'); 보낸.disabled = true;
     var 내방 = 'me-' + (누구 || (자료 && 자료.누구) || '원장님'), 장수 = 목.length;
@@ -4429,13 +4483,16 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     var 사진말 = 장수 ? (글 ? ' · ' : '') + '사진 ' + 장수 + '장은 대화에 있어요' : '';
     사진쪽.then(function () {
       if (s.모드 === '댓글') return 보내기짐({ 종류: '댓글', id: s.id, 글: 글 + 사진말 });
+      if (s.모드 === '결정' || s.모드 === '연락') return 보내기짐({ 종류: '단계', id: s.id, 단계: s.단계, 사유: 단계사유 });
       return 보내기짐({ 종류: '끝냈어요', id: s.id, 글: (글 + 사진말).trim() });
     }).then(function (j) {
       if (!j || !j.됨) throw new Error();
       저장.set(s.키, ''); delete 시트사진[s.키]; 글시트닫기();
+      if (s.모드 === '결정') { 결정뒤(s.id, s.단계, 단계사유); return; }
+      if (s.모드 === '연락') { 연락뒤(s.id, s.단계, 단계사유); return; }
       if (s.모드 === '끝') { 저장.set('끝_' + s.id, '1'); 토스트(s.말 || '끝낸 것으로 적었어요.'); } else 토스트(장수 ? '적어 두었어요. 사진 ' + 장수 + '장도 함께 보냈어요.' : '적어 두었어요.');
       받아오기().then(그리기);
-    }).catch(function (e) { 보낸.disabled = false; 못했어요(e, s.모드 === '끝' ? '끝냈어요 · ' + s.id : '댓글'); });
+    }).catch(function (e) { 보낸.disabled = false; 못했어요(e, s.모드 === '끝' ? '끝냈어요 · ' + s.id : s.모드 === '결정' ? '결정' : s.모드 === '연락' ? '연락결과' : '댓글'); });
   }
   $('글시트글').addEventListener('input', function () { if (시트상태) 저장.set(시트상태.키, this.value); });
   document.addEventListener('click', function (e) {
@@ -4445,6 +4502,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     if (t.closest('#글시트취소') || t === $('글시트')) { 글시트닫기(); return; }
     if (t.closest('#글시트보내')) { 글시트보내기(); return; }
   });
+  $('글시트날짜').addEventListener('input', 시트과거안내); $('글시트날짜').addEventListener('change', 시트과거안내);
   $('글시트파일').addEventListener('change', function () { var fs = this.files; 글시트사진더하기(fs); this.value = ''; });
   // 시트가 열려 있을 때 붙여넣은 그림은 시트로 — 먼저(capture) 받아 대화 입력줄 쪽 붙여넣기가 가로채지 못하게 한다
   document.addEventListener('paste', function (e) {
