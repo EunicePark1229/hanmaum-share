@@ -777,7 +777,7 @@ nav.탭 button.켬::after { content: ''; position: absolute; top: 0; left: 22%; 
 
 <div class="입력줄" id="입력줄">
   <button class="둥" id="사진단추" aria-label="사진"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
-  <input type="file" id="사진파일" accept="image/*" class="숨김">
+  <input type="file" id="사진파일" accept="image/*" multiple class="숨김">
   <button class="둥" id="음성단추" aria-label="음성"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
   <textarea id="글" rows="1" placeholder="적어 주세요"></textarea>
   <button class="단추" id="보내기">보내기</button>
@@ -1368,7 +1368,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-10-20c';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-10-21a';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 첫불러옴실패 = false;   // 처음 여는 기기(저장된 자료 없음)에서 자료가 아직 안 왔거나 못 왔을 때 — 빈 홈(「할 일 없어요」)을 먼저 그리지 않는다(2026-10-12)
   var 열람고정 = false;   // 설정 「열람전용」 조직(한마음)에서 대표 열쇠는 늘 원장님 화면을 보기만 한다 — 「내 화면」이 없고 쓰기는 블로그 단계뿐(2026-10-16 유니스)
@@ -4589,10 +4589,13 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     });
   });
   $('사진파일').addEventListener('change', function () {
-    var f = this.files && this.files[0]; if (!f) return; this.value = '';
-    줄이기(f).then(function (r) {
-      var 이름 = '사진_' + 지금iso().replace(/[-:T]/g, '').slice(0, 14) + '.jpg';
-      보내기({ 종류: '사진', 글: '', 파일이름: 이름, 파일형식: 'image/jpeg', 파일: r.base64 }, { 누가: '나', 종류: '사진', 파일이름: 이름, 미리보기: r.dataUrl, 시각: 지금iso(), 임시: Date.now() });
+    var fs = Array.prototype.slice.call(this.files || [], 0, 5); var 넘침 = (this.files || []).length > 5; if (!fs.length) return; this.value = '';
+    if (넘침) 토스트('한 번에 5장까지 보내요. 나머지는 다시 골라 주세요.');   // 앱 피드백 111 이어 #1644 — 여러 장 고르기(장마다 바로 보냄, 끌어다 놓기와 같은 5장 상한)
+    fs.forEach(function (f, i) {
+      줄이기(f).then(function (r) {
+        var 이름 = '사진_' + 지금iso().replace(/[-:T]/g, '').slice(0, 14) + (fs.length > 1 ? '_' + (i + 1) : '') + '.jpg';
+        보내기({ 종류: '사진', 글: '', 파일이름: 이름, 파일형식: 'image/jpeg', 파일: r.base64 }, { 누가: '나', 종류: '사진', 파일이름: 이름, 미리보기: r.dataUrl, 시각: 지금iso(), 임시: Date.now() + i });
+      });
     });
   });
   // 붙여넣은 캡처 · 끌어다 놓은 파일 — 사진은 줄여서, 그 밖 파일은 그대로(1.5MB 까지 · 뒷단 한 줄 한도)
