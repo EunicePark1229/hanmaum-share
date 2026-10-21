@@ -133,6 +133,20 @@ details { margin: 10px 0; } details summary { cursor: pointer; color: var(--강�
 .썸작 { width: 72px; height: 72px; object-fit: cover; border-radius: 10px; flex: 0 0 72px; background: var(--강조연); }
 .단추줄 { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
 .단추줄 .단추 { height: 44px; padding: 0 14px; }
+/* 오늘 올릴 소식(2026-10-21 유니스 「앱에 오늘 올릴 소식지」) — 원장님 눈높이: 글 18px 이상 · 단추 높이 52px · 상태는 색이 아니라 말 */
+.소식곳, .소식머리, .소식그밖 { word-break: keep-all; overflow-wrap: anywhere; }
+.소식곳 .소식제목 { font-size: 20px; font-weight: 700; line-height: 1.4; margin: 2px 0 6px; }
+.소식곳 .소식미리 { font-size: 18px; line-height: 1.55; color: var(--보조); margin-bottom: 10px; white-space: pre-line; }
+.소식곳 .소식순서 { font-size: 18px; line-height: 1.5; margin: 0 0 12px; }
+.소식곳 .단추줄 { gap: 10px; margin-bottom: 8px; flex-direction: column; }   /* 순서대로 한 줄에 하나 — 복사 → 열기 → 올렸어요 */
+.소식곳 .신호, .소식머리 .신호 { font-size: 18px; color: var(--글); }
+.소식곳 .단추줄 .단추, .소식곳 a.단추 { width: 100%; box-sizing: border-box; height: 52px; padding: 0 18px; font-size: 18px; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+.소식곳 details { margin: 6px 0 4px; font-size: 18px; }
+.소식곳 details summary { min-height: 44px; display: flex; align-items: center; color: var(--강조); cursor: pointer; }
+.소식곳 .소식끝, .소식곳 .소식빔 { font-size: 18px; line-height: 1.55; }
+.소식머리 .소식한줄 { font-size: 18px; line-height: 1.55; margin: 0 0 8px; }
+.소식그밖 textarea { width: 100%; min-height: 96px; font-size: 18px; line-height: 1.5; padding: 10px 12px; border: 1px solid var(--선); border-radius: 12px; background: var(--카드); color: var(--글); font-family: inherit; box-sizing: border-box; margin: 6px 0 10px; }
+.소식그밖 label.라벨글 { font-size: 18px; display: block; }
 .본문글 { font-size: 17px; line-height: 1.7; }
 .본문글 h3 { font-size: 18px; margin: 20px 0 8px; color: var(--강조); }
 .본문글 p { margin: 0 0 12px; }
@@ -1373,7 +1387,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
 <script>
 (function () {
   'use strict';
-  var 판 = '2026-10-21b';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
+  var 판 = '2026-10-21c';                                  // 화면을 고쳐 올릴 때 바꾼다 — 폰이 어느 판을 열었는지 뒷단 기록에 남는다
   var 설정 = null, 자료 = null, 열쇠 = '', 탭 = '홈', 갈래 = '';
   var 첫불러옴실패 = false;   // 처음 여는 기기(저장된 자료 없음)에서 자료가 아직 안 왔거나 못 왔을 때 — 빈 홈(「할 일 없어요」)을 먼저 그리지 않는다(2026-10-12)
   var 열람고정 = false;   // 설정 「열람전용」 조직(한마음)에서 대표 열쇠는 늘 원장님 화면을 보기만 한다 — 「내 화면」이 없고 쓰기는 블로그 단계뿐(2026-10-16 유니스)
@@ -1937,7 +1951,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     return false;
   }
   function 답기다림이름(x) { return x.갈래 === '문자' ? '보내도 될까요' : x.갈래 === '블로그' ? '블로그 초안' : x.갈래 === '당근' ? '당근 소식' : '받은 것'; }
-  function 받은것끝났나(x) { return 대체됐나(x) || (x.갈래 === '문자' && (x.단계 === '완료' || x.단계 === '결정' || x.단계 === '보류')) || ((x.갈래 === '블로그' || x.갈래 === '당근') && (x.단계 === '썼어요' || x.단계 === '보류')); }
+  function 받은것끝났나(x) { return 대체됐나(x) || x.갈래 === '소식' || (x.갈래 === '문자' && (x.단계 === '완료' || x.단계 === '결정' || x.단계 === '보류')) || ((x.갈래 === '블로그' || x.갈래 === '당근') && (x.단계 === '썼어요' || x.단계 === '보류')); }
   // 문자 한 묶음의 상태 — 한 자리에서만 만든다(홈 카드·받은 것 탭·상세가 같은 말을 쓰게).
   function 문자상태(x) {
     if (대체됐나(x)) return 신호('모름', '지난 판 — ' + (x.대체된왜 || '새 묶음으로 바뀜').slice(0, 30));
@@ -2011,6 +2025,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     });
     var 초안 = 받.filter(function (x) { return x.갈래 === '블로그' && (x.단계 || '초안') === '초안' && !대체됐나(x); }).sort(function (a, b) { return ((a.원장확인먼저 ? 1000 : 0) + (a.순위 || 999)) - ((b.원장확인먼저 ? 1000 : 0) + (b.순위 || 999)); });
     if (초안.length) 할.push({ 종류: '블로그', 급: 4, 순: '', 가: '받은것', 속: 'data-블로그열기="' + esc(초안[0].id) + '"', 원: null, 항목: 초안[0], 제목: '블로그 글 올리기 — ' + 초안[0].제목, 한줄: 초안[0].순위이유 || '본문을 복사해서 블로그에 붙여 넣으시면 돼요' });
+    var 소식수 = 오늘소식수();   // 오늘 올릴 소식(2026-10-21) — 곳 하나로 묶어 한 줄. 눌러서 한 화면으로
+    if (소식수) 할.push({ 종류: '소식', 급: 4, 순: '', 가: '받은것', 속: 'data-소식열기="1"', 원: null, 항목: null, 제목: '오늘 올릴 소식 ' + 소식수 + '곳', 한줄: '글을 복사해서 붙여 넣기만 하시면 돼요' });
     var 배 = Number(규칙.목적배수) || 2, 기본 = 규칙.기본 || {};
     function 칸(t, 이름, i) { var v = t.항목 && t.항목[이름]; if (v === 0 || v) return Number(v) || 0; var d = 기본[t.종류] || 기본.할일 || [1, 1]; return Number(d[i]) || 0; }
     할.forEach(function (t) {
@@ -3667,7 +3683,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
   //   참고는 접고(「참고며칠」 안만), 내려감(어댑터가 더는 안 주는 줄)·끝난 것·대체된 것은 뺀다. 오래 안 닫힌 손댈 것은 따로 접어 GN 창이 닫게 한다.
   function 받은것나눔() {
     var 정 = 화면정리() || {}, 액일 = Number(정.액션며칠) || 14, 참일 = Number(정.참고며칠) || 14;
-    var 전부 = ((자료 && 자료.피드.받은것) || []).filter(function (x) { return !x.내려감 && !대체됐나(x) && x.갈래 !== '블로그' && x.갈래 !== '당근' && x.갈래 !== '문자'; });
+    var 전부 = ((자료 && 자료.피드.받은것) || []).filter(function (x) { return !x.내려감 && !대체됐나(x) && x.갈래 !== '블로그' && x.갈래 !== '당근' && x.갈래 !== '문자' && x.갈래 !== '소식'; });
     var 손댈 = 전부.filter(function (x) { return x.갈래 === '액션' && x.내할것 && x.단계 !== '완료'; });
     var 새 = 손댈.filter(function (x) { return 며칠지났나(x.시각) <= 액일; }), 묵은 = 손댈.filter(function (x) { return 며칠지났나(x.시각) > 액일; });
     var 참고 = 전부.filter(function (x) { return 손댈.indexOf(x) < 0 && x.단계 !== '완료' && 며칠지났나(x.시각) <= 참일; });
@@ -3700,6 +3716,66 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     h += '<div class="본문글">' + 마크다운(x.본문 || '') + '</div>';
     return h + 댓글칸(x) + '</section>';
   }
+  // ── 오늘 올릴 소식(2026-10-21 유니스 「앱에 오늘 올릴 소식지 만들어주세요」 · 안내문 09_Docs/보고/주제/2026-10-21_한마음_다섯곳소식_안내문.md) ──
+  //   곳마다 「글 복사 → 앱 열기 → 붙여 넣기 → 올렸어요」. 당근은 받은 것 · 당근 글을, 플레이스·카카오는 갈래 「소식」(곳 칸) 글을 그대로 쓴다.
+  //   구글은 저희가 올리고(원장님 할 일 없음) 블로그는 받은 것 · 블로그로 연결. 설정 「오늘소식」이 있는 조직에만 보인다.
+  var 소식열림 = false;
+  function 소식설정() { var o = 설정 && 설정.오늘소식; return (o && o.곳 && o.곳.length) ? o : null; }
+  function 소식정렬(a, b) {
+    if (a.올릴날 && b.올릴날 && a.올릴날 !== b.올릴날) return a.올릴날 < b.올릴날 ? 1 : -1;   // 날이 정해진 것은 가장 가까운(지난) 날 것 먼저
+    var sa = a.순서 || 999, sb = b.순서 || 999; if (sa !== sb) return sa - sb;
+    return a.시각 < b.시각 ? 1 : -1;
+  }
+  function 소식고르기(곳) {
+    var 전부 = ((자료 && 자료.피드.받은것) || []).filter(function (x) { return !대체됐나(x) && (곳.갈래 === '당근' ? x.갈래 === '당근' : (x.갈래 === '소식' && x.곳 === 곳.곳)); });
+    var 오늘 = 오늘날(), 초안 = 전부.filter(function (x) { return (x.단계 || '초안') === '초안'; });
+    var 올림 = 전부.filter(function (x) { return x.단계 === '썼어요' && String(x.단계때 || '').slice(0, 10) === 오늘; }).sort(최신순(function (x) { return x.단계때; }))[0] || null;
+    var 올릴 = 초안.filter(function (x) { return !x.올릴날 || x.올릴날 <= 오늘; }).sort(소식정렬)[0] || null;
+    var 다음 = 초안.filter(function (x) { return x.올릴날 && x.올릴날 > 오늘; }).sort(function (a, b) { return a.올릴날 < b.올릴날 ? -1 : 1; })[0] || null;
+    return { 올릴: 올릴, 올림: 올림, 다음: 다음 };
+  }
+  function 오늘소식수() { var o = 소식설정(); if (!o) return 0; return o.곳.slice(0, 3).filter(function (곳) { return !!소식고르기(곳).올릴; }).length; }
+  function 소식글(x) { return x.갈래 === '당근' ? 복사용글(x) : String(x.본문 || '').trim(); }
+  function 소식입구카드() {
+    var o = 소식설정(), n = 오늘소식수(); if (!o || !n) return '';
+    var 이름 = o.곳.slice(0, 3).filter(function (곳) { return !!소식고르기(곳).올릴; }).map(function (곳) { return 곳.곳; }).join(' · ');
+    return '<section class="카드"><div class="줄" data-가="받은것" data-소식열기="1" style="cursor:pointer"><div class="제목" style="font-size:20px">오늘 올릴 소식 ' + n + '곳</div><div class="한줄" style="font-size:18px">' + esc(이름) + ' — 글을 모아 놨어요</div><div class="때" style="font-size:18px"><span style="color:var(--강조)">열어서 복사하기 ›</span></div></div></section>';
+  }
+  function 소식곳카드(곳) {
+    var 고 = 소식고르기(곳), x = 고.올릴;
+    var h = '<section class="카드 소식곳" data-구역="소식-' + esc(곳.곳) + '"><h2>' + esc(곳.이름 || 곳.곳) + '</h2>';
+    if (x) {
+      var 글 = 소식글(x), 줄들 = 글.split('\n').filter(function (l) { return l.trim(); });
+      var 미리 = 줄들.slice(0, 2).join('\n'), 뒤 = 줄들.length > 2;
+      h += '<div style="margin-bottom:8px">' + 신호('살핌', '아직 안 올렸어요') + (x.올릴날 ? ' <span style="font-size:18px;color:var(--보조)">올릴 날 ' + esc(짧은날(x.올릴날)) + '</span>' : '') + '</div>';
+      h += '<div class="소식제목">' + esc(x.제목) + '</div><div class="소식미리">' + esc(미리) + (뒤 ? ' …' : '') + '</div>';
+      h += '<div class="단추줄"><button class="단추" data-소식복사="' + esc(x.id) + '" data-곳="' + esc(곳.곳) + '">글 복사</button>';
+      if (곳.열기주소) h += '<a class="단추 테" href="' + esc(곳.열기주소) + '" target="_blank" rel="noopener">' + esc(곳.열기이름 || (곳.곳 + ' 열기')) + '</a>';
+      h += '<button class="단추 테" data-단계="썼어요" data-id="' + esc(x.id) + '">올렸어요</button></div>';
+      if ((x.사진 || []).length) h += '<div class="단추줄"><button class="단추 테" data-사진저장="' + esc(x.id) + '">그림 ' + x.사진.length + '장 저장</button></div>';
+      h += '<details><summary>글 전부 읽어 보기</summary><div class="본문글"><pre style="white-space:pre-wrap;font:inherit;margin:0">' + esc(글) + '</pre></div></details>';
+    } else if (고.올림) {
+      h += '<div class="소식끝">' + 신호('좋음', '오늘 올렸어요') + ' ' + esc(고.올림.제목) + '</div>';
+    } else {
+      h += '<div class="소식빔">오늘 올릴 새 글은 없어요.' + (고.다음 ? ' 다음 소식은 ' + esc(짧은날(고.다음.올릴날)) + '에 올리실 차례예요 — ' + esc(고.다음.제목) : ' 새 글이 생기면 여기에 올려 둘게요.') + '</div>';
+    }
+    return h + '</section>';
+  }
+  function 소식화면() {
+    var o = 소식설정(), n = 오늘소식수(), 곳들 = o.곳.slice(0, 3);
+    var 순서 = 곳들.filter(function (곳) { return !!소식고르기(곳).올릴; }).concat(곳들.filter(function (곳) { return !소식고르기(곳).올릴; }));   // 올릴 것이 위
+    var 블초 = ((자료 && 자료.피드.받은것) || []).filter(function (x) { return x.갈래 === '블로그' && (x.단계 || '초안') === '초안' && !대체됐나(x); }).length;
+    var h = '<section class="카드 소식머리"><button class="더" data-소식닫기="1">‹ 돌아가기</button><h2 style="margin-top:8px">오늘 올릴 소식 ' + (n ? n + '곳' : '') + '</h2>';
+    h += '<div class="소식한줄">' + esc(n ? (o.머리 || '곳마다 글 복사 → 열기 → 붙여 넣기 → 올렸어요 순서로 하시면 돼요.') : '오늘은 다 올리셨어요. 고생하셨어요.') + '</div>';
+    if (o.자동) h += '<div class="소식한줄">' + 신호('좋음', '구글은 저희가 해요') + ' ' + esc(o.자동) + '</div>';
+    h += '</section>';
+    h += 순서.map(소식곳카드).join('');
+    if (o.블로그) h += '<section class="카드 소식곳"><h2>블로그</h2><div class="소식빔">' + esc(o.블로그) + '</div><div class="단추줄" style="margin-top:10px"><button class="단추 테" data-소식블로그="1">블로그 초안 ' + 블초 + '개 보기</button></div></section>';
+    if (입구켜짐()) {
+      h += '<section class="카드 소식그밖"><h2>그 밖에</h2><label class="라벨글" for="소식그밖글">올리고 싶은 소식이나 바꾸고 싶은 점이 있으면 적어 주세요</label><textarea id="소식그밖글" placeholder="여기에 적어 주세요">' + esc(저장.get('소식그밖초안') || '') + '</textarea><button class="단추" data-소식그밖보내기="1" style="height:52px;font-size:18px">보내기</button></section>';
+    }
+    return h;
+  }
   // 받은 것 중 블로그·당근·문자 밖의 것을 셋으로 — 할 것(유니스·원장님이 손댈 것) · 참고(두고 보시는 자료) · 끝(완료·보류) (2026-10-17 목록과다)
   //   할 것 = 「내할것」 한 줄이 있거나 · 갈래가 액션이거나 · 답을 기다리는 것(답기다리나 — 종 배지와 같은 기준)
   function 받은것나머지나눔(목록) {
@@ -3710,16 +3786,17 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
   }
   // 메뉴 「받은 것 N」 = 기본 보기에 펴진 할 것 수(화면정리 조직은 손댈 것 수 — 받은것나눔). 전부를 세면 화면과 수가 어긋난다(숫자일치)
   function 받은것할것수() {
-    var 목록 = ((자료 && 자료.피드.받은것) || []).filter(function (x) { return !대체됐나(x); });
+    var 목록 = ((자료 && 자료.피드.받은것) || []).filter(function (x) { return !대체됐나(x) && x.갈래 !== '소식'; });
     var 세갈래 = 목록.filter(function (x) { return x.갈래 === '블로그' || x.갈래 === '당근' || x.갈래 === '문자'; });
-    return 세갈래.filter(function (x) { return !받은것끝났나(x); }).length + 받은것나머지나눔(목록.filter(function (x) { return 세갈래.indexOf(x) < 0; })).할.length;
+    return 세갈래.filter(function (x) { return !받은것끝났나(x); }).length + 받은것나머지나눔(목록.filter(function (x) { return 세갈래.indexOf(x) < 0; })).할.length + 오늘소식수();
   }
   function 받은것() {
-    var 목록 = ((자료 && 자료.피드.받은것) || []).slice().reverse();
+    if (소식열림 && 소식설정()) return 소식화면();
+    var 목록 = ((자료 && 자료.피드.받은것) || []).slice().reverse().filter(function (x) { return x.갈래 !== '소식'; });   // 소식(플레이스·카카오 글)은 「오늘 올릴 소식」 화면 한 곳에서만 보인다
     if (열린블로그) { var x = 목록.filter(function (y) { return y.id === 열린블로그; })[0]; if (x) return x.갈래 === '문자' ? 문자상세(x) : (화면정리() && x.갈래 !== '블로그' && x.갈래 !== '당근') ? 정리받은것상세(x) : 블로그상세(x); if (자료) 열린블로그 = ''; }
     if (화면정리()) return 정리받은것();
     var 갈래들 = (설정.받은것갈래 || []);
-    var h = 늘쓰는것카드('받은것');
+    var h = 늘쓰는것카드('받은것') + 소식입구카드();
     h += '<div class="갈래줄"><button class="' + (갈래 ? '' : '켬') + '" data-갈래="">전부</button>' + 갈래들.map(function (g) { return '<button class="' + (갈래 === g ? '켬' : '') + '" data-갈래="' + esc(g) + '">' + esc(g) + '</button>'; }).join('') + '</div>';
     var 골전부 = 갈래 ? 목록.filter(function (x) { return x.갈래 === 갈래; }) : 목록;
     // 대체된 것(구버전)은 목록에서 뺀다 — 「지난 것 N개 보기」를 눌러야 나온다 (2026-09-24 유니스).
@@ -3764,8 +3841,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
     return h;
   }
   // 열린 상세를 다 닫는다 — 탭 단추·왼쪽 메뉴가 같은 길을 쓴다(2026-10-12 · 종전엔 할 일·블로그·고객만 닫고 초안·메일은 남았다)
-  function 상세열렸나() { return !!((탭 === '초안' && 초안틀.열린()) || (탭 === '메일' && 열린메일) || (탭 === '할일' && 열린할일id) || (탭 === '받은것' && 열린블로그) || (탭 === '고객' && 열린고객)); }
-  function 상세모두닫기() { 열린할일id = ''; 열린블로그 = ''; 열린고객 = ''; 초안틀.닫기전부(); 열린메일 = ''; 답장쓰는id = ''; }
+  function 상세열렸나() { return !!((탭 === '초안' && 초안틀.열린()) || (탭 === '메일' && 열린메일) || (탭 === '할일' && 열린할일id) || (탭 === '받은것' && (열린블로그 || 소식열림)) || (탭 === '고객' && 열린고객)); }
+  function 상세모두닫기() { 소식열림 = false; 열린할일id = ''; 열린블로그 = ''; 열린고객 = ''; 초안틀.닫기전부(); 열린메일 = ''; 답장쓰는id = ''; }
   function 그리기() {
     var 본 = $('본문');
     var 화면 = { 홈: 홈, 대화: 대화, 할일: 할일, 재고: 재고, 장부: 장부, 받은것: 받은것, 일정: 일정, 메일: 메일화면, 초안: 초안틀.화면, 고객: 고객화면 };
@@ -3938,10 +4015,14 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
       return;
     }
     var 고객줄el = e.target.closest('[data-고객]'); if (고객줄el) { 열린고객 = 고객줄el.getAttribute('data-고객'); 탭 = '고객'; 그리기(); window.scrollTo(0, 0); return; }
+    if (e.target.closest('[data-소식닫기]')) { 소식열림 = false; 그리기(); window.scrollTo(0, 0); return; }
+    var 소복 = e.target.closest('[data-소식복사]'); if (소복) { var 소x = ((자료 && 자료.피드.받은것) || []).filter(function (y) { return y.id === 소복.getAttribute('data-소식복사'); })[0]; if (소x) { var 소글 = 소식글(소x), 곳이름 = 소복.getAttribute('data-곳'); (navigator.clipboard ? navigator.clipboard.writeText(소글) : Promise.reject()).then(function () { 토스트('글을 복사했어요. ' + 곳이름 + '을 열어 붙여 넣으세요.'); }, function () { 토스트('복사가 안 돼요. 「글 전부 읽어 보기」에서 글을 길게 눌러 복사해 주세요.'); }); } return; }
+    if (e.target.closest('[data-소식블로그]')) { 소식열림 = false; 열린블로그 = ''; 갈래 = ''; 그리기(); window.scrollTo(0, 0); return; }
+    var 소밖 = e.target.closest('[data-소식그밖보내기]'); if (소밖) { var 칸 = $('소식그밖글'), 소말 = 칸 ? 칸.value.trim() : ''; if (!소말) { 토스트('한두 줄만 적어 주세요.'); return; } if (보기라못보냄()) return; var 소몸 = '[오늘 올릴 소식 · 그 밖] ' + 소말; 저장.set('소식그밖초안', ''); 소식열림 = false; 보내기({ 종류: '글', 글: 소몸 }, { 누가: '나', 종류: '글', 글: 소몸, 시각: 지금iso(), 임시: Date.now(), 조용히: true }).then(function (r) { if (r !== false) 토스트('받았어요. 확인하고 답 드릴게요.'); }); return; }
     var 단 = e.target.closest('[data-단계]'); if (단) { var 단계 = 단.getAttribute('data-단계'), 사유 = ''; if (단계 === '보류') { 사유 = window.prompt('안 쓰시는 이유를 한 줄 적어 주시면 다음 글에 반영해요(안 적어도 돼요)', '') || ''; } 단.disabled = true; 보내기짐({ 종류: '단계', id: 단.getAttribute('data-id'), 단계: 단계, 사유: 사유 }).then(function (j) { if (!j || !j.됨) throw new Error(); 토스트(단계 === '썼어요' ? '고마워요. 다음 글을 채워 둘게요.' : 단계 === '보류' ? '적어 두었어요.' : '다시 초안으로 두었어요.'); 받아오기(); }).catch(function (e) { 단.disabled = false; 못했어요(e, '블로그 단계'); }); return; }
     var 더보 = e.target.closest('[data-더보기]'); if (더보) { 펼침더[더보.getAttribute('data-더보기')] = true; 그리기(); return; }
     var 접힌 = e.target.closest('[data-접힌]'); if (접힌) { var 접키 = 접힌.getAttribute('data-접힌'); 접힌열림[접키] = !접힌열림[접키]; 그리기(); return; }   // 화면정리 — 나중에·끝낸 것·정리 중·참고(2026-10-12)
-    var 더 = e.target.closest('[data-가]'); if (더) { if (더.getAttribute('data-할일상대')) { 할일상대 = 더.getAttribute('data-할일상대'); 열린할일id = ''; } if (더.getAttribute('data-고객보기')) { 고객보기 = 더.getAttribute('data-고객보기'); 고객검색 = ''; 열린고객 = ''; } if (더.getAttribute('data-블로그열기')) 열린블로그 = 더.getAttribute('data-블로그열기'); if (더.getAttribute('data-할일열기')) 열린할일id = 더.getAttribute('data-할일열기'); if (더.getAttribute('data-가') === '메일' && 더.getAttribute('data-초점')) 메일열기(더.getAttribute('data-초점')); if (더.hasAttribute('data-메일폴더열기')) { 메일폴더 = 더.getAttribute('data-메일폴더열기'); 메일거름 = 더.getAttribute('data-메일거름열기') || ''; 메일검색 = ''; 메일보일수 = 150; } 가기(더.getAttribute('data-가'), 더.getAttribute('data-초점'), 더.getAttribute('data-펼침열기'), 더.getAttribute('data-스크롤')); return; }
+    var 더 = e.target.closest('[data-가]'); if (더) { if (더.getAttribute('data-할일상대')) { 할일상대 = 더.getAttribute('data-할일상대'); 열린할일id = ''; } if (더.getAttribute('data-고객보기')) { 고객보기 = 더.getAttribute('data-고객보기'); 고객검색 = ''; 열린고객 = ''; } if (더.hasAttribute('data-소식열기')) { 소식열림 = true; 열린블로그 = ''; } if (더.getAttribute('data-블로그열기')) 열린블로그 = 더.getAttribute('data-블로그열기'); if (더.getAttribute('data-할일열기')) 열린할일id = 더.getAttribute('data-할일열기'); if (더.getAttribute('data-가') === '메일' && 더.getAttribute('data-초점')) 메일열기(더.getAttribute('data-초점')); if (더.hasAttribute('data-메일폴더열기')) { 메일폴더 = 더.getAttribute('data-메일폴더열기'); 메일거름 = 더.getAttribute('data-메일거름열기') || ''; 메일검색 = ''; 메일보일수 = 150; } 가기(더.getAttribute('data-가'), 더.getAttribute('data-초점'), 더.getAttribute('data-펼침열기'), 더.getAttribute('data-스크롤')); return; }
     var 진펼 = e.target.closest('[data-진행펼침]'); if (진펼 && !e.target.closest('a')) { var jid = 진펼.getAttribute('data-진행펼침'); 펼친진행[jid] = !펼친진행[jid]; 그리기(); return; }
     if (e.target.closest('[data-참고토글]')) { 참고보기 = !참고보기; 그리기(); return; }
     var 적기 = e.target.closest('[data-할일적기]'); if (적기) { 적기열림 = 적기.getAttribute('data-할일적기') === '1'; 그리기(); if (적기열림) setTimeout(function () { var t = $('적기_제목'); if (t) t.focus(); }, 50); return; }
@@ -4494,6 +4575,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = 공지팝�
       받아오기().then(그리기);
     }).catch(function (e) { 보낸.disabled = false; 못했어요(e, s.모드 === '끝' ? '끝냈어요 · ' + s.id : s.모드 === '결정' ? '결정' : s.모드 === '연락' ? '연락결과' : '댓글'); });
   }
+  $('본문').addEventListener('input', function (e) { if (e.target && e.target.id === '소식그밖글') 저장.set('소식그밖초안', e.target.value); });   // 오늘 올릴 소식 · 그 밖 칸 — 적던 글은 다시 그려도 남는다
   $('글시트글').addEventListener('input', function () { if (시트상태) 저장.set(시트상태.키, this.value); });
   document.addEventListener('click', function (e) {
     var t = e.target; if (!t || !t.closest) return;
